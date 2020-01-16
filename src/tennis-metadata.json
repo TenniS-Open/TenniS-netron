@@ -2,23 +2,29 @@
   {
     "name": "add",
     "schema": {
+      "description": "Y = LHS + RHS",
       "attributes": [
         { "name": "test", "type": "int32", "default": 1 }
+      ],
+      "inputs": [
+        {
+          "description": "Input tensor",
+          "name": "LHS",
+          "type": "Tensor"
+        },
+        {
+          "description": "Input tensor",
+          "name": "RHS",
+          "type": "Tensor"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "Output tensor",
+          "name": "Y",
+          "type": "Tensor"
+        }
       ]
-    },
-    "inputs": [
-      {
-        "description": "Input tensor",
-        "name": "LHS",
-        "type": "Tensor"
-      }
-    ],
-    "outputs": [
-      {
-        "description": "Output tensor",
-        "name": "RHS",
-        "type": "Tensor"
-      }
-    ]
+    }
   }
 ]

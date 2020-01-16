@@ -133,6 +133,7 @@ class Application {
                     'pkl', 'joblib',
                     'pbtxt', 'prototxt',
                     'cfg',
+                    'tsm',
                     'xml' ] }
             ]
         };

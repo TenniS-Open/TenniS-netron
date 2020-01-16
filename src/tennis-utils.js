@@ -195,6 +195,28 @@ tennis.Tensor = class {
         }
     }
 
+    get count() {
+        let prod = 1;
+        for (const i of this._shape) {
+            prod *= i;
+        }
+        return prod;
+    }
+
+    get value() {
+        if (!(this._value === null)) {
+            return this._value;
+        }
+        switch (this._dtype) {
+        case tennis.dtype.CHAR8:
+            {
+                this._value = String.fromCharCode.apply(null, new Int8Array(this._data));
+                break;
+            }
+        }
+        return this._value;
+    }
+
     /**
      * @param {[tennis.Tensor]} fields
      * @return {tennis.Tensor}
@@ -220,37 +242,53 @@ tennis.Node = class {
      * 
      * @param {{}} params 
      */
-    constructor(params) {
+    constructor(params, id=null) {
         for (let param in params) {
             // no use code
             let value = params[param];
         }
+        this._id = id;
         this._params = params;
-        this._name = this.get("#name", "#name");
-        this._op = this.get("#op", "#op");
+        this._name = this.get("#name").value;
+        this._op = this.get("#op").value;
         this._shape = this.get("#shape");
         this._dtype = this.get("#dtype");
+        this._inputs = []
+    }
+
+    /**
+     * @return {string} arg_id
+     */
+    get arg_id() {
+        return this._id.toString() + ":" + this._name;
+    }
+
+    /**
+     * @return {number} id
+     */
+    get id() {
+        return this._id;
     }
 
     /**
      * @return {string} name
      */
-    name() { return this._name; }
+    get name() { return this._name; }
 
     /**
      * @return {string} op
      */
-    op() { return this._op; }
+    get op() { return this._op; }
 
     /**
      * @return {[number]} shape
      */
-    shape() { return this._shape; }
+    get shape() { return this._shape; }
 
     /**
      * @return {number} dtype
      */
-    dtype() { return this._dtype; }
+    get dtype() { return this._dtype; }
 
     /**
      * 
@@ -292,7 +330,7 @@ tennis.Node = class {
      * @return {tennis.Node}
      */
     input(i) {
-        return self._inputs[i];
+        return this._inputs[i];
     }
 }
 
@@ -314,13 +352,28 @@ tennis.Module = class {
         this._read_graph(stream);
         this._inputs = []
         this._outputs = []
-        for (let i in inputs) {
-            this._inputs.push(this._nodes[inputs[i]]);
+        for (const i of inputs) {
+            this._inputs.push(this._nodes[i]);
         }
-        for (let i in outputs) {
-            this._outputs.push(this._nodes[outputs[i]]);
+        for (const i of outputs) {
+            this._outputs.push(this._nodes[i]);
         }
     }
+
+    /**
+     * @return {[tennis.Node]} inputs
+     */
+    get inputs() { return this._inputs; }
+
+    /**
+     * @return {[tennis.Node]} outputs
+     */
+    get outputs() { return this._outputs; }
+
+    /**
+     * @return {[tennis.Node]} nodes
+     */
+    get nodes() { return this._nodes; }
 
     /**
      * @param {[number]} shape
@@ -328,8 +381,8 @@ tennis.Module = class {
      */
     _prod(shape) {
         let prod = 1;
-        for (let i in shape) {
-            prod *= shape[i];
+        for (const i of shape) {
+            prod *= i;
         }
         return prod;
     }
@@ -356,9 +409,10 @@ tennis.Module = class {
     /**
      * 
      * @param {tennis.Stream} stream
+     * @param {number} id
      * @return {tennis.Node} 
      */
-    _read_bubble(stream) {
+    _read_bubble(stream, id=null) {
         let size = stream.int32();
         let params = {};
         for (let i = 0; i < size; ++i) {
@@ -366,7 +420,7 @@ tennis.Module = class {
             let value = this._read_tensor(stream);
             params[name] = value;
         }
-        return new tennis.Node(params);
+        return new tennis.Node(params, id);
     }
 
     /**
@@ -378,14 +432,13 @@ tennis.Module = class {
         let nodes = [];
         let node_inputs = [];
         for (let i = 0; i < size; ++i) {
-            nodes.push(this._read_bubble(stream));
+            nodes.push(this._read_bubble(stream, i));
             node_inputs.push(stream.int32_array());
         }
         for (let i = 0; i < size; ++i) {
             let inputs = [];
-            const i_node_inputs = node_inputs[i];
-            for (let j in i_node_inputs) {
-                inputs.push(nodes[i_node_inputs[j]])
+            for (const j of node_inputs[i]) {
+                inputs.push(nodes[j])
             }
             nodes[i].inputs = inputs;
         }

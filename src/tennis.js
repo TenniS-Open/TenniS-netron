@@ -13,7 +13,6 @@ tennis.ModelFactory = class {
     match(context) {
         // const extension = context.identifier.split('.').pop().toLowerCase();
         const b = context.buffer;
-        console.log("b.length = " + b.length)
         let stream = new ts.Stream(b)
         stream.skip(4)
         const mask = stream.int32()
@@ -23,19 +22,13 @@ tennis.ModelFactory = class {
     open(context, host) {
         return tennis.Metadata.open(host).then((metadata) => {
             const identifier = context.identifier;
-            const parts = identifier.split('.');
-            parts.pop();
-            const basename = parts.join('.');
-            return context.request(basename + '.weights', null).then((weights) => {
-                return this._openModel(metadata, identifier, context.text, weights);
-            }).catch(() => {
-                return this._openModel(metadata, identifier, context.text, null);
-            });
+            let stream = new ts.Stream(context.buffer);
+            return this._openModel(metadata, stream, identifier);
         });
     }
-    _openModel( metadata, identifier, cfg, weights) {
+    _openModel(metadata, stream, identifier) {
         try {
-            return new tennis.Model(metadata, cfg, weights ? new tennis.Weights(weights) : null);
+            return new tennis.Model(metadata, stream);
         }
         catch (error) {
             let message = error && error.message ? error.message : error.toString();
@@ -47,9 +40,9 @@ tennis.ModelFactory = class {
 
 tennis.Model = class {
 
-    constructor(metadata, cfg, weights) {
+    constructor(metadata, stream) {
         this._graphs = [];
-        this._graphs.push(new tennis.Graph(metadata, cfg, weights));
+        this._graphs.push(new tennis.Graph(metadata, stream));
     }
 
     get format() {
@@ -63,601 +56,24 @@ tennis.Model = class {
 
 tennis.Graph = class {
     
-    constructor(metadata, cfg, weights) {
+    constructor(metadata, stream) {
         this._inputs = [];
         this._outputs = [];
         this._nodes = [];
 
-        // read_cfg
-        let sections = [];
-        let section = null;
-        let lines = cfg.split('\n');
-        let lineNumber = 0;
-        while (lines.length > 0) {
-            lineNumber++;
-            const text = lines.shift();
-            const line = text.replace(/\s/g, '');
-            if (line.length > 0) {
-                switch (line[0]) {
-                    case '#':
-                    case ';':
-                        break;
-                    case '[': {
-                        section = {};
-                        section.line = lineNumber;
-                        section.type = line[line.length - 1] === ']' ? line.substring(1, line.length - 1) : line.substring(1);
-                        section.options = {};
-                        sections.push(section);
-                        break;
-                    }
-                    default: {
-                        if (!section || line[0] < 0x20 || line[0] > 0x7E) {
-                            throw new tennis.Error("Invalid cfg '" + text.replace(/[^\x20-\x7E]+/g, '').trim() + "' at line " + lineNumber.toString() + ".");
-                        }
-                        if (section) {
-                            const index = line.indexOf('=');
-                            if (index < 0) {
-                                throw new tennis.Error("Invalid cfg '" + text.replace(/[^\x20-\x7E]+/g, '').trim() + "' at line " + lineNumber.toString() + ".");
-                            }
-                            const key = line.substring(0, index);
-                            const value = line.substring(index + 1);
-                            section.options[key] = value;
-                        }
-                        break;
-                    }
-                }
-            }
+        let graph = new ts.Module(stream);
+
+        for (const input of graph.inputs) {
+            this._inputs.push(new tennis.Parameter(input.name, true, [new tennis.Argument(input.arg_id, "float32:[1,2,3]", "", null)]))
+        }
+        for (const output of graph.outputs) {
+            this._outputs.push(new tennis.Parameter(output.name, true, [new tennis.Argument(output.arg_id, "", "", null)]))
         }
 
-        const option_find_int = (options, key, defaultValue) => {
-            const value = options[key];
-            return value !== undefined ? parseInt(value, 10) : defaultValue;
-        };
-
-        const option_find_str = (options, key, defaultValue) => {
-            const value = options[key];
-            return value !== undefined ? value : defaultValue;
-        };
-
-        const load_weights = (name, shape, visible) => {
-            let data = null;
-            if (weights) {
-                let size = 1;
-                for (const dim of shape) {
-                    size *= dim;
-                }
-                data = weights.bytes(4 * size);
-            }
-            const type = new tennis.TensorType('float32', new tennis.TensorShape(shape));
-            const initializer = new tennis.Tensor(type, data);
-            const argument = new tennis.Argument('', null, initializer);
-            return new tennis.Parameter(name, visible === false ? false : true, [ argument ]);
-        }
-
-        const load_batch_normalize_weights = (layer, prefix, size) => {
-            layer.weights.push(load_weights(prefix + 'scale', [ size ], prefix === ''));
-            layer.weights.push(load_weights(prefix + 'mean', [ size ], prefix === ''));
-            layer.weights.push(load_weights(prefix + 'variance', [ size ], prefix === ''));
-        }
-
-        const make_convolutional_layer = (layer, prefix, w, h, c, n, groups, size, stride_x, stride_y, padding, batch_normalize) => {
-            layer.out_w = Math.floor((w + 2 * padding - size) / stride_x) + 1;
-            layer.out_h = Math.floor((h + 2 * padding - size) / stride_y) + 1;
-            layer.out_c = n;
-            layer.out = layer.out_w * layer.out_h * layer.out_c;
-            layer.weights.push(load_weights(prefix + 'biases', [ n ], prefix === ''));
-            if (batch_normalize) {
-                load_batch_normalize_weights(layer, prefix, n);
-            }
-            layer.weights.push(load_weights(prefix + 'weights', [ Math.floor(c / groups), n, size, size ], prefix === ''));
-            layer.outputs[0].type = new tennis.TensorType('float32', new tennis.TensorShape([ layer.out_w, layer.out_h, layer.out_c ]));
-        }
-
-        const make_connected_layer = (layer, prefix, inputs, outputs, batch_normalize) => {
-            layer.out_h = 1;
-            layer.out_w = 1;
-            layer.out_c = outputs;
-            layer.out = outputs;
-            layer.weights.push(load_weights(prefix + 'biases', [ outputs ], prefix === ''));
-            if (batch_normalize) {
-                load_batch_normalize_weights(layer, prefix, outputs);
-            }
-            layer.weights.push(load_weights(prefix + 'weights', [ inputs, outputs ], prefix === ''));
-            layer.outputs[0].type = new tennis.TensorType('float32', new tennis.TensorShape([ outputs ]));
-        }
-
-        let params = {};
-        const net = sections.shift();
-        switch (net.type) {
-            case 'net':
-            case 'network': {
-                params.h = option_find_int(net.options, 'height', 0);
-                params.w = option_find_int(net.options, 'width', 0);
-                params.c = option_find_int(net.options, 'channels', 0);
-                params.inputs = option_find_int(net.options, 'inputs', params.h * params.w * params.c);
-                break;
-            }
-        }
-
-        const inputType = params.w && params.h && params.c ?
-            new tennis.TensorType('float32', new tennis.TensorShape([ params.w, params.h, params.c ])) :
-            new tennis.TensorType('float32', new tennis.TensorShape([ params.inputs ]));
-        const inputName = 'input';
-        params.arguments = [ new tennis.Argument(inputName, inputType, null) ];
-        this._inputs.push(new tennis.Parameter(inputName, true, params.arguments));
-
-        if (sections.length === 0) {
-            throw new tennis.Error('Config file has no sections.');
-        }
-
-        let infer = true;
-        for (let i = 0; i < sections.length; i++) {
-            let section = sections[i];
-            section.name = i.toString();
-            section.chain = [];
-            section.layer = {};
-            let options = section.options;
-            let layer = section.layer; 
-            layer.inputs = [].concat(params.arguments);
-            layer.outputs = [ new tennis.Argument(i.toString(), null, null) ];
-            layer.weights = [];
-            switch (section.type) {
-                case 'shortcut':
-                case 'sam':
-                case 'scale_channels': {
-                    let index = option_find_int(options, 'from', 0);
-                    if (index < 0) {
-                        index = i + index;
-                    }
-                    const from = sections[index].layer;
-                    if (from) {
-                        layer.inputs.push(from.outputs[0]);
-                        layer.from = from;
-                    }
-                    delete options.from;
-                    break;
-                }
-                case 'route': {
-                    layer.inputs = [];
-                    layer.layers = [];
-                    const routes = options.layers ? options.layers.split(',').map((route) => Number.parseInt(route.trim(), 10)) : [];
-                    for (let j = 0; j < routes.length; j++) {
-                        const index = (routes[j] < 0) ? i + routes[j] : routes[j];
-                        const route = sections[index].layer;
-                        if (route) {
-                            layer.inputs.push(route.outputs[0]);
-                            layer.layers.push(route);
-                        }
-                    }
-                    delete options.layers;
-                    break;
-                }
-            }
-            if (infer) {
-                switch (section.type) {
-                    case 'conv':
-                    case 'convolutional':
-                    case 'deconvolutional': {
-                        const shape = layer.inputs[0].type.shape.dimensions;
-                        if (shape[0] !== params.w || shape[1] !== params.h || shape[2] !== params.c) {
-                            throw new tennis.Error('Layer before convolutional layer must output image.');
-                        }
-                        const size = option_find_int(options, 'size', 1);
-                        const n = option_find_int(options, 'filters', 1);
-                        const pad = option_find_int(options, 'pad', 0);
-                        const padding = pad ? (size >> 1) : option_find_int(options, 'padding', 0);
-                        let stride_x = option_find_int(options, 'stride_x', -1);
-                        let stride_y = option_find_int(options, 'stride_y', -1);
-                        if (stride_x < 1 || stride_y < 1) {
-                            const stride = option_find_int(options, 'stride', 1);
-                            stride_x = stride_x < 1 ? stride : stride_x; 
-                            stride_y = stride_y < 1 ? stride : stride_y;
-                        }
-                        const groups = option_find_int(options, 'groups', 1);
-                        const batch_normalize = option_find_int(options, 'batch_normalize', 0);
-                        const activation = option_find_str(options, 'activation', 'logistic');
-                        make_convolutional_layer(layer, '', params.w, params.h, params.c, n, groups, size, stride_x, stride_y, padding, batch_normalize);
-                        if (activation !== 'logistic') {
-                            section.chain.push({ type: activation });
-                        }
-                        break;
-                    }
-                    case 'connected': {
-                        const outputs = option_find_int(options, 'output', 1);
-                        const batch_normalize = option_find_int(options, 'batch_normalize', 0);
-                        const activation = option_find_str(options, 'activation', 'logistic');
-                        make_connected_layer(layer, '', params.inputs, outputs, batch_normalize);
-                        if (activation !== 'logistic') {
-                            section.chain.push({ type: activation });
-                        }
-                        break;
-                    }
-                    case 'local': {
-                        const shape = layer.inputs[0].type.shape.dimensions;
-                        if (shape[0] !== params.w || shape[1] !== params.h || shape[2] !== params.c) {
-                            throw new tennis.Error('Layer before avgpool layer must output image.');
-                        }
-                        const n = option_find_int(options, 'filters' , 1);
-                        const size = option_find_int(options, 'size', 1);
-                        const stride = option_find_int(options, 'stride', 1);
-                        const pad = option_find_int(options, 'pad', 0);
-                        const activation = option_find_str(options, 'activation', 'logistic');
-                        layer.out_h = Math.floor((params.h - (pad ? 1 : size)) / stride) + 1;
-                        layer.out_w = Math.floor((params.w - (pad ? 1 : size)) / stride) + 1;
-                        layer.out_c = n;
-                        layer.out = layer.out_w * layer.out_h * layer.out_c;
-                        layer.weights.push(load_weights('weights', [ params.c, n, size, size, layer.out_h * layer.out_w ]));
-                        layer.weights.push(load_weights('biases',[ layer.out_w * layer.out_h * layer.out_c ]));
-                        layer.outputs[0].type = new tennis.TensorType('float32', new tennis.TensorShape([ layer.out_w, layer.out_h, layer.out_c ]));
-                        if (activation !== 'logistic') {
-                            section.chain.push({ type: activation });
-                        }
-                        break;
-                    }
-                    case 'batchnorm': {
-                        layer.out_h = params.h;
-                        layer.out_w = params.w;
-                        layer.out_c = params.c;
-                        layer.out = layer.in;
-                        load_batch_normalize_weights(weights, section, '', layer.out);
-                        layer.outputs[0].type = new tennis.TensorType('float32', new tennis.TensorShape([ layer.ouputs ]));
-                        break;
-                    }
-                    case 'activation': {
-                        layer.out_h = params.h;
-                        layer.out_w = params.w;
-                        layer.out_c = params.c;
-                        layer.out = layer.in;
-                        layer.outputs[0].type = new tennis.TensorType('float32', new tennis.TensorShape([ layer.ouputs ]));
-                        break;
-                    }
-                    case 'max':
-                    case 'maxpool': {
-                        const shape = layer.inputs[0].type.shape.dimensions;
-                        if (shape[0] !== params.w || shape[1] !== params.h || shape[2] !== params.c) {
-                            throw new tennis.Error('Layer before maxpool layer must output image.');
-                        }
-                        const antialiasing = option_find_int(options, 'antialiasing', 0);
-                        const stride = option_find_int(options, 'stride', 1);
-                        const blur_stride_x = option_find_int(options, 'stride_x', stride);
-                        const blur_stride_y = option_find_int(options, 'stride_y', stride);
-                        const stride_x = antialiasing ? 1 : blur_stride_x;
-                        const stride_y = antialiasing ? 1 : blur_stride_y;
-                        const size = option_find_int(options, 'size', stride);
-                        const padding = option_find_int(options, 'padding', size - 1);
-                        const out_channels = option_find_int(options, 'out_channels', 1);
-                        const maxpool_depth = option_find_int(options, 'maxpool_depth', 0);
-                        if (maxpool_depth) {
-                            layer.out_c = out_channels;
-                            layer.out_w = params.w;
-                            layer.out_h = params.h;
-                        }
-                        else {
-                            layer.out_w = Math.floor((params.w + padding - size) / stride_x) + 1;
-                            layer.out_h = Math.floor((params.h + padding - size) / stride_y) + 1;
-                            layer.out_c = params.c;
-                        }
-                        if (antialiasing) {
-                            const blur_size = antialiasing === 2 ? 2 : 3;
-                            const blur_pad = antialiasing === 2 ? 0 : Math.floor(blur_size / 3);
-                            layer.input_layer = { weights: [], outputs: layer.outputs };
-                            make_convolutional_layer(layer.input_layer, '', layer.out_h, layer.out_w, layer.out_c, layer.out_c, layer.out_c, blur_size, blur_stride_x, blur_stride_y, blur_pad, 0);
-                            layer.out_w = layer.input_layer.out_w;
-                            layer.out_h = layer.input_layer.out_h;
-                            layer.out_c = layer.input_layer.out_c;
-                        }
-                        else {
-                            layer.outputs[0].type = new tennis.TensorType('float32', new tennis.TensorShape([ layer.out_w, layer.out_h, layer.out_c ]));
-                        }
-                        layer.out = layer.out_w * layer.out_h * layer.out_c;
-                        break;
-                    }
-                    case 'avgpool': {
-                        const shape = layer.inputs[0].type.shape.dimensions;
-                        if (shape[0] !== params.w || shape[1] !== params.h || shape[2] !== params.c) {
-                            throw new tennis.Error('Layer before avgpool layer must output image.');
-                        }
-                        layer.out_w = 1;
-                        layer.out_h = 1;
-                        layer.out_c = params.c;
-                        layer.out = layer.out_c;
-                        layer.outputs[0].type = new tennis.TensorType('float32', new tennis.TensorShape([ layer.out_w, layer.out_h, layer.out_c ]));
-                        break;
-                    }
-                    case 'crnn': {
-                        const size = option_find_int(options, 'size', 3);
-                        const stride = option_find_int(options, 'stride', 1);
-                        const output_filters = option_find_int(options, 'output', 1);
-                        const hidden_filters = option_find_int(options, 'hidden', 1);
-                        const groups = option_find_int(options, 'groups', 1);
-                        const pad = option_find_int(options, 'pad', 0);
-                        const padding = pad ? (size >> 1) : option_find_int(options, 'padding', 0);
-                        const batch_normalize = option_find_int(options, 'batch_normalize', 0);
-                        layer.input_layer = { weights: [], outputs: [ new tennis.Argument('', null, null) ] };
-                        make_convolutional_layer(layer.input_layer, 'input_', params.h, params.w, params.c, hidden_filters, groups, size, stride, stride, padding, batch_normalize);
-                        layer.self_layer = { weights: [], outputs: [ new tennis.Argument('', null, null) ] };
-                        make_convolutional_layer(layer.self_layer, 'self_', params.h, params.w, hidden_filters, hidden_filters, groups, size, stride, stride, padding, batch_normalize);
-                        layer.output_layer = { weights: [], outputs: layer.outputs };
-                        make_convolutional_layer(layer.output_layer, 'output_', params.h, params.w, hidden_filters, output_filters, groups, size, stride, stride, padding, batch_normalize);
-                        layer.weights = layer.weights.concat(layer.input_layer.weights);
-                        layer.weights = layer.weights.concat(layer.self_layer.weights);
-                        layer.weights = layer.weights.concat(layer.output_layer.weights);
-                        layer.out_h = layer.output_layer.out_h;
-                        layer.out_w = layer.output_layer.out_w;
-                        layer.out_c = output_filters;
-                        layer.out = layer.output_layer.out;
-                        break;
-                    }
-                    case 'rnn': {
-                        const outputs = option_find_int(options, 'output', 1);
-                        const hidden = option_find_int(options, 'hidden', 1);
-                        const batch_normalize = option_find_int(options, 'batch_normalize', 0);
-                        const inputs = params.inputs;
-                        layer.input_layer = { weights: [], outputs: [ new tennis.Argument('', null, null) ] };
-                        make_connected_layer(layer.input_layer, 'input_', inputs, hidden, batch_normalize);
-                        layer.self_layer = { weights: [], outputs: [ new tennis.Argument('', null, null) ] };
-                        make_connected_layer(layer.self_layer, 'self_', hidden, hidden, batch_normalize);
-                        layer.output_layer = { weights: [], outputs: layer.outputs };
-                        make_connected_layer(layer.output_layer, 'output_', hidden, outputs, batch_normalize);
-                        layer.weights = layer.weights.concat(layer.input_layer.weights);
-                        layer.weights = layer.weights.concat(layer.self_layer.weights);
-                        layer.weights = layer.weights.concat(layer.output_layer.weights);
-                        layer.out_w = 1;
-                        layer.out_h = 1;
-                        layer.out_c = outputs;
-                        layer.out = outputs;
-                        break;
-                    }
-                    case 'gru': {
-                        const inputs = params.inputs;
-                        const outputs = option_find_int(options, 'output', 1);
-                        const batch_normalize = option_find_int(options, 'batch_normalize', 0);
-                        layer.input_z_layer = { weights: [], outputs: [ new tennis.Argument('', null, null) ] };
-                        make_connected_layer(layer.input_z_layer, 'input_z', inputs, outputs, batch_normalize);
-                        layer.state_z_layer = { weights: [], outputs: [ new tennis.Argument('', null, null) ] };
-                        make_connected_layer(layer.state_z_layer, 'state_z', outputs, outputs, batch_normalize);
-                        layer.input_r_layer = { weights: [], outputs: [ new tennis.Argument('', null, null) ] };
-                        make_connected_layer(layer.input_r_layer, 'input_r', inputs, outputs, batch_normalize);
-                        layer.state_r_layer = { weights: [], outputs: [ new tennis.Argument('', null, null) ] };
-                        make_connected_layer(layer.state_r_layer, 'state_r', outputs, outputs, batch_normalize);
-                        layer.input_h_layer = { weights: [], outputs: [ new tennis.Argument('', null, null) ] };
-                        make_connected_layer(layer.input_h_layer, 'input_h', inputs, outputs, batch_normalize);
-                        layer.state_h_layer = { weights: [], outputs: [ new tennis.Argument('', null, null) ] };
-                        make_connected_layer(layer.state_h_layer, 'state_h', outputs, outputs, batch_normalize);
-                        layer.weights = layer.weights.concat(layer.input_z_layer.weights);
-                        layer.weights = layer.weights.concat(layer.state_z_layer.weights);
-                        layer.weights = layer.weights.concat(layer.input_r_layer.weights);
-                        layer.weights = layer.weights.concat(layer.state_r_layer.weights);
-                        layer.weights = layer.weights.concat(layer.input_h_layer.weights);
-                        layer.weights = layer.weights.concat(layer.state_h_layer.weights);
-                        layer.out = outputs;
-                        layer.outputs[0].type = new tennis.TensorType('float32', new tennis.TensorShape([ outputs ]));
-                        break;
-                    }
-                    case 'lstm': {
-                        const inputs = params.inputs;
-                        const outputs = option_find_int(options, 'output', 1);
-                        const batch_normalize = option_find_int(options, 'batch_normalize', 0);
-                        layer.uf = { weights: [], outputs: [ new tennis.Argument('', null, null) ] };
-                        make_connected_layer(layer.uf, 'uf_', inputs, outputs, batch_normalize);
-                        layer.ui = { weights: [], outputs: [ new tennis.Argument('', null, null) ] };
-                        make_connected_layer(layer.ui, 'ui_', inputs, outputs, batch_normalize);
-                        layer.ug = { weights: [], outputs: [ new tennis.Argument('', null, null) ] };
-                        make_connected_layer(layer.ug, 'ug_', inputs, outputs, batch_normalize);
-                        layer.uo = { weights: [], outputs: [ new tennis.Argument('', null, null) ] };
-                        make_connected_layer(layer.uo, 'uo_', inputs, outputs, batch_normalize);
-                        layer.wf = { weights: [], outputs: [ new tennis.Argument('', null, null) ] };
-                        make_connected_layer(layer.wf, 'wf_', outputs, outputs, batch_normalize);
-                        layer.wi = { weights: [], outputs: [ new tennis.Argument('', null, null) ] };
-                        make_connected_layer(layer.wi, 'wi_', outputs, outputs, batch_normalize);
-                        layer.wg = { weights: [], outputs: [ new tennis.Argument('', null, null) ] };
-                        make_connected_layer(layer.wg, 'wg_', outputs, outputs, batch_normalize);
-                        layer.wo = { weights: [], outputs: [ new tennis.Argument('', null, null) ] };
-                        make_connected_layer(layer.wo, 'wo_', outputs, outputs, batch_normalize);
-                        layer.weights = layer.weights.concat(layer.uf.weights);
-                        layer.weights = layer.weights.concat(layer.ui.weights);
-                        layer.weights = layer.weights.concat(layer.ug.weights);
-                        layer.weights = layer.weights.concat(layer.uo.weights);
-                        layer.weights = layer.weights.concat(layer.wf.weights);
-                        layer.weights = layer.weights.concat(layer.wi.weights);
-                        layer.weights = layer.weights.concat(layer.wg.weights);
-                        layer.weights = layer.weights.concat(layer.wo.weights);
-                        layer.out_w = 1;
-                        layer.out_h = 1;
-                        layer.out_c = outputs;
-                        layer.out = outputs;
-                        layer.outputs[0].type = new tennis.TensorType('float32', new tennis.TensorShape([ outputs ]));
-                        weights = null;
-                        break;
-                    }
-                    case 'softmax': {
-                        layer.out_w = params.w;
-                        layer.out_h = params.h;
-                        layer.out_c = params.c;
-                        layer.out = params.inputs;
-                        layer.outputs[0].type = new tennis.TensorType('float32', new tennis.TensorShape([ layer.out ]));
-                        break;
-                    }
-                    case 'dropout': {
-                        layer.out_w = params.w;
-                        layer.out_h = params.h;
-                        layer.out_c = params.c;
-                        layer.out = params.inputs;
-                        layer.outputs[0].type = new tennis.TensorType('float32', new tennis.TensorShape([ layer.out_w, layer.out_h, layer.out_c ]));
-                        break;
-                    }
-                    case 'upsample': {
-                        const stride = option_find_int(options, 'stride', 2);
-                        layer.out_w = params.w * stride;
-                        layer.out_h = params.h * stride;
-                        layer.out_c = params.c;
-                        layer.out = layer.out_w * layer.out_h * layer.out_c;
-                        layer.outputs[0].type = new tennis.TensorType('float32', new tennis.TensorShape([ layer.out_w, layer.out_h, layer.out_c ]));
-                        break;
-                    }
-                    case 'crop': {
-                        const shape = layer.inputs[0].type.shape.dimensions;
-                        if (shape[0] !== params.w || shape[1] !== params.h || shape[2] !== params.c) {
-                            throw new tennis.Error('Layer before crop layer must output image.');
-                        }
-                        const crop_height = option_find_int(options, 'crop_height', 1);
-                        const crop_width = option_find_int(options, 'crop_width', 1);
-                        layer.out_w = crop_width;
-                        layer.out_h = crop_height;
-                        layer.out_c = params.c;
-                        layer.out = layer.out_w * layer.out_h * layer.out_c;
-                        layer.outputs[0].type = new tennis.TensorType('float32', new tennis.TensorShape([ layer.out_w, layer.out_h, layer.out_c ]));
-                        break;
-                    }
-                    case 'yolo': {
-                        const classes = option_find_int(options, 'classes', 20);
-                        const n = option_find_int(options, 'num', 1);
-                        layer.out_h = params.h;
-                        layer.out_w = params.w;
-                        layer.out_c = n * (classes + 4 + 1);
-                        layer.out = layer.out_h * layer.out_w * layer.out_c;
-                        layer.outputs[0].type = new tennis.TensorType('float32', new tennis.TensorShape([ layer.out_w, layer.out_h, layer.out_c ]));
-                        break;
-                    }
-                    case 'Gaussian_yolo': {
-                        const classes = option_find_int(options, 'classes', 20);
-                        const n = option_find_int(options, 'num', 1);
-                        layer.out_h = params.h;
-                        layer.out_w = params.w;
-                        layer.out_c = n * (classes + 8 + 1);
-                        layer.out = layer.out_h * layer.out_w * layer.out_c;
-                        layer.outputs[0].type = new tennis.TensorType('float32', new tennis.TensorShape([ layer.out_w, layer.out_h, layer.out_c ]));
-                        break;
-                    }
-                    case 'region': {
-                        const coords = option_find_int(options, 'coords', 4);
-                        const classes = option_find_int(options, 'classes', 20);
-                        const num = option_find_int(options, 'num', 1);
-                        layer.out = params.h * params.w * num * (classes + coords + 1);
-                        layer.outputs[0].type = new tennis.TensorType('float32', new tennis.TensorShape([ params.h, params.w, num, (classes + coords + 1) ]));
-                        break;
-                    }
-                    case 'cost': {
-                        layer.out = params.inputs;
-                        layer.outputs[0].type = new tennis.TensorType('float32', new tennis.TensorShape([ layer.out ]));
-                        break;
-                    }
-                    case 'reorg': {
-                        const stride = option_find_int(options, 'stride', 1);
-                        const reverse = option_find_int(options, 'reverse', 0);
-                        const extra = option_find_int(options, 'extra', 0);
-                        if (reverse) {
-                            layer.out_w = params.w * stride;
-                            layer.out_h = params.h * stride;
-                            layer.out_c = Math.floor(params.c / (stride * stride));
-                        } 
-                        else {
-                            layer.out_w = Math.floor(params.w / stride);
-                            layer.out_h = Math.floor(params.h / stride);
-                            layer.out_c = params.c * (stride * stride);
-                        }
-                        layer.out = layer.out_h * layer.out_w * layer.out_c;
-                        if (extra) {
-                            layer.out_w = 0;
-                            layer.out_h = 0; 
-                            layer.out_c = 0;
-                            layer.out = (params.h * params.w * params.c) + extra;
-                        }
-                        layer.outputs[0].type = new tennis.TensorType('float32', new tennis.TensorShape([ layer.out ]));
-                        break;
-                    }
-                    case 'sam': {
-                        const activation = option_find_str(options, 'activation', 'linear');
-                        if (activation !== 'linear') {
-                            section.chain.push({ type: activation });
-                        }
-                        infer = false;
-                        break;
-                    }
-                    case 'route': {
-                        let layers = [].concat(layer.layers);
-                        layer.out = 0;
-                        for (const next of layers) {
-                            layer.out += next.out;
-                        }
-                        const first = layers.shift();
-                        layer.out_w = first.out_w;
-                        layer.out_h = first.out_h;
-                        layer.out_c = first.out_c;
-                        while (layers.length > 0) {
-                            const next = layers.shift();
-                            if (next.out_w === first.out_w && next.out_h === first.out_h) {
-                                layer.out_c += next.out_c;
-                            }
-                            else {
-                                layer.out_h = 0;
-                                layer.out_w = 0;
-                                layer.out_c = 0;
-                            }
-                        }
-                        layer.outputs[0].type = new tennis.TensorType('float32', new tennis.TensorShape([ layer.out_w, layer.out_h, layer.out_c ]));
-                        break;
-                    }
-                    case 'shortcut': {
-                        const activation = option_find_str(options, 'activation', 'linear');
-                        layer.out_w = params.w;
-                        layer.out_h = params.h;
-                        layer.out_c = params.c;
-                        layer.out = params.w * params.h * params.c;
-                        layer.outputs[0].type = new tennis.TensorType('float32', new tennis.TensorShape([ params.w, params.h, params.c ]));
-                        if (activation !== 'linear') {
-                            section.chain.push({ type: activation });
-                        }
-                        break;
-                    }
-                    case 'scale_channels': {
-                        const activation = option_find_str(options, 'activation', 'linear');
-                        layer.out_w = params.w;
-                        layer.out_h = params.h;
-                        layer.out_c = params.c;
-                        layer.out = params.w * params.h * params.c;
-                        layer.outputs[0].type = new tennis.TensorType('float32', new tennis.TensorShape([ params.w, params.h, params.c ]));
-                        if (activation !== 'linear') {
-                            section.chain.push({ type: activation });
-                        }
-                        break;
-                    }
-                    case 'detection': {
-                        layer.out_w = params.w;
-                        layer.out_h = params.h;
-                        layer.out_c = params.c;
-                        layer.out = params.inputs;
-                        layer.outputs[0].type = new tennis.TensorType('float32', new tennis.TensorShape([ layer.out ]));
-                        break;
-                    }
-                    default: {
-                        infer = false;
-                        break;
-                    }
-                }
-                params.h = layer.out_h;
-                params.w = layer.out_w;
-                params.c = layer.out_c;
-                params.inputs = layer.out;
-                params.last = section;
-            }
-            params.arguments = layer.outputs;
-        }
-
-        for (let i = 0; i < sections.length; i++) {
-            this._nodes.push(new tennis.Node(metadata, net, sections[i]));
-        }
-
-        /* if (sections.length > 0) {
-            const last = sections[sections.length - 1].layer;
-            for (let i = 0; i < last.outputs.length; i++) {
-                const outputName = 'output' + (i > 1 ? i.toString() : '');
-                this._outputs.push(new tennis.Parameter(outputName, true, [ last.outputs[i] ]));
-            }
-        } */
-
-        if (weights) {
-            weights.validate();
+        for (const node of graph.nodes) {
+            if (node.op == "<param>") continue;
+            if (node.op == "<const>") continue;
+            this._nodes.push(new tennis.Node(metadata, node))
         }
     }
 
@@ -696,11 +112,11 @@ tennis.Parameter = class {
 };
 
 tennis.Argument = class {
-
-    constructor(id, type, initializer) {
+    constructor(id, type, description, initializer) {
         this._id = id;
-        this._type = type;
-        this._initializer = initializer;
+        this._type = type || null;
+        this._description = description || '';
+        this._initializer = initializer || null;
     }
 
     get id() {
@@ -712,6 +128,10 @@ tennis.Argument = class {
             return this._initializer.type;
         }
         return this._type;
+    }
+
+    get description() {
+        return this._description;
     }
 
     set type(value) {
@@ -727,35 +147,65 @@ tennis.Argument = class {
 };
 
 tennis.Node = class {
-
-    constructor(metadata, net, section) {
-        this._name = (section.name || '') + (section.line !== undefined ? '@' + section.line.toString() : '');
+    /**
+     * 
+     * @param {tennis.Metadata} metadata 
+     * @param {ts.Node} node 
+     */
+    constructor(metadata, node) {
+        this._name = node.name;
         this._metadata = metadata;
-        this._operator = section.type;
+        this._operator = node.op;
         this._attributes = [];
         this._inputs = [];
         this._outputs = [];
         this._chain = [];
-        const layer = section.layer;
-        if (layer && layer.inputs && layer.inputs.length > 0) {
-            this._inputs.push(new tennis.Parameter(layer.inputs.length <= 1 ? 'input' : 'inputs', true, layer.inputs));
+
+        let schema = this._metadata.getSchema(this._operator)
+        let schema_inputs = [];
+        let schema_outputs = [];
+        if (schema) {
+            schema = JSON.parse(JSON.stringify(schema));
+            schema_inputs = schema.inputs;
+            schema_outputs = schema.outputs;
+        } else {
+            for (let i = 0; i < node.inputs.length; ++i) {
+                schema_inputs.push({
+                    name: node.inputs.length > 1 ? "input" : "inputs",
+                    type: "Tensor",
+                    description: "",
+                })
+            }
+            schema_outputs.push({
+                name: "output",
+                type: "Tensor",
+                description: "",
+            })
         }
-        if (layer && layer.weights && layer.weights.length > 0) {
-            this._inputs = this._inputs.concat(layer.weights);
-        }
-        if (layer && layer.outputs && layer.outputs.length > 0) {
-            this._outputs.push(new tennis.Parameter(layer.outputs.length <= 1 ? 'output' : 'outputs', true, layer.outputs));
-        }
-        if (section.chain) {
-            for (const chain of section.chain) {
-                this._chain.push(new tennis.Node(metadata, net, chain, ''));
+        if (schema_inputs.length == 1 && node.inputs.length > 1) {
+            const input = schema_inputs[0];
+            let args = [];
+            for (let i = 0; i < node.inputs.length; ++i) {
+                args.push(new tennis.Argument(node.input(i).arg_id, null, null, null));
+            }
+            this._inputs.push(new tennis.Parameter(input.name, true, args));
+        } else {
+            for (let i = 0; i < node.inputs.length; ++i) {
+                let input = {name: "output", type: "Tensor", description: ""};
+                if (i < schema_inputs.length) {
+                    input = schema_inputs[i];
+                }
+                this._inputs.push(new tennis.Parameter(input.name, true, [
+                    new tennis.Argument(node.input(i).arg_id, input.type, input.description)
+                ]));
             }
         }
-        const options = section.options;
-        if (options) {
-            for (const key of Object.keys(options)) {
-                this._attributes.push(new tennis.Attribute(metadata, this._operator, key, options[key]));
-            }
+        for (let i = 0; i < schema_outputs.length; ++i) {
+            let output = schema_outputs[i];
+            this._outputs.push(new tennis.Parameter(output.name, true, [
+                new tennis.Argument(node.arg_id + (i == 0 ? "" : "[" + i + "]"),
+                output.type, output.description)
+            ]));
         }
     }
 
