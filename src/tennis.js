@@ -70,10 +70,13 @@ tennis.Graph = class {
             this._outputs.push(new tennis.Parameter(output.name, true, [new tennis.Argument(output.arg_id, "", "", null)]))
         }
 
+        let map_node = {};
         for (const node of graph.nodes) {
             if (node.op == "<param>") continue;
             if (node.op == "<const>") continue;
-            this._nodes.push(new tennis.Node(metadata, node))
+            let draw_node = new tennis.Node(metadata, node);
+            map_node[node] = draw_node;
+            this._nodes.push(draw_node);
         }
     }
 
@@ -277,6 +280,10 @@ tennis.Node = class {
 
     get chain() {
         return this._chain;
+    }
+
+    set chain(v) {
+        this._chain = v;
     }
 };
 

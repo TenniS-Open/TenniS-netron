@@ -271,6 +271,13 @@ tennis.Node = class {
     }
 
     /**
+     * @param {number} v
+     */
+    set id(v) {
+        this._id = v;
+    }
+
+    /**
      * @return {string} name
      */
     get name() { return this._name; }

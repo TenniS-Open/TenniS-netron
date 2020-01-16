@@ -2,6 +2,7 @@
   {
     "name": "add",
     "schema": {
+      "category": "Layer",
       "description": "Y = LHS + RHS",
       "attributes": [
         { "name": "test", "type": "int32", "default": 1 }
@@ -22,6 +23,30 @@
         {
           "description": "Output tensor",
           "name": "Y",
+          "type": "Tensor"
+        }
+      ]
+    }
+  },
+  {
+    "name": "concat",
+    "schema": {
+      "category": "Wrapper",
+      "description": "Concat all input tensors.",
+      "attributes": [
+        { "name": "test", "type": "int32", "default": 1 }
+      ],
+      "inputs": [
+        {
+          "description": "List of Tensors",
+          "name": "inputs",
+          "type": "List[Tensor]"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "Output tensor",
+          "name": "concat_value",
           "type": "Tensor"
         }
       ]
