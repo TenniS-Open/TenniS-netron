@@ -64,10 +64,10 @@ tennis.Graph = class {
         let graph = new ts.Module(stream);
 
         for (const input of graph.inputs) {
-            this._inputs.push(new tennis.Parameter(input.name, true, [new tennis.Argument(input.arg_id, "float32:[1,2,3]", "", null)]))
+            this._inputs.push(new tennis.Parameter(input.name, true, [new tennis.Argument(input, input.proto, "", null)]))
         }
         for (const output of graph.outputs) {
-            this._outputs.push(new tennis.Parameter(output.name, true, [new tennis.Argument(output.arg_id, "", "", null)]))
+            this._outputs.push(new tennis.Parameter(output.name, true, [new tennis.Argument(output, output.proto, "", null)]))
         }
 
         let map_node = {};
@@ -115,11 +115,28 @@ tennis.Parameter = class {
 };
 
 tennis.Argument = class {
-    constructor(id, type, description, initializer) {
-        this._id = id;
-        this._type = type || null;
+    /**
+     * 
+     * @param {ts.Node} node 
+     * @param {object} type 
+     * @param {string} description 
+     * @param {object} initializer 
+     */
+    constructor(node, type, description, initializer) {
+        this._id = node.arg_id;
+        let proto = node.proto;
+        if (proto) {
+            this._type = proto;
+        } else {
+            this._type = type || null;
+        }
         this._description = description || '';
         this._initializer = initializer || null;
+        if (!this._initializer) {
+            if (node.op == "<const>") {
+                this._initializer = new tennis.Tensor(node.get("value"));
+            }
+        }
     }
 
     get id() {
@@ -174,14 +191,14 @@ tennis.Node = class {
         } else {
             for (let i = 0; i < node.inputs.length; ++i) {
                 schema_inputs.push({
-                    name: node.inputs.length > 1 ? "input" : "inputs",
-                    type: "Tensor",
+                    name: node.inputs.length > 1 ? "input " + i : "inputs",
+                    type: "tensor",
                     description: "",
                 })
             }
             schema_outputs.push({
                 name: "output",
-                type: "Tensor",
+                type: "tensor",
                 description: "",
             })
         }
@@ -189,25 +206,24 @@ tennis.Node = class {
             const input = schema_inputs[0];
             let args = [];
             for (let i = 0; i < node.inputs.length; ++i) {
-                args.push(new tennis.Argument(node.input(i).arg_id, null, null, null));
+                args.push(new tennis.Argument(node.input(i), null, null, null));
             }
             this._inputs.push(new tennis.Parameter(input.name, true, args));
         } else {
             for (let i = 0; i < node.inputs.length; ++i) {
-                let input = {name: "output", type: "Tensor", description: ""};
+                let input = {name: "input " + i, type: "tensor", description: ""};
                 if (i < schema_inputs.length) {
                     input = schema_inputs[i];
                 }
                 this._inputs.push(new tennis.Parameter(input.name, true, [
-                    new tennis.Argument(node.input(i).arg_id, input.type, input.description)
+                    new tennis.Argument(node.input(i), input.type, input.description)
                 ]));
             }
         }
         for (let i = 0; i < schema_outputs.length; ++i) {
             let output = schema_outputs[i];
             this._outputs.push(new tennis.Parameter(output.name, true, [
-                new tennis.Argument(node.arg_id + (i == 0 ? "" : "[" + i + "]"),
-                output.type, output.description)
+                new tennis.Argument(node, output.type, output.description)
             ]));
         }
     }
@@ -335,13 +351,19 @@ tennis.Attribute = class {
 
 tennis.Tensor = class {
 
-    constructor(type, data) {
-        this._type = type;
-        this._data = data;
+    /**
+     * 
+     * @param {ts.Tensor} tensor 
+     */
+    constructor(tensor) {
+        this._type = new tennis.TensorType(
+            ts.dtype.type_str(tensor.dtype),
+            new tennis.TensorShape(tensor.shape));
+        this._value = tensor.value;
     }
 
     get kind() {
-        return 'Tensor';
+        return 'Initializer';
     }
 
     get name() {
@@ -353,71 +375,24 @@ tennis.Tensor = class {
     }
 
     get state() {
-        return this._context().state;
+        if (this._value === null)
+        {
+            return 'Tensor data is empty.';
+        }
+        return null;
     }
 
     get value() {
-        let context = this._context();
-        if (context.state) {
-            return null;
-        }
-        context.limit = Number.MAX_SAFE_INTEGER;
-        return this._decode(context, 0);
+        return this._value;
     }
 
     toString() {
-        let context = this._context();
-        if (context.state) {
-            return '';
-        }
-        context.limit = 10000;
-        const value = this._decode(context, 0);
+        const value = this._value;
         return JSON.stringify(value, null, 4);
-    }
-
-    _context() {
-        let context = {};
-        if (!this._data) {
-            context.state = 'Tensor data is empty.';
-            return context;
-        }
-        context.state = null;
-        context.position = 0;
-        context.count = 0;
-        context.dataView = new DataView(this._data.buffer, this._data.byteOffset, this._data.byteLength);
-        context.dimensions = this.type.shape.dimensions;
-        return context;
-    }
-
-    _decode(context, dimension) {
-        let results = [];
-        const size = context.dimensions[dimension];
-        if (dimension == context.dimensions.length - 1) {
-            for (let i = 0; i < size; i++) {
-                if (context.count > context.limit) {
-                    results.push('...');
-                    return results;
-                }
-                results.push(context.dataView.getFloat32(context.position, true));
-                context.position += 4;
-                context.count++;
-            }
-        }
-        else {
-            for (let j = 0; j < size; j++) {
-                if (context.count > context.limit) {
-                    results.push('...');
-                    return results;
-                }
-                results.push(this._decode(context, dimension + 1));
-            }
-        }
-        return results;
     }
 };
 
 tennis.TensorType = class {
-
     constructor(dataType, shape) {
         this._dataType = dataType;
         this._shape = shape;
@@ -438,6 +413,10 @@ tennis.TensorType = class {
 
 tennis.TensorShape = class {
 
+    /**
+     * 
+     * @param {ts.Tensor} tensor 
+     */
     constructor(dimensions) {
         if (dimensions.some((dimension) => dimension === 0 || dimension === undefined || isNaN(dimension))) {
             throw new tennis.Error('Invalid tensor shape.');

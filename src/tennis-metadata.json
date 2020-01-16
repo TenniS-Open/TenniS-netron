@@ -11,19 +11,19 @@
         {
           "description": "Input tensor",
           "name": "LHS",
-          "type": "Tensor"
+          "type": "tensor"
         },
         {
           "description": "Input tensor",
           "name": "RHS",
-          "type": "Tensor"
+          "type": "tensor"
         }
       ],
       "outputs": [
         {
           "description": "Output tensor",
           "name": "Y",
-          "type": "Tensor"
+          "type": "tensor"
         }
       ]
     }
@@ -31,7 +31,7 @@
   {
     "name": "concat",
     "schema": {
-      "category": "Wrapper",
+      "category": "Tensor",
       "description": "Concat all input tensors.",
       "attributes": [
         { "name": "test", "type": "int32", "default": 1 }
@@ -40,14 +40,14 @@
         {
           "description": "List of Tensors",
           "name": "inputs",
-          "type": "List[Tensor]"
+          "type": "list[tensor]"
         }
       ],
       "outputs": [
         {
           "description": "Output tensor",
           "name": "concat_value",
-          "type": "Tensor"
+          "type": "tensor"
         }
       ]
     }
