@@ -2,6 +2,12 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "type": "node",
+            "request": "launch",
+            "name": "Launch Test Tennis",
+            "program": "${workspaceFolder}/src/test_tennis.js"
+        },
+        {
             "name": "Launch Program",
             "type": "node",
             "request": "launch",

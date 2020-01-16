@@ -1,0 +1,24 @@
+[
+  {
+    "name": "add",
+    "schema": {
+      "attributes": [
+        { "name": "test", "type": "int32", "default": 1 }
+      ]
+    },
+    "inputs": [
+      {
+        "description": "Input tensor",
+        "name": "LHS",
+        "type": "Tensor"
+      }
+    ],
+    "outputs": [
+      {
+        "description": "Output tensor",
+        "name": "RHS",
+        "type": "Tensor"
+      }
+    ]
+  }
+]
