@@ -1,34 +1,806 @@
 [
   {
-    "name": "add",
+    "name": "_cast",
     "schema": {
-      "category": "Layer",
-      "description": "Y = LHS + RHS",
+      "category": "Custom",
+      "description": "Cast input to `dtype`.",
       "attributes": [
-        { "name": "test", "type": "int32", "default": 1 },
-        { "name": "test2", "type": "enum", "default": "AVG", "enum": ["AVG", "MAX"] }
+        {
+          "description": "",
+          "name": "dtype", "type": "enum",
+          "enum": ["void", "int8", "uint8", "int16", "uint16", "int32", "uint32", "int64", "uint64",
+            "float16", "float32", "float64", "pointer", "char8", "char16", "char32",
+            "unknown8", "unknown16", "unknown32", "unknown64", "unknown128",
+            "bool", "complex32", "complex64", "complex128"]
+        }
       ],
       "inputs": [
         {
-          "description": "Input tensor",
-          "name": "LHS",
-          "type": "tensor"
-        },
-        {
-          "description": "Input tensor",
-          "name": "RHS",
+          "description": "[device]",
+          "name": "x",
           "type": "tensor"
         }
       ],
       "outputs": [
         {
-          "description": "Output tensor",
-          "name": "Y",
+          "description": "[device]",
+          "name": "y",
           "type": "tensor"
         }
       ]
     }
   },
+  {
+    "name": "_copy",
+    "schema": {
+      "category": "Custom",
+      "description": "Copy input to output.",
+      "attributes": [],
+      "inputs": [
+        {
+          "description": "[device]",
+          "name": "x",
+          "type": "tensor"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "[device]",
+          "name": "y",
+          "type": "tensor"
+        }
+      ]
+    }
+  },
+  {
+    "name": "_dims",
+    "schema": {
+      "category": "Custom",
+      "description": "Get input tensor's dims.",
+      "attributes": [],
+      "inputs": [
+        {
+          "description": "[device]",
+          "name": "x",
+          "type": "tensor"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "[host]",
+          "name": "dims",
+          "type": "int32"
+        }
+      ]
+    }
+  },
+  {
+    "name": "_dimshuffle",
+    "schema": {
+      "category": "Transform",
+      "description": "Shuffle value on specific `dim`. \nExample: \n    Do BGR2RGB on NCHW format tensor: dim=1, shuffle = [2, 1, 0].",
+      "attributes": [
+        {
+          "description": "dim in [-x.dims, x.dims).",
+          "name": "dim", "type": "int32"
+        },
+        {
+          "description": "shuffle.size >= 1.",
+          "name": "shuffle", "type": "int32[_]"
+        }
+      ],
+      "inputs": [
+        {
+          "description": "[device]",
+          "name": "x",
+          "type": "tensor"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "[device]",
+          "name": "y",
+          "type": "tensor"
+        }
+      ]
+    }
+  },
+  {
+    "name": "_dragon_conv2d_padding",
+    "schema": {
+      "category": "Custom",
+      "description": "Dragon dynamic padding.",
+      "attributes": [
+        {
+          "description": "",
+          "name": "format", "type": "string"
+        },
+        {
+          "description": "",
+          "name": "stride", "type": "int32[4]", "default": [1, 1, 1, 1]
+        },
+        {
+          "description": "",
+          "name": "dilation", "type": "int32[4]", "default": [1, 1, 1, 1]
+        },
+        {
+          "description": "method in [VALID, SAME_UPPER, SAME_LOWER]",
+          "name": "padding_method", "type": "string", "default": "VALID"
+        },
+        {
+          "description": "",
+          "name": "padding", "type": "int32[4, 2]", "default": [0, 0, 0, 0, 0, 0, 0, 0]
+        }
+      ],
+      "inputs": [
+        {
+          "description": "[device] compuating data, in NCHW(default) or NHWC format.",
+          "name": "x",
+          "type": "[_, _, _, _]"
+        },
+        {
+          "description": "[device] convolution kernel: [output_channels, input_channels, kernel_height, kernel_width].",
+          "name": "w",
+          "type": "[_, _, _, _]"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "[host]",
+          "name": "dynamic_padding",
+          "type": "int32[4, 2]"
+        }
+      ]
+    }
+  },
+  {
+    "name": "_dragon_pooling2d_padding",
+    "schema": {
+      "category": "Custom",
+      "description": "Dragon dynamic padding.",
+      "attributes": [
+        {
+          "description": "",
+          "name": "format", "type": "string"
+        },
+        {
+          "description": "",
+          "name": "ceil", "type": "bool", "default": true
+        }
+      ],
+      "inputs": [
+        {
+          "description": "[device] Compuating data, in NCHW(default) or NHWC format.",
+          "name": "x",
+          "type": "[_, _, _, _]"
+        },
+        {
+          "description": "[host] pooling kernel size.",
+          "name": "ksize",
+          "type": "int32[4]"
+        },
+        {
+          "description": "[host] pooling stirde.",
+          "name": "stride",
+          "type": "int32[4]"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "[host]",
+          "name": "dynamic_padding",
+          "type": "int32[4, 2]"
+        }
+      ]
+    }
+  },
+  {
+    "name": "_expand",
+    "schema": {
+      "category": "Shape",
+      "description": "Return x if dims <= x.dims, else expanded x shape to has dims. First insert front of shape if `inverse` is false.",
+      "attributes": [
+        {
+          "description": "max dim can be add in front.",
+          "name": "front", "type": "int32"
+        },
+        {
+          "description": "max dim can be add in end.",
+          "name": "end", "type": "int32"
+        },
+        {
+          "description": "first add in front if inverse is false.",
+          "name": "inverse", "type": "bool", "default": false
+        }
+      ],
+      "inputs": [
+        {
+          "description": "[device]",
+          "name": "x",
+          "type": "tensor"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "[device]",
+          "name": "y",
+          "type": "tensor"
+        }
+      ]
+    }
+  },
+  {
+    "name": "_limit",
+    "schema": {
+      "category": "Tensor",
+      "description": "y = x if x.shape < `shape`, else center crop x.  \nNote: If shape.size < x.dims, then expand -1 on the x's high dim. \nExample: \n    if x=float32[1, 3, 90, 90], shape=[-1, -1, 80, 80], got y=[1, 3, 80, 80].",
+      "attributes": [
+        {
+          "description": "shape limit, -1 for un-limited dim.",
+          "name": "shape", "type": "int32[_]"
+        }
+      ],
+      "inputs": [
+        {
+          "description": "[device]",
+          "name": "x",
+          "type": "tensor"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "[device]",
+          "name": "y",
+          "type": "tensor"
+        }
+      ]
+    }
+  },
+  {
+    "name": "_mx_pooling2d_padding",
+    "schema": {
+      "category": "Custom",
+      "description": "MXNet dynamic padding.",
+      "attributes": [
+        {
+          "description": "",
+          "name": "format", "type": "string"
+        },
+        {
+          "description": "",
+          "name": "valid", "type": "int32"
+        },
+        {
+          "description": "",
+          "name": "padding", "type": "int32[4, 2]", "default": [0, 0, 0, 0, 0, 0, 0, 0]
+        }
+      ],
+      "inputs": [
+        {
+          "description": "[device] compuating data, in NCHW(default) or NHWC format.",
+          "name": "x",
+          "type": "[_, _, _, _]"
+        },
+        {
+          "description": "[host] pooling kernel size.",
+          "name": "ksize",
+          "type": "int32[4]"
+        },
+        {
+          "description": "[host] pooling stirde.",
+          "name": "stride",
+          "type": "int32[4]"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "[host]",
+          "name": "dynamic_padding",
+          "type": "int32[4, 2]"
+        }
+      ]
+    }
+  },
+  {
+    "name": "_nhwc_center_crop2d",
+    "schema": {
+      "category": "Tensor",
+      "description": "Center crop tensor from given NHWC format tensor.",
+      "attributes": [
+        {
+          "description": "{width, height}",
+          "name": "size", "type": "int32[2]"
+        }
+      ],
+      "inputs": [
+        {
+          "description": "[device]",
+          "name": "x",
+          "type": "[N, H, W, C]"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "[device]",
+          "name": "y",
+          "type": "[N, $size(1), $size(0), C]"
+        }
+      ]
+    }
+  },
+  {
+    "name": "_nhwc_letterbox",
+    "schema": {
+      "category": "Tensor",
+      "description": "Adjust image within letterbox, resize image and pad with outer_value.",
+      "attributes": [
+        {
+          "description": "{width, height}",
+          "name": "size", "type": "int32[1] or int32[2]"
+        },
+        {
+          "description": "resize image method, in [linear=0, cubic=1, nearest=2, hard=3].",
+          "name": "type", "type": "enum",
+          "enum": ["linear", "cubic", "nearest", "hard"]
+        },
+        {
+          "description": "outer value pad image after reiszed.",
+          "name": "outer_value", "type": "float32", "default": 0
+        }
+      ],
+      "inputs": [
+        {
+          "description": "[device]",
+          "name": "x",
+          "type": "[N, H, W, C]"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "[device]",
+          "name": "y",
+          "type": "[N, $size(1), $size(0), C]"
+        }
+      ]
+    }
+  },
+  {
+    "name": "_nhwc_scale_resize2d",
+    "schema": {
+      "category": "Tensor",
+      "description": "Equal scale or hard resize imagel. If size.size == 1, do equal scale image with long edge. If size.size == 2, do hard resize image.",
+      "attributes": [
+        {
+          "description": "{width, height}",
+          "name": "size", "type": "int32[1] or int32[2]"
+        },
+        {
+          "description": "resize image method, in [linear=0, cubic=1, nearest=2, hard=3].",
+          "name": "type", "type": "enum",
+          "enum": ["linear", "cubic", "nearest", "hard"]
+        }
+      ],
+      "inputs": [
+        {
+          "description": "[device]",
+          "name": "x",
+          "type": "[N, H, W, C]"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "[device]",
+          "name": "y",
+          "type": "[N, _, _, C]"
+        }
+      ]
+    }
+  },
+  {
+    "name": "_onnx_pooling2d_padding",
+    "schema": {
+      "category": "Custom",
+      "description": "ONNX dynamic auto padding.",
+      "attributes": [
+        {
+          "description": "in [NOTSET, SAME_UPPER, SAME_LOWER, VALID].",
+          "name": "auto_pad", "type": "string", "default": "NOTSET"
+        },
+        {
+          "description": "",
+          "name": "padding", "type": "int32[4, 2]", "default": [0, 0, 0, 0, 0, 0, 0, 0]
+        }
+      ],
+      "inputs": [
+        {
+          "description": "[device] compuating data, in NCHW format.",
+          "name": "x",
+          "type": "[_, _, _, _]"
+        },
+        {
+          "description": "[host] pooling kernel size.",
+          "name": "ksize",
+          "type": "int32[4]"
+        },
+        {
+          "description": "[host] pooling stirde.",
+          "name": "stride",
+          "type": "int32[4]"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "[host]",
+          "name": "dynamic_padding",
+          "type": "int32[4, 2]"
+        }
+      ]
+    }
+  },
+  {
+    "name": "_reshape",
+    "schema": {
+      "category": "Shape",
+      "description": "Reshape tensor.",
+      "attributes": [
+        {
+          "description": "dest shape, -1 for remaining unspecified dimensions, 0 for equal to input dim.",
+          "name": "shape", "type": "int32[_]"
+        }
+      ],
+      "inputs": [
+        {
+          "description": "[device]",
+          "name": "x",
+          "type": "tensor"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "[device]",
+          "name": "y",
+          "type": "tensor"
+        }
+      ]
+    }
+  },
+  {
+    "name": "_reshape_v2",
+    "schema": {
+      "category": "Shape",
+      "description": "Reshape tensor.",
+      "attributes": [],
+      "inputs": [
+        {
+          "description": "[device]",
+          "name": "x",
+          "type": "tensor"
+        },
+        {
+          "description": "[host] dest shape, -1 for remaining unspecified dimensions, 0 for equal to input dim.",
+          "name": "shape",
+          "type": "int32[_]"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "[device]",
+          "name": "y",
+          "type": "tensor"
+        }
+      ]
+    }
+  },
+  {
+    "name": "_resize2d",
+    "schema": {
+      "category": "Tensor",
+      "description": "Resize tensor to given size, only 2d resize support. Output tensor has shape `size`. s\nNote: $x.dims == $size.size. \nExample: \n    x=[1, 640, 480, 3], size=[-1, 300, 300, -1], ",
+      "attributes": [
+        {
+          "description": "resize image method, in [linear=0, cubic=1, nearest=2, hard=3].",
+          "name": "type", "type": "enum", "default": "linear",
+          "enum": ["linear", "cubic", "nearest", "hard"]
+        }
+      ],
+      "inputs": [
+        {
+          "description": "[device]",
+          "name": "x",
+          "type": "tensor"
+        },
+        {
+          "description": "[host]",
+          "name": "size",
+          "type": "int32[_]"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "[device]",
+          "name": "y",
+          "type": "tensor"
+        }
+      ]
+    }
+  },
+  {
+    "name": "_shape",
+    "schema": {
+      "category": "Custom",
+      "description": "Get input tensor's shape.",
+      "attributes": [],
+      "inputs": [
+        {
+          "description": "[device]",
+          "name": "x",
+          "type": "tensor"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "[host]",
+          "name": "shape",
+          "type": "int32[_]"
+        }
+      ]
+    }
+  },
+  {
+    "name": "_tf_conv2d_padding",
+    "schema": {
+      "category": "Custom",
+      "description": "TensorFlow dynamic padding.",
+      "attributes": [
+        {
+          "description": "in [NCHW, NHWC]",
+          "name": "format", "type": "string"
+        },
+        {
+          "description": "",
+          "name": "stride", "type": "int32[4]", "default": [1, 1, 1, 1]
+        },
+        {
+          "description": "method in [VALID, SAME]",
+          "name": "padding_method", "type": "string"
+        },
+        {
+          "description": "",
+          "name": "dilation", "type": "int32[4]", "default": [1, 1, 1, 1]
+        },
+        {
+          "description": "",
+          "name": "padding", "type": "int32[4, 2]", "default": [0, 0, 0, 0, 0, 0, 0, 0]
+        }
+      ],
+      "inputs": [
+        {
+          "description": "[device] compuating data, in NCHW(default) or NHWC format.",
+          "name": "x",
+          "type": "[_, _, _, _]"
+        },
+        {
+          "description": "[device] convolution kernel: [output_channels, input_channels, kernel_height, kernel_width].",
+          "name": "w",
+          "type": "[_, _, _, _]"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "[host]",
+          "name": "dynamic_padding",
+          "type": "int32[4, 2]"
+        }
+      ]
+    }
+  },
+  {
+    "name": "_tf_pooling2d_padding",
+    "schema": {
+      "category": "Custom",
+      "description": "TensorFlow dynamic padding.",
+      "attributes": [
+        {
+          "description": "in [NCHW, NHWC].",
+          "name": "format", "type": "string"
+        },
+        {
+          "description": "method in [VALID, SAME]",
+          "name": "padding_method", "type": "string"
+        },
+        {
+          "description": "",
+          "name": "padding", "type": "int32[4, 2]", "default": [0, 0, 0, 0, 0, 0, 0, 0]
+        }
+      ],
+      "inputs": [
+        {
+          "description": "[device] Compuating data, in NCHW(default) or NHWC format.",
+          "name": "x",
+          "type": "[_, _, _, _]"
+        },
+        {
+          "description": "[host] pooling kernel size.",
+          "name": "ksize",
+          "type": "int32[4]"
+        },
+        {
+          "description": "[host] pooling stirde.",
+          "name": "stride",
+          "type": "int32[4]"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "[host]",
+          "name": "dynamic_padding",
+          "type": "int32[4, 2]"
+        }
+      ]
+    }
+  },
+  {
+    "name": "_transpose",
+    "schema": {
+      "category": "Transform",
+      "description": "Transpose tenosr with `permute`, like y = numpy.transpose(x, permute)",
+      "attributes": [
+        {
+          "description": "$permute.size == $x.dims.",
+          "name": "permute", "type": "int32[_]"
+        }
+      ],
+      "inputs": [
+        {
+          "description": "[device]",
+          "name": "x",
+          "type": "tensor"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "[device]",
+          "name": "y",
+          "type": "tensor"
+        }
+      ]
+    }
+  },
+  {
+    "name": "abs",
+    "schema": {
+      "category": "Tensor",
+      "description": "y = abs(x)",
+      "attributes": [],
+      "inputs": [
+        {
+          "description": "[device]",
+          "name": "x",
+          "type": "tensor"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "[device]",
+          "name": "y",
+          "type": "tensor"
+        }
+      ]
+    }
+  },
+  {
+    "name": "add",
+    "schema": {
+      "category": "Tensor",
+      "description": "y = lhs + rhs. Add support broadcast.",
+      "attributes": [],
+      "inputs": [
+        {
+          "description": "",
+          "name": "lhs",
+          "type": "tensor"
+        },
+        {
+          "description": "",
+          "name": "rhs",
+          "type": "tensor"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "lhs + rhs",
+          "name": "y",
+          "type": "tensor"
+        }
+      ]
+    }
+  },
+  {
+    "name": "add_bias",
+    "schema": {
+      "category": "Layer",
+      "description": "Add bias on `dim`. Broadcast add. $b.size == $x.shape(dim)",
+      "attributes": [
+        {
+          "description": "in [NCHW, NHWC]",
+          "name": "format", "type": "string"
+        },
+        {
+          "description": "in [-$x.dims, $x.dims)",
+          "name": "dim", "type": "int32"
+        }
+      ],
+      "inputs": [
+        {
+          "description": "[device]",
+          "name": "x",
+          "type": "tensor"
+        },
+        {
+          "description": "[device]",
+          "name": "b",
+          "type": "array"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "[device]",
+          "name": "y",
+          "type": "tensor"
+        }
+      ]
+    }
+  },
+  {
+    "name": "affine_smaple2d",
+    "schema": {
+      "category": "Tensor",
+      "description": "Sample 2d data on x: $y([a, b]) = sample($x(affine * [a, b, 1])). \n`dim` and `dim + 1` mean image's dimensions.",
+      "attributes": [
+        {
+          "description": "resize image method, in [linear=0, cubic=1, nearest=2, hard=3].",
+          "name": "type", "type": "enum",
+          "enum": ["linear", "cubic", "nearest", "hard"]
+        },
+        {
+          "description": "in [-$x.dims, $x.dims)",
+          "name": "dim", "type": "int32", "default": -2
+        },
+        {
+          "description": "sampled value if sample on the over area.",
+          "name": "outer_value", "type": "float", "default": 0
+        }
+      ],
+      "inputs": [
+        {
+          "description": "[device]",
+          "name": "x",
+          "type": "tensor"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "[device]",
+          "name": "y",
+          "type": "tensor"
+        }
+      ]
+    }
+  },
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   {
     "name": "concat",
     "schema": {
@@ -39,14 +811,14 @@
       ],
       "inputs": [
         {
-          "description": "List of Tensors",
+          "description": "[device] list of tensors",
           "name": "inputs",
           "type": "list[tensor]"
         }
       ],
       "outputs": [
         {
-          "description": "Output tensor",
+          "description": "[device] output tensor",
           "name": "concat_value",
           "type": "tensor"
         }

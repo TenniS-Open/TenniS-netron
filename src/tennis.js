@@ -284,6 +284,12 @@ tennis.Node = class {
                     }
                 }
             }
+            if (schema.note) {
+                schema.note = marked(schema.note);
+            }
+            if (schema.example) {
+                schema.example = marked(schema.example);
+            }
             return schema;
         }
         return '';
@@ -329,6 +335,7 @@ tennis.Attribute = class {
         if (this._value === null) {
             this._value = "Not readable.";
         }
+        this._show_value = null;
         this._type = value.proto;
         this._description = null;
         const schema = metadata.getAttributeSchema(operator, name);
@@ -338,13 +345,13 @@ tennis.Attribute = class {
             switch (schema.type) {
                 case "bool":
                 case "boolean":
-                    this._value = this._value ? true : false;
+                    this._show_value = this._value ? true : false;
                     this._type = "bool";
                     break;
                 case "enum":
                     this._type = "enum";
                     try {
-                        this._value = schema.enum[this._value];
+                        this._show_value = schema.enum[this._value];
                     }
                     catch (error) {
                     }
@@ -354,9 +361,13 @@ tennis.Attribute = class {
                 this._visible = false;
             }
             else if (Object.prototype.hasOwnProperty.call(schema, 'default')) {
-                if (this._value == schema.default) {
+                if (this.value == schema.default) {
                     this._visible = false;
                 }
+            }
+            if (this._type == "enum") {
+                // show enum as value : string
+                this._show_value = this._value + " : " + this._show_value;
             }
         }
     }
@@ -374,7 +385,10 @@ tennis.Attribute = class {
     }
 
     get value() {
-        return this._value;
+        if (this._show_value === null) {
+            return this._value;
+        }
+        return this._show_value;
     }
 
     get visible() {
