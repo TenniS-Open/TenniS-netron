@@ -464,6 +464,12 @@ tennis.Node = class {
 
     /**
      * 
+     * @return {{}} params
+     */
+    get params() { return this._params; }
+
+    /**
+     * 
      * @param {name} param 
      */
     has(param) {
@@ -521,7 +527,7 @@ tennis.Prototype =  class {
         let part1 = this._dtype === null ? "" : tennis.dtype.type_str(this._dtype);
         let part2 = "";
         if (this._shape === null) {
-            part2 = part1.length > 0 ? " tensor" : "tensor";
+            part2 = part1.length > 0 ? "[...]" : "tensor";
         } else if (this._shape.length > 0) {
             part2 += "[";
             for (let i = 0; i < this._shape.length; ++i) {

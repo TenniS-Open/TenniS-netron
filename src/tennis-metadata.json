@@ -5,7 +5,8 @@
       "category": "Layer",
       "description": "Y = LHS + RHS",
       "attributes": [
-        { "name": "test", "type": "int32", "default": 1 }
+        { "name": "test", "type": "int32", "default": 1 },
+        { "name": "test2", "type": "enum", "default": "AVG", "enum": ["AVG", "MAX"] }
       ],
       "inputs": [
         {

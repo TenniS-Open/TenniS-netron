@@ -181,6 +181,9 @@ tennis.Node = class {
         this._outputs = [];
         this._chain = [];
 
+        /**
+         * add input output info
+         */
         let schema = this._metadata.getSchema(this._operator)
         let schema_inputs = [];
         let schema_outputs = [];
@@ -225,6 +228,15 @@ tennis.Node = class {
             this._outputs.push(new tennis.Parameter(output.name, true, [
                 new tennis.Argument(node, output.type, output.description)
             ]));
+        }
+
+        /**
+         * add attrubite
+         */
+        for (let name in node.params) {
+            if (name[0] == '#') continue;
+            let value = node.get(name);
+            this._attributes.push(new tennis.Attribute(metadata, node.op, name, value));
         }
     }
 
@@ -304,22 +316,39 @@ tennis.Node = class {
 };
 
 tennis.Attribute = class {
-
+    /**
+     * 
+     * @param {tennis.Metadata} metadata 
+     * @param {string} operator 
+     * @param {string} name 
+     * @param {ts.Tensor} value 
+     */
     constructor(metadata, operator, name, value) {
         this._name = name;
-        this._value = value;
+        this._value = value.value;
+        if (this._value === null) {
+            this._value = "Not readable.";
+        }
+        this._type = value.proto;
+        this._description = null;
         const schema = metadata.getAttributeSchema(operator, name);
         if (schema) {
-            this._type = schema.type || '';
-            switch (this._type) {
-                case 'int32': {
-                    this._value = parseInt(this._value, 10);
+            this._description = schema.description;
+            // update value, based on schema type
+            switch (schema.type) {
+                case "bool":
+                case "boolean":
+                    this._value = this._value ? true : false;
+                    this._type = "bool";
                     break;
-                }
-                case 'float32': {
-                    this._value = parseFloat(this._value);
+                case "enum":
+                    this._type = "enum";
+                    try {
+                        this._value = schema.enum[this._value];
+                    }
+                    catch (error) {
+                    }
                     break;
-                }
             }
             if (Object.prototype.hasOwnProperty.call(schema, 'visible') && !schema.visible) {
                 this._visible = false;
@@ -330,6 +359,10 @@ tennis.Attribute = class {
                 }
             }
         }
+    }
+
+    get description() {
+        return this._description;
     }
 
     get name() {
@@ -363,7 +396,7 @@ tennis.Tensor = class {
     }
 
     get kind() {
-        return 'Initializer';
+        return 'Constant';
     }
 
     get name() {
@@ -438,54 +471,6 @@ tennis.TensorShape = class {
         return '';
     }
 };
-
-tennis.Weights = class {
-
-    constructor(buffer) {
-        this._buffer = buffer;
-        this._dataView = new DataView(buffer.buffer, buffer.byteOffset, buffer.byteLength);
-        this._position = 0;
-        const major = this.int32();
-        const minor = this.int32();
-        const revision = this.int32();
-        this._seen = ((major * 10 + minor) >= 2) ? this.int64() : this.int32();
-        const transpose = (major > 1000) || (minor > 1000);
-        if (transpose) {
-            throw new tennis.Error("Unsupported transpose weights file version '" + [ major, minor, revision ].join('.') + "'.");
-        }
-    }
-
-    int32() {
-        const position = this._position;
-        this.seek(4);
-        return this._dataView.getInt32(position, true);
-    }
-
-    int64() {
-        let hi = this.int32();
-        let lo = this.int32();
-        return new long.Long(hi, lo, true).toNumber();
-    }
-
-    bytes(length) {
-        const position = this._position;
-        this.seek(length);
-        return this._buffer.subarray(position, this._position);
-    }
-
-    seek(offset) {
-        this._position += offset;
-        if (this._position > this._buffer.length) {
-            throw new tennis.Error('Expected ' + (this._position - this._buffer.length) + ' more bytes. The file might be corrupted. Unexpected end of file.');
-        }
-    }
-
-    validate() {
-        if (this._position !== this._buffer.length) {
-            throw new tennis.Error('Invalid weights size.')
-        }
-    }
-}
 
 tennis.Metadata = class {
 
