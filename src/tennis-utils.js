@@ -39,8 +39,17 @@ tennis.Stream = class {
      * @return {number} 
      */
     int64() {
-        let high = this.int32();
-        let low = this.int32();
+        let high = this.uint32();
+        let low = this.uint32();
+        return new long.Long(high, low, false).toNumber();
+    }
+
+    /**
+     * @return {number} 
+     */
+    uint64() {
+        let high = this.uint32();
+        let low = this.uint32();
         return new long.Long(high, low, true).toNumber();
     }
 
@@ -338,7 +347,7 @@ tennis.Tensor = class {
         case tennis.dtype.UINT32:
             return this._decode_core(function() {return stream.uint32(); });
         case tennis.dtype.UINT64:
-            return this._decode_core(function() {return stream.int64(); });
+            return this._decode_core(function() {return stream.uinst64(); });
         case tennis.dtype.FLOAT32:
             return this._decode_core(function() {return stream.float32(); });
         case tennis.dtype.FLOAT64:
@@ -365,6 +374,96 @@ tennis.Tensor = class {
             }
         }
         return this._value;
+    }
+
+    _context() {
+        let context = {};
+        context.stream = new tennis.Stream(this._data);
+        let decoder = null;
+        switch (this._dtype) {
+            case tennis.dtype.INT8:
+                decoder = function(stream) {return stream.int8(); }; break;
+            case tennis.dtype.INT16:
+                decoder = function(stream) {return stream.int16(); }; break;
+            case tennis.dtype.INT32:
+                decoder = function(stream) {return stream.int32(); }; break;
+            case tennis.dtype.INT64:
+                decoder = function(stream) {return stream.int64(); }; break;
+            case tennis.dtype.UINT8:
+                decoder = function(stream) {return stream.uint8(); }; break;
+            case tennis.dtype.UINT16:
+                decoder = function(stream) {return stream.uint16(); }; break;
+            case tennis.dtype.UINT32:
+                decoder = function(stream) {return stream.uint32(); }; break;
+            case tennis.dtype.UINT64:
+                decoder = function(stream) {return stream.uint64(); }; break;
+            case tennis.dtype.FLOAT32:
+                decoder = function(stream) {return stream.float32(); }; break;
+            case tennis.dtype.FLOAT64:
+                decoder = function(stream) {return stream.float64(); }; break;
+            case tennis.dtype.BOOLEAN:
+                decoder = function(stream) {return stream.uint8(); }; break;
+            }
+        if (decoder === null) {
+            return null;
+        }
+        context.shape = this._shape;
+        context.next = decoder;
+        context.count = 0;
+        context.limit = Number.MAX_SAFE_INTEGER;
+
+        return context;
+    }
+
+    get viewable() {
+        return (false ||
+            this._dtype == tennis.dtype.INT8 ||
+            this._dtype == tennis.dtype.INT16 ||
+            this._dtype == tennis.dtype.INT32 ||
+            this._dtype == tennis.dtype.INT64 ||
+            this._dtype == tennis.dtype.UINT8 ||
+            this._dtype == tennis.dtype.UINT16 ||
+            this._dtype == tennis.dtype.UINT32 ||
+            this._dtype == tennis.dtype.UINT64 ||
+            this._dtype == tennis.dtype.FLOAT32 ||
+            this._dtype == tennis.dtype.FLOAT64 ||
+            this._dtype == tennis.dtype.BOOLEAN);
+    }
+
+    _view(context, dim=0) {
+        if (dim >= context.shape.length) {
+            return context.next(context.stream);
+        }
+        let array = [];
+        const size = context.shape[dim];
+        if (dim == context.shape.length - 1) {
+            for (let i = 0; i < size; ++i) {
+                if (context.count >= context.limit) {
+                    array.push("...");
+                    return array;
+                }
+                array.push(context.next(context.stream));
+                context.count++;
+            }
+        } else {
+            for (let i = 0; i < size; ++i) {
+                if (context.count >= context.limit) {
+                    array.push("...");
+                    return array;
+                }
+                array.push(this._view(context, dim + 1))
+            }
+        }
+        return array;
+    }
+
+    view(limit=null) {
+        let context = this._context();
+        if (context === null) return null;
+        if (!(limit === null)) {
+            context.limit = limit;
+        }
+        return this._view(context);
     }
 
     /**

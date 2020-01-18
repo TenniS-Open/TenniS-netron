@@ -134,7 +134,7 @@ tennis.Argument = class {
         this._initializer = initializer || null;
         if (!this._initializer) {
             if (node.op == "<const>") {
-                this._initializer = new tennis.Tensor(node.get("value"));
+                this._initializer = new tennis.Tensor(node.get("value"), node.name);
             }
         }
     }
@@ -402,11 +402,13 @@ tennis.Tensor = class {
      * 
      * @param {ts.Tensor} tensor 
      */
-    constructor(tensor) {
+    constructor(tensor, name=null) {
         this._type = new tennis.TensorType(
             ts.dtype.type_str(tensor.dtype),
             new tennis.TensorShape(tensor.shape));
-        this._value = tensor.value;
+        // this._value = tensor.value;  // do not decode by default
+        this._name = name || '';
+        this._tensor = tensor;
     }
 
     get kind() {
@@ -414,7 +416,7 @@ tennis.Tensor = class {
     }
 
     get name() {
-        return '';
+        return this._name;
     }
 
     get type() {
@@ -422,20 +424,23 @@ tennis.Tensor = class {
     }
 
     get state() {
-        if (this._value === null)
+        if (this._tensor.viewable)
         {
-            return 'Tensor data is empty.';
+            return null;
         }
-        return null;
+        return "Tensor data is not readable."
     }
 
     get value() {
-        return this._value;
+        return this._tensor.view();
     }
 
     toString() {
-        const value = this._value;
-        return JSON.stringify(value, null, 4);
+        const value = this._tensor.view(1000);
+        if (value === null) {
+            return "";
+        }
+        return JSON.stringify(value, null, 2);
     }
 };
 
