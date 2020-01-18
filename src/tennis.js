@@ -42,8 +42,18 @@ tennis.Model = class {
 
     constructor(metadata, stream) {
         this._graphs = [];
-        this._graphs.push(new tennis.Graph(metadata, stream));
+        this._metadata = [];
+
+        let graph = new tennis.Graph(metadata, stream);
+        this._graphs.push(graph);
+
+        this._metadata.push({ name: "version", value: "0x" + graph.mask.toString(16)});
     }
+
+    /**
+     * @return {number}
+     */
+    get metadata() { return this._metadata; }
 
     get format() {
         return 'tennis';
@@ -62,6 +72,7 @@ tennis.Graph = class {
         this._nodes = [];
 
         let graph = new ts.Module(stream);
+        this._mask = graph.mask;
 
         for (const input of graph.inputs) {
             this._inputs.push(new tennis.Parameter(input.name, true, [new tennis.Argument(input, input.proto, "", null)]))
@@ -79,6 +90,11 @@ tennis.Graph = class {
             this._nodes.push(draw_node);
         }
     }
+
+    /**
+     * @return {number}
+     */
+    get mask() { return this._mask; }
 
     get inputs() {
         return this._inputs;
@@ -361,7 +377,8 @@ tennis.Attribute = class {
                 this._visible = false;
             }
             else if (Object.prototype.hasOwnProperty.call(schema, 'default')) {
-                if (this.value == schema.default) {
+                if (this.value == schema.default ||
+                    this.value.toString() == schema.default.toString()) {
                     this._visible = false;
                 }
             }

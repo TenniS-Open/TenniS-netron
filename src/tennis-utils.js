@@ -655,6 +655,7 @@ tennis.Module = class {
         if (mask != 0x19910929) {
             throw tennis.Error("TenniS Module not valid.");
         }
+        this._mask = mask;
         stream.skip(120);
         let inputs = stream.int32_array();
         let outputs = stream.int32_array();
@@ -669,6 +670,11 @@ tennis.Module = class {
             this._outputs.push(this._nodes[i]);
         }
     }
+
+    /**
+     * @return {number}
+     */
+    get mask() { return this._mask; }
 
     /**
      * @return {[tennis.Node]} inputs
