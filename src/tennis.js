@@ -227,12 +227,14 @@ tennis.Node = class {
             if (i >= node.inputs.length) break;
             const input = schema_inputs[i];
             if (input.option == "variadic") {
-                let args = node.inputs.slice(i, node.inputs.length).map((v, j) => {
+                let left_schema = schema_inputs.length - i;
+                let left_input = node.inputs.length - i;
+                let variadic_count = left_input - left_schema + 1;
+                let args = node.inputs.slice(i, i + variadic_count).map((v, j) => {
                     return new tennis.Argument(node.input(j), null, null, null);
                 });
                 this._inputs.push(new tennis.Parameter(input.name, true, args));
-                i = node.inputs.length;
-                break;
+                i += variadic_count - 1;
             }
             this._inputs.push(new tennis.Parameter(input.name, true, [
                 new tennis.Argument(node.input(i), input.type, input.description)
@@ -476,10 +478,29 @@ tennis.Tensor = class {
         return this._tensor.view();
     }
 
+    _int_array_string() {
+        let str = "[";
+        return str;
+    }
+
     toString() {
-        const value = this._tensor.view(1000);
+        const limit = 1000;
+        const value = this._tensor.view(limit);
         if (value === null) {
             return "";
+        }
+        if (false ||
+                this._tensor.dtype == ts.dtype.INT8 ||
+                this._tensor.dtype == ts.dtype.INT16 ||
+                this._tensor.dtype == ts.dtype.INT32 ||
+                this._tensor.dtype == ts.dtype.INT64 ||
+                this._tensor.dtype == ts.dtype.UINT8 ||
+                this._tensor.dtype == ts.dtype.UINT16 ||
+                this._tensor.dtype == ts.dtype.UINT32 ||
+                this._tensor.dtype == ts.dtype.UINT64) {
+            if (this._tensor.shape.length == 1 && this._tensor.shape[0] <= limit) {
+                return JSON.stringify(value, null); // parse to single line
+            }
         }
         return JSON.stringify(value, null, 2);
     }

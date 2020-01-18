@@ -268,7 +268,7 @@
         },
         {
           "description": "",
-          "name": "valid", "type": "int32"
+          "name": "valid", "type": "bool"
         },
         {
           "description": "",
@@ -696,19 +696,19 @@
       "attributes": [],
       "inputs": [
         {
-          "description": "",
+          "description": "[device]",
           "name": "lhs",
           "type": "tensor"
         },
         {
-          "description": "",
+          "description": "[device]",
           "name": "rhs",
           "type": "tensor"
         }
       ],
       "outputs": [
         {
-          "description": "lhs + rhs",
+          "description": "[device] lhs + rhs",
           "name": "y",
           "type": "tensor"
         }
@@ -822,7 +822,7 @@
       "attributes": [
         {
           "description": "data channel, in [-$x.dims, $x.dims)",
-          "name": "dim", "type": "int32"
+          "name": "dim", "type": "int32", "default": 1
         },
         {
           "description": "incase of divide zero.",
@@ -863,7 +863,7 @@
       "attributes": [
         {
           "description": "data channel, in [-$x.dims, $x.dims)",
-          "name": "dim", "type": "int32"
+          "name": "dim", "type": "int32", "default": 1
         }
       ],
       "inputs": [
@@ -1054,6 +1054,64 @@
           "description": "[device]",
           "name": "y",
           "type": "[N, _, _, _]"
+        }
+      ],
+      "examples": [
+        {
+          "code": "pad_h = pad_h_top + pad_h_bottom; \npad_w = pad_w_left + pad_h_right; \noutput_h = floor((height + pad_h - (dilation_h * (kernel_h - 1) + 1)) / stride_h + 1); \noutput_w = floor((width + pad_w - (dilation_w * (kernel_w - 1) + 1)) / stride_w + 1);",
+          "summary": "output_shape"
+        }
+      ]
+    }
+  },
+  {
+    "name": "conv2d_quantized",
+    "schema": {
+      "category": "Layer",
+      "description": "Quantized 2D Convolution.",
+      "attributes": [
+        {
+          "description": "in [NCHW, NHWC]",
+          "name": "format", "type": "string", "default": "NCHW"
+        },
+        {
+          "description": "",
+          "name": "padding", "type": "int32[4, 2]", "default": [0, 0, 0, 0, 0, 0, 0, 0]
+        },
+        {
+          "description": "",
+          "name": "padding_value", "type": "float32", "default": 0
+        },
+        {
+          "description": "",
+          "name": "stride", "type": "int32[4]", "default": [1, 1, 1, 1]
+        },
+        {
+          "description": "",
+          "name": "dilation", "type": "int32[4]", "default": [1, 1, 1, 1]
+        },
+        {
+          "description": "how to dequantize after convolution. dequantize_scales.size == w.shape(0)",
+          "name": "dequantize_scales", "type": "float32[_]"
+        }
+      ],
+      "inputs": [
+        {
+          "description": "[device] compuating data, in NCHW(default) or NHWC format.",
+          "name": "x",
+          "type": "int8[N, _, _, _]"
+        },
+        {
+          "description": "[device] convolution kernel: [output_channels, input_channels, kernel_height, kernel_width].",
+          "name": "w",
+          "type": "int8[_, _, _, _]"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "[device]",
+          "name": "y",
+          "type": "float32[N, _, _, _]"
         }
       ],
       "examples": [
@@ -1299,19 +1357,19 @@
       "attributes": [],
       "inputs": [
         {
-          "description": "",
+          "description": "[device]",
           "name": "lhs",
           "type": "tensor"
         },
         {
-          "description": "",
+          "description": "[device]",
           "name": "rhs",
           "type": "tensor"
         }
       ],
       "outputs": [
         {
-          "description": "lhs / rhs",
+          "description": "[device] lhs / rhs",
           "name": "y",
           "type": "tensor"
         }
@@ -1379,7 +1437,7 @@
       "attributes": [
         {
           "description": "reduction axes after `dim`.",
-          "name": "dims", "type": "int32"
+          "name": "dim", "type": "int32", "default": 1
         }
       ],
       "inputs": [
@@ -1460,7 +1518,7 @@
       "attributes": [
         {
           "description": "data channel, in [-$x.dims, $x.dims)",
-          "name": "dim", "type": "int32"
+          "name": "dim", "type": "int32", "default": 1
         },
         {
           "description": "incase of divide zero.",
@@ -1535,8 +1593,733 @@
       ]
     }
   },
+  {
+    "name": "gatherv2",
+    "schema": {
+      "category": "Transform",
+      "description": "Index the last axis (if indices.shape[-1] == x.rank) or slice (indices.shape[-1] < x.rank) according to the indices.shape[-1]. \nOutput Shape indices.shape[:-1] + x.shape[indices.shape[-1]:].",
+      "attributes": [],
+      "inputs": [
+        {
+          "description": "[device]",
+          "name": "x",
+          "type": "tensor"
+        },
+        {
+          "description": "[host]",
+          "name": "indices",
+          "type": "int32[_]"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "[device]",
+          "name": "y",
+          "type": "tensor"
+        }
+      ]
+    }
+  },
+  {
+    "name": "gemm",
+    "schema": {
+      "category": "Layer",
+      "description": "Do gemm(transA, transB, M, N, K, alpha, a, _, b, _, beta, C, _).",
+      "attributes": [
+        {
+          "description": "",
+          "name": "alpha", "type": "float", "default": 1
+        },
+        {
+          "description": "",
+          "name": "beta", "type": "float", "default": 1
+        },
+        {
+          "description": "",
+          "name": "transA", "type": "bool", "default": false
+        },
+        {
+          "description": "",
+          "name": "transB", "type": "bool", "default": false
+        }
+      ],
+      "inputs": [
+        {
+          "description": "[device] transA ? [K, M] : [M, K]",
+          "name": "a",
+          "type": "matrix"
+        },
+        {
+          "description": "[device] transB ? [N, K] : [K, N]",
+          "name": "b",
+          "type": "matrix"
+        },
+        {
+          "description": "[device] can be broadcast to [M, N]",
+          "name": "c",
+          "type": "array"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "[device] [M, N]",
+          "name": "y",
+          "type": "matrix"
+        }
+      ],
+      "examples": [
+        {
+          "code": "A' = transpose(A) if transA else A\nB' = transpose(B) if transB else B\nCompute Y = alpha * A' * B' + beta * C,\nwhere input tensor A has shape (M, K) or (K, M),\ninput tensor B has shape (K, N) or (N, K),\ninput tensor C is broadcastable to shape (M, N),\nand output tensor Y has shape (M, N).\nA will be transposed before doing the computation\nif attribute transA is non-zero, same for B and transB.\nThis operator supports unidirectional broadcasting\n(tensor C should be unidirectional broadcastable\nto tensor A * B); \n",
+          "summary": ""
+        }
+      ]
+    }
+  },
+  {
+    "name": "global_pooling2d",
+    "schema": {
+      "category": "Pool",
+      "description": "Global pooling.",
+      "attributes": [
+        {
+          "description": "in [NCHW, NHWC]",
+          "name": "format", "type": "string", "default": "NCHW"
+        },
+        {
+          "description": "",
+          "name": "type", "type": "enum",
+          "enum": ["max", "avg"]
+        }
+      ],
+      "inputs": [
+        {
+          "description": "[device] Compuating data, in NCHW(default) or NHWC format.",
+          "name": "x",
+          "type": "[N, _, _, _]"
+        },
+        {
+          "description": "[host] pooling kernel size.",
+          "name": "ksize",
+          "type": "int32[4]"
+        },
+        {
+          "description": "[host] pooling stirde.",
+          "name": "stride",
+          "type": "int32[4]"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "[device]",
+          "name": "y",
+          "type": "[N, _, _, _]"
+        }
+      ]
+    }
+  },
+  {
+    "name": "inner_prod",
+    "schema": {
+      "category": "Layer",
+      "description": "Do y = x \\times w",
+      "attributes": [
+        {
+          "description": "if transpose on w before \\times.",
+          "name": "transpose", "type": "bool", "default": false
+        }
+      ],
+      "inputs": [
+        {
+          "description": "[device] flatten x if x.dims > 2.",
+          "name": "x",
+          "type": "matrix"
+        },
+        {
+          "description": "[device]",
+          "name": "w",
+          "type": "matrix"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "[device]",
+          "name": "y",
+          "type": "matrix"
+        }
+      ]
+    }
+  },
+  {
+    "name": "l2_norm",
+    "schema": {
+      "category": "Normalization",
+      "description": "Do L2 norm on `dim` axis. \nFor 1-D NDArray, it computes: out = data / sqrt(sum(data ** 2) + eps). \n For N-D NDArray, if the input array has shape (N, N, ..., N): \nfor dim in 2...N \nfor i in 0...N \nout[.....,i,...] = take(out, indices=i, axis=dim) / sqrt(sum(take(out, indices=i, axis=dim) ** 2) + eps)",
+      "attributes": [
+        {
+          "description": "data channel, in [-$x.dims, $x.dims)",
+          "name": "dim", "type": "int32"
+        },
+        {
+          "description": "incase of divide zero.",
+          "name": "epsilon", "type": "float32", "default": 1e-5
+        }
+      ],
+      "inputs": [
+        {
+          "description": "[device]",
+          "name": "x",
+          "type": "tensor"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "[device] y.shape == x.shape.",
+          "name": "y",
+          "type": "tensor"
+        }
+      ]
+    }
+  },
+  {
+    "name": "leaky_relu",
+    "schema": {
+      "category": "Activation",
+      "description": "y = x > 0 ? x : scale * x",
+      "attributes": [
+        {
+          "description": "",
+          "name": "scale", "type": "float32"
+        }
+      ],
+      "inputs": [
+        {
+          "description": "[device]",
+          "name": "x",
+          "type": "tensor"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "[device] y.shape == x.shape.",
+          "name": "y",
+          "type": "tensor"
+        }
+      ]
+    }
+  },
+  {
+    "name": "max",
+    "schema": {
+      "category": "Tensor",
+      "description": "Got max value of x on `dim` axis.",
+      "attributes": [
+        {
+          "description": "",
+          "name": "dim", "type": "int32"
+        },
+        {
+          "description": "if retain reduced dimensions with length 1.",
+          "name": "keep_dims", "type": "bool", "default": true
+        }
+      ],
+      "inputs": [
+        {
+          "description": "[device]",
+          "name": "x",
+          "type": "tensor"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "[device] `[x.shape[:dim], 1, x.shape[dim+1:]]` if `keep_dims` else `[x.shape[:dim], x.shape[dim+1:]]`",
+          "name": "y",
+          "type": "tensor"
+        }
+      ]
+    }
+  },
+  {
+    "name": "maximum",
+    "schema": {
+      "category": "Tensor",
+      "description": "y = max(lhs, rhs). Support broadcast.",
+      "attributes": [],
+      "inputs": [
+        {
+          "description": "[device]",
+          "name": "lhs",
+          "type": "tensor"
+        },
+        {
+          "description": "[device]",
+          "name": "rhs",
+          "type": "tensor"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "[device] max(lhs, rhs)",
+          "name": "y",
+          "type": "tensor"
+        }
+      ]
+    }
+  },
+  {
+    "name": "mul",
+    "schema": {
+      "category": "Tensor",
+      "description": "`y = lhs \\mul rhs`. Support broadcast.",
+      "attributes": [],
+      "inputs": [
+        {
+          "description": "[device]",
+          "name": "lhs",
+          "type": "tensor"
+        },
+        {
+          "description": "[device]",
+          "name": "rhs",
+          "type": "tensor"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "[device] `lhs \\mul rhs`",
+          "name": "y",
+          "type": "tensor"
+        }
+      ]
+    }
+  },
+  {
+    "name": "non_max_suppression_v3",
+    "schema": {
+      "category": "Tensor",
+      "description": "`y = lhs \\mul rhs`. Support broadcast.",
+      "attributes": [
+        {
+          "description": "output bbox number, <= `N`",
+          "name": "max_output_size", "type": "int32"
+        },
+        {
+          "description": "min overlap area to select bbox to fuse.",
+          "name": "iou_threshold", "type": "float"
+        },
+        {
+          "description": "threshold for deciding when to remove boxes based on score.",
+          "name": "score_threshold", "type": "float"
+        },
+        {
+          "description": "in [xyxy, xywh], representing bbox area",
+          "name": "mode", "type": "string", "default": "xyxy"
+        }
+      ],
+      "inputs": [
+        {
+          "description": "[device]",
+          "name": "bbox",
+          "type": "[N, 4]"
+        },
+        {
+          "description": "[device]",
+          "name": "socres",
+          "type": "[N]"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "[device] selected indices, -1 for no selection.",
+          "name": "y",
+          "type": "int32[_]"
+        }
+      ]
+    }
+  },
+  {
+    "name": "norm_image",
+    "schema": {
+      "category": "Normalization",
+      "description": "Norm image with mean and std_dev. For each $x_i$ of n-th image run：$x_i = (x_i - mean(x_i)) / (std_dev(x_i) + epsilon)$.",
+      "attributes": [
+        {
+          "description": "incase of divide zero.",
+          "name": "epsilon", "type": "float32", "default": 1e-5
+        }
+      ],
+      "inputs": [
+        {
+          "description": "[device] first axes represent value has N images.",
+          "name": "x",
+          "type": "[N, ...]"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "[device] normalized images.",
+          "name": "y",
+          "type": "[N, ...]"
+        }
+      ]
+    }
+  },
+  {
+    "name": "pad",
+    "schema": {
+      "category": "Tensor",
+      "description": "Pad `padding_value` on input tensor. Support neg `padding` for crop tensor.",
+      "attributes": [
+        {
+          "description": "",
+          "name": "padding_value", "type": "float32", "default": 0
+        }
+      ],
+      "inputs": [
+        {
+          "description": "[device]",
+          "name": "x",
+          "type": "tensor"
+        },
+        {
+          "description": "[host] K == x.dims",
+          "name": "padding",
+          "type": "int32[K, 2]"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "[device]",
+          "name": "y",
+          "type": "tensor"
+        }
+      ]
+    }
+  },
+  {
+    "name": "pooling2d",
+    "schema": {
+      "category": "Pool",
+      "description": "2D pooling.",
+      "attributes": [
+        {
+          "description": "in [NCHW, NHWC]",
+          "name": "format", "type": "string", "default": "NCHW"
+        },
+        {
+          "description": "in [max=0, avg=1]",
+          "name": "type", "type": "enum",
+          "enum": ["max", "avg"]
+        },
+        {
+          "description": "",
+          "name": "padding", "type": "int32[4, 2]", "default": [0, 0, 0, 0, 0, 0, 0, 0]
+        },
+        {
+          "description": "in [black=0, copy=1, loop=2, white=3]. Black for caffe style. White for dragon style (fixed denominator for avg).",
+          "name": "padding_type", "type": "enum", "default": "black",
+          "enum": ["black", "copy", "loop", "white"]
+        },
+        {
+          "description": "",
+          "name": "ksize", "type": "int32[4]", "default": [1, 1, 1, 1]
+        },
+        {
+          "description": "",
+          "name": "stride", "type": "int32[4]", "default": [1, 1, 1, 1]
+        }
+      ],
+      "inputs": [
+        {
+          "description": "[device] Compuating data, in NCHW(default) or NHWC format.",
+          "name": "x",
+          "type": "[N, _, _, _]"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "[device]",
+          "name": "y",
+          "type": "[N, _, _, _]"
+        }
+      ]
+    }
+  },
+  {
+    "name": "pooling2d_v2",
+    "schema": {
+      "category": "Pool",
+      "description": "2D pooling.",
+      "attributes": [
+        {
+          "description": "in [NCHW, NHWC]",
+          "name": "format", "type": "string", "default": "NCHW"
+        },
+        {
+          "description": "in [max=0, avg=1]",
+          "name": "type", "type": "enum",
+          "enum": ["max", "avg"]
+        },
+        {
+          "description": "in [black=0, copy=1, loop=2, white=3]. Black for caffe style. White for onnx default style (fixed denominator for avg).",
+          "name": "padding_type", "type": "enum", "default": "black",
+          "enum": ["black", "copy", "loop", "white"]
+        }
+      ],
+      "inputs": [
+        {
+          "description": "[device] Compuating data, in NCHW(default) or NHWC format.",
+          "name": "x",
+          "type": "[N, _, _, _]"
+        },
+        {
+          "description": "[host] padding edge.",
+          "name": "padding",
+          "type": "int32[4, 2]"
+        },
+        {
+          "description": "[host] pooling kernel size.",
+          "name": "ksize",
+          "type": "int32[4]"
+        },
+        {
+          "description": "[host] pooling stirde.",
+          "name": "stride",
+          "type": "int32[4]"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "[device]",
+          "name": "y",
+          "type": "[N, _, _, _]"
+        }
+      ]
+    }
+  },
+  {
+    "name": "prelu",
+    "schema": {
+      "category": "Activation",
+      "description": "y = x > 0 ? x : slope * x",
+      "attributes": [
+        {
+          "description": "dimension of slope.",
+          "name": "dim", "type": "int32", "default": 1
+        }
+      ],
+      "inputs": [
+        {
+          "description": "[device]",
+          "name": "x",
+          "type": "tensor"
+        },
+        {
+          "description": "[device] array.size == x.shape(dim).",
+          "name": "slope",
+          "type": "array"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "[device] y.shape == x.shape.",
+          "name": "y",
+          "type": "tensor"
+        }
+      ]
+    }
+  },
+  {
+    "name": "prewhiten",
+    "schema": {
+      "category": "Normalization",
+      "description": "Prewhiten images.",
+      "attributes": [
+        {
+          "description": "incase of divide zero.",
+          "name": "epsilon", "type": "float32", "default": 1e-5
+        }
+      ],
+      "inputs": [
+        {
+          "description": "[device] first axes represent value has N images.",
+          "name": "x",
+          "type": "[N, ...]"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "[device] prewhiten images.",
+          "name": "y",
+          "type": "[N, ...]"
+        }
+      ],
+      "examples": [
+        {
+          "code": "template <typename T>\nvoid prewhiten(T *data, size_t len)\n{\n    double mean = 0;\n    double std_dev = 0;\n    T *at= nullptr;\n\n    at = data;\n    for (size_t i = 0; i < len; ++i, ++at) mean += *at;\n    mean /= len;\n\n    at = data;\n    for (size_t i = 0; i < len; ++i, ++at) std_dev += (*at - mean) * (*at - mean);\n    std_dev = std::sqrt(std_dev / len);\n    std_dev = std::max<T>(std_dev, 1 / std::sqrt(len));\n    double std_dev_rec = 1 / std_dev;\n\n    at = data;\n    for (size_t i = 0; i < len; ++i, ++at) {\n        *at -= mean;\n        *at *= std_dev_rec;\n    }\n}\n",
+          "summary": "implementation example"
+        }
+      ]
+    }
+  },
+  {
+    "name": "proposal",
+    "schema": {
+      "category": "Tensor",
+      "description": "See [Dragon proposal](http://dragon.seetatech.com/api/python/contents/operators/contrib/rcnn).",
+      "attributes": [
+        {
+          "description": "The strides of anchors.",
+          "name": "strides", "type": "int32[_]"
+        },
+        {
+          "description": "The ratios of anchors.",
+          "name": "ratios", "type": "float32[_]"
+        },
+        {
+          "description": "The scales of anchors.",
+          "name": "scales", "type": "float32[_]"
+        },
+        {
+          "description": "The number of anchors before nms.",
+          "name": "pre_nms_top_n", "type": "int32", "default": 6000
+        },
+        {
+          "description": "The number of anchors after nms.",
+          "name": "post_nms_top_n", "type": "int32", "default": 300
+        },
+        {
+          "description": "The threshold of nms.",
+          "name": "nms_thresh", "type": "float32", "default": 0.7
+        },
+        {
+          "description": "The min size of anchors.",
+          "name": "min_size", "type": "int32", "default": 16
+        },
+        {
+          "description": "Finest level of the FPN pyramid.",
+          "name": "min_level", "type": "int32", "default": 2
+        },
+        {
+          "description": "Coarsest level of the FPN pyramid.",
+          "name": "max_level", "type": "int32", "default": 5
+        },
+        {
+          "description": "The baseline scale of mapping policy.",
+          "name": "canonical_scale", "type": "int32", "default": 224
+        },
+        {
+          "description": "Heuristic level of the canonical scale.",
+          "name": "canonical_level", "type": "int32", "default": 4
+        }
+      ],
+      "inputs": [
+        {
+          "description": "[device] list[scores], length like strides",
+          "name": "inputs",
+          "type": "list[tensor]",
+          "option": "variadic"
+        },
+        {
+          "description": "[device] [1, A, 4, K], A = number of anchors, K = feature map's height * width",
+          "name": "prob",
+          "type": "tensor"
+        },
+        {
+          "description": "[device] [1, A, K], A = number of anchors, K = feature map's height * width",
+          "name": "bbox",
+          "type": "tensor"
+        },
+        {
+          "description": "[host] conatins [H, W, scale]. `H` and `W is input image size. `scale` is they scale value between input image and orignal image.",
+          "name": "im_info",
+          "type": "float32[3]"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "[device] The propsals. Shape is [N * post_nms_top_n, 5], N = number of images.",
+          "name": "proposals",
+          "type": "[_, 5]"
+        }
+      ]
+    }
+  },
+  {
+    "name": "quantize",
+    "schema": {
+      "category": "Custom",
+      "description": "quantize input tensor.",
+      "attributes": [
+        {
+          "description": "assume that quantize_scale.size == x.shape(0)",
+          "name": "quantize_scale", "type": "float32[_]"
+        }
+      ],
+      "inputs": [
+        {
+          "description": "[host]",
+          "name": "x",
+          "type": "tensor"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "[host]",
+          "name": "y",
+          "type": "int8[...]"
+        }
+      ]
+    }
+  },
 
 
+
+
+
+  {
+    "name": "roi_align",
+    "schema": {
+      "category": "Tensor",
+      "description": "See [Dragon ROIAlign](http://dragon.seetatech.com/api/python/contents/operators/vision#dragon.operators.vision.ROIAlign). features and proposal are same shape.",
+      "attributes": [
+        {
+          "description": "The height of pooled tensor.",
+          "name": "pool_h", "type": "int32", "default": 0
+        },
+        {
+          "description": "The width of pooled tensor.",
+          "name": "pool_w", "type": "int32", "default": 0
+        },
+        {
+          "description": "The `inverse` of total down-sampling multiples on input tensor.",
+          "name": "spatial_scale", "type": "float32", "default": 1.0
+        },
+        {
+          "description": "The number of sampling grids for each RoI bin.",
+          "name": "sampling_ratio", "type": "int32", "default": 2
+        }
+      ],
+      "inputs": [
+        {
+          "description": "[device] Features, represent as [N, C, H, W] format",
+          "name": "features",
+          "type": "tensor"
+        },
+        {
+          "description": "[device] RoIs, represent as [num_rois, 5] format, this last axis layout [batch_index, min_x, min_y, max_x, max_y] respectively.",
+          "name": "proposal",
+          "type": "tensor"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "[device] The batch of pooled RoI regions. Shape is [proposal.shape(0), features.size(1), pool_h, pool_w]",
+          "name": "regions",
+          "type": "tensor"
+        }
+      ]
+    }
+  },
 
 
 
