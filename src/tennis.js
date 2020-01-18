@@ -222,26 +222,28 @@ tennis.Node = class {
             })
         }
         // set inputs which have schema
-        let i = null;
-        for (i = 0; i < schema_inputs.length; ++i) {
-            if (i >= node.inputs.length) break;
+        let i = null;   // for schema index
+        let ii = null;  // for input index
+        for (i = ii = 0; i < schema_inputs.length; ++i, ++ii) {
+            if (ii >= node.inputs.length) break;
             const input = schema_inputs[i];
             if (input.option == "variadic") {
                 let left_schema = schema_inputs.length - i;
-                let left_input = node.inputs.length - i;
+                let left_input = node.inputs.length - ii;
                 let variadic_count = left_input - left_schema + 1;
-                let args = node.inputs.slice(i, i + variadic_count).map((v, j) => {
+                let args = node.inputs.slice(ii, ii + variadic_count).map((v, j) => {
                     return new tennis.Argument(node.input(j), null, null, null);
                 });
                 this._inputs.push(new tennis.Parameter(input.name, true, args));
-                i += variadic_count - 1;
+                ii += variadic_count - 1;
+                continue;
             }
             this._inputs.push(new tennis.Parameter(input.name, true, [
-                new tennis.Argument(node.input(i), input.type, input.description)
+                new tennis.Argument(node.input(ii), input.type, input.description)
             ]));
         }
         // set inputs with out schema
-        for (;i < node.inputs.length; ++i) {
+        for (i = ii; i < node.inputs.length; ++i) {
             let input = {name: "input " + i, type: "tensor", description: ""};
             this._inputs.push(new tennis.Parameter(input.name, true, [
                 new tennis.Argument(node.input(i), input.type, input.description)

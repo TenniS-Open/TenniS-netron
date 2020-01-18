@@ -323,7 +323,7 @@
         {
           "description": "[device]",
           "name": "y",
-          "type": "[N, $size(1), $size(0), C]"
+          "type": "[N, size(1), size(0), C]"
         }
       ]
     }
@@ -359,7 +359,7 @@
         {
           "description": "[device]",
           "name": "y",
-          "type": "[N, $size(1), $size(0), C]"
+          "type": "[N, size(1), size(0), C]"
         }
       ]
     }
@@ -495,7 +495,7 @@
     "name": "_resize2d",
     "schema": {
       "category": "Tensor",
-      "description": "Resize tensor to given size, only 2d resize support. Output tensor has shape `size`. s\nNote: $x.dims == $size.size. \nExample: \n    x=[1, 640, 480, 3], size=[-1, 300, 300, -1], ",
+      "description": "Resize tensor to given size, only 2d resize support. Output tensor has shape `size`. s\nNote: x.dims == size.size. \nExample: \n    x=[1, 640, 480, 3], size=[-1, 300, 300, -1], ",
       "attributes": [
         {
           "description": "resize image method, in [linear=0, cubic=1, nearest=2, hard=3].",
@@ -646,7 +646,7 @@
       "description": "Transpose tenosr with `permute`, like y = numpy.transpose(x, permute)",
       "attributes": [
         {
-          "description": "$permute.size == $x.dims.",
+          "description": "permute.size == x.dims.",
           "name": "permute", "type": "int32[_]"
         }
       ],
@@ -719,14 +719,14 @@
     "name": "add_bias",
     "schema": {
       "category": "Tensor",
-      "description": "Add bias on `dim`. Broadcast add. $b.size == $x.shape(dim)",
+      "description": "Add bias on `dim`. Broadcast add. b.size == x.shape(dim)",
       "attributes": [
         {
           "description": "in [NCHW, NHWC]",
           "name": "format", "type": "string", "default": "NCHW"
         },
         {
-          "description": "in [-$x.dims, $x.dims)",
+          "description": "in [-x.dims, x.dims)",
           "name": "dim", "type": "int32", "default": 1
         }
       ],
@@ -755,7 +755,7 @@
     "name": "affine_smaple2d",
     "schema": {
       "category": "Tensor",
-      "description": "Sample 2d data on x: $y([a, b]) = sample($x(affine * [a, b, 1])). \n`dim` and `dim + 1` mean image's dimensions.",
+      "description": "Sample 2d data on x: y([a, b]) = sample(x(affine * [a, b, 1])). \n`dim` and `dim + 1` mean image's dimensions.",
       "attributes": [
         {
           "description": "resize image method, in [linear=0, cubic=1, nearest=2, hard=3].",
@@ -763,7 +763,7 @@
           "enum": ["linear", "cubic", "nearest", "hard"]
         },
         {
-          "description": "in [-$x.dims, $x.dims)",
+          "description": "in [-x.dims, x.dims)",
           "name": "dim", "type": "int32", "default": -2
         },
         {
@@ -791,10 +791,10 @@
     "name": "argmax",
     "schema": {
       "category": "Tensor",
-      "description": "Get max indices in x on `dim`. Indices has dim = $x.dims - 1, shape like [x.shape(0), ..., x.shape(dim - 1), x.shape(dim + 1), ...]",
+      "description": "Get max indices in x on `dim`. Indices has dim = x.dims - 1, shape like [x.shape(0), ..., x.shape(dim - 1), x.shape(dim + 1), ...]",
       "attributes": [
         {
-          "description": "in [-$x.dims, $x.dims)",
+          "description": "in [-x.dims, x.dims)",
           "name": "dim", "type": "int32"
         }
       ],
@@ -821,7 +821,7 @@
       "description": "y = (x - mean) / (sqrt(variance + epsilon))",
       "attributes": [
         {
-          "description": "data channel, in [-$x.dims, $x.dims)",
+          "description": "data channel, in [-x.dims, x.dims)",
           "name": "dim", "type": "int32", "default": 1
         },
         {
@@ -836,12 +836,12 @@
           "type": "tensor"
         },
         {
-          "description": "[device] $mean.size == $x.shape(dim)",
+          "description": "[device] mean.size == x.shape(dim)",
           "name": "mean",
           "type": "array"
         },
         {
-          "description": "[device] $variance.size == $x.shape(dim)",
+          "description": "[device] variance.size == x.shape(dim)",
           "name": "variance",
           "type": "array"
         }
@@ -862,7 +862,7 @@
       "description": "y = x * scale + bias",
       "attributes": [
         {
-          "description": "data channel, in [-$x.dims, $x.dims)",
+          "description": "data channel, in [-x.dims, x.dims)",
           "name": "dim", "type": "int32", "default": 1
         }
       ],
@@ -873,12 +873,12 @@
           "type": "tensor"
         },
         {
-          "description": "[device] $scale.size == $x.shape(dim)",
+          "description": "[device] scale.size == x.shape(dim)",
           "name": "scale",
           "type": "array"
         },
         {
-          "description": "[device] $bias.size == $x.shape(dim)",
+          "description": "[device] bias.size == x.shape(dim)",
           "name": "bias",
           "type": "array"
         }
@@ -1383,7 +1383,7 @@
       "description": "Adjust input x' shape to witch can be divide exactly.",
       "attributes": [
         {
-          "description": "-1 for no adjustment, $size.size == $x.dims.",
+          "description": "-1 for no adjustment, size.size == x.dims.",
           "name": "size", "type": "int32[_]"
         },
         {
@@ -1517,7 +1517,7 @@
       "description": "y = batch_scale(batch_norm(x, mean, variance), scale, bias)",
       "attributes": [
         {
-          "description": "data channel, in [-$x.dims, $x.dims)",
+          "description": "data channel, in [-x.dims, x.dims)",
           "name": "dim", "type": "int32", "default": 1
         },
         {
@@ -1532,22 +1532,22 @@
           "type": "tensor"
         },
         {
-          "description": "[device] $mean.size == $x.shape(dim)",
+          "description": "[device] mean.size == x.shape(dim)",
           "name": "mean",
           "type": "array"
         },
         {
-          "description": "[device] $variance.size == $x.shape(dim)",
+          "description": "[device] variance.size == x.shape(dim)",
           "name": "variance",
           "type": "array"
         },
         {
-          "description": "[device] $scale.size == $x.shape(dim)",
+          "description": "[device] scale.size == x.shape(dim)",
           "name": "scale",
           "type": "array"
         },
         {
-          "description": "[device] $bias.size == $x.shape(dim)",
+          "description": "[device] bias.size == x.shape(dim)",
           "name": "bias",
           "type": "array"
         }
@@ -1756,7 +1756,7 @@
       "description": "Do L2 norm on `dim` axis. \nFor 1-D NDArray, it computes: out = data / sqrt(sum(data ** 2) + eps). \n For N-D NDArray, if the input array has shape (N, N, ..., N): \nfor dim in 2...N \nfor i in 0...N \nout[.....,i,...] = take(out, indices=i, axis=dim) / sqrt(sum(take(out, indices=i, axis=dim) ** 2) + eps)",
       "attributes": [
         {
-          "description": "data channel, in [-$x.dims, $x.dims)",
+          "description": "data channel, in [-x.dims, x.dims)",
           "name": "dim", "type": "int32"
         },
         {
