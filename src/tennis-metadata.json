@@ -112,8 +112,8 @@
       "description": "Dragon dynamic padding.",
       "attributes": [
         {
-          "description": "",
-          "name": "format", "type": "string"
+          "description": "in [NCHW, NHWC]",
+          "name": "format", "type": "string", "default": "NCHW"
         },
         {
           "description": "",
@@ -160,8 +160,8 @@
       "description": "Dragon dynamic padding.",
       "attributes": [
         {
-          "description": "",
-          "name": "format", "type": "string"
+          "description": "in [NCHW, NHWC]",
+          "name": "format", "type": "string", "default": "NCHW"
         },
         {
           "description": "",
@@ -232,7 +232,7 @@
   {
     "name": "_limit",
     "schema": {
-      "category": "Tensor",
+      "category": "Custom",
       "description": "y = x if x.shape < `shape`, else center crop x.  \nNote: If shape.size < x.dims, then expand -1 on the x's high dim. \nExample: \n    if x=float32[1, 3, 90, 90], shape=[-1, -1, 80, 80], got y=[1, 3, 80, 80].",
       "attributes": [
         {
@@ -263,8 +263,8 @@
       "description": "MXNet dynamic padding.",
       "attributes": [
         {
-          "description": "",
-          "name": "format", "type": "string"
+          "description": "in [NCHW, NHWC]",
+          "name": "format", "type": "string", "default": "NCHW"
         },
         {
           "description": "",
@@ -554,7 +554,7 @@
       "attributes": [
         {
           "description": "in [NCHW, NHWC]",
-          "name": "format", "type": "string"
+          "name": "format", "type": "string", "default": "NCHW"
         },
         {
           "description": "",
@@ -601,8 +601,8 @@
       "description": "TensorFlow dynamic padding.",
       "attributes": [
         {
-          "description": "in [NCHW, NHWC].",
-          "name": "format", "type": "string"
+          "description": "in [NCHW, NHWC]",
+          "name": "format", "type": "string", "default": "NCHW"
         },
         {
           "description": "method in [VALID, SAME]",
@@ -692,7 +692,7 @@
     "name": "add",
     "schema": {
       "category": "Tensor",
-      "description": "y = lhs + rhs. Add support broadcast.",
+      "description": "y = lhs + rhs. Support broadcast.",
       "attributes": [],
       "inputs": [
         {
@@ -718,16 +718,16 @@
   {
     "name": "add_bias",
     "schema": {
-      "category": "Layer",
+      "category": "Tensor",
       "description": "Add bias on `dim`. Broadcast add. $b.size == $x.shape(dim)",
       "attributes": [
         {
           "description": "in [NCHW, NHWC]",
-          "name": "format", "type": "string"
+          "name": "format", "type": "string", "default": "NCHW"
         },
         {
           "description": "in [-$x.dims, $x.dims)",
-          "name": "dim", "type": "int32"
+          "name": "dim", "type": "int32", "default": 1
         }
       ],
       "inputs": [
@@ -787,39 +787,841 @@
       ]
     }
   },
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+  {
+    "name": "argmax",
+    "schema": {
+      "category": "Tensor",
+      "description": "Get max indices in x on `dim`. Indices has dim = $x.dims - 1, shape like [x.shape(0), ..., x.shape(dim - 1), x.shape(dim + 1), ...]",
+      "attributes": [
+        {
+          "description": "in [-$x.dims, $x.dims)",
+          "name": "dim", "type": "int32"
+        }
+      ],
+      "inputs": [
+        {
+          "description": "[device]",
+          "name": "x",
+          "type": "tensor"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "[device]",
+          "name": "indices",
+          "type": "int32[...]"
+        }
+      ]
+    }
+  },
+  {
+    "name": "batch_norm",
+    "schema": {
+      "category": "Normalization",
+      "description": "y = (x - mean) / (sqrt(variance + epsilon))",
+      "attributes": [
+        {
+          "description": "data channel, in [-$x.dims, $x.dims)",
+          "name": "dim", "type": "int32"
+        },
+        {
+          "description": "incase of divide zero.",
+          "name": "epsilon", "type": "float32", "default": 1e-5
+        }
+      ],
+      "inputs": [
+        {
+          "description": "[device]",
+          "name": "x",
+          "type": "tensor"
+        },
+        {
+          "description": "[device] $mean.size == $x.shape(dim)",
+          "name": "mean",
+          "type": "array"
+        },
+        {
+          "description": "[device] $variance.size == $x.shape(dim)",
+          "name": "variance",
+          "type": "array"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "[device]",
+          "name": "y",
+          "type": "tensor"
+        }
+      ]
+    }
+  },
+  {
+    "name": "batch_scale",
+    "schema": {
+      "category": "Normalization",
+      "description": "y = x * scale + bias",
+      "attributes": [
+        {
+          "description": "data channel, in [-$x.dims, $x.dims)",
+          "name": "dim", "type": "int32"
+        }
+      ],
+      "inputs": [
+        {
+          "description": "[device]",
+          "name": "x",
+          "type": "tensor"
+        },
+        {
+          "description": "[device] $scale.size == $x.shape(dim)",
+          "name": "scale",
+          "type": "array"
+        },
+        {
+          "description": "[device] $bias.size == $x.shape(dim)",
+          "name": "bias",
+          "type": "array"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "[device]",
+          "name": "y",
+          "type": "tensor"
+        }
+      ]
+    }
+  },
+  {
+    "name": "batch_to_space4d",
+    "schema": {
+      "category": "Normalization",
+      "description": "Rearranges (permutes) data from batch into blocks of spatial data, followed by cropping. Only support NCHW format. \n See tf.[BatchToSapceND](https://www.w3cschool.cn/tensorflow_python/tensorflow_python-bnyg2ckl.html) for more information.",
+      "attributes": [
+        {
+          "description": "[[crop_top, crop_bottom], [crop_left, crop_right]]",
+          "name": "crop", "type": "int32[2, 2]"
+        },
+        {
+          "description": "[block_height, block_width]",
+          "name": "block_shape", "type": "int32[2]"
+        }
+      ],
+      "inputs": [
+        {
+          "description": "[device]",
+          "name": "x",
+          "type": "tensor"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "[device]",
+          "name": "y",
+          "type": "tensor"
+        }
+      ]
+    }
+  },
+  {
+    "name": "broadcast",
+    "schema": {
+      "category": "Tensor",
+      "description": "Broadcast x to shape, assume like x * numpy.ones(shape).",
+      "attributes": [],
+      "inputs": [
+        {
+          "description": "[device]",
+          "name": "x",
+          "type": "tensor"
+        },
+        {
+          "description": "[host]",
+          "name": "shape",
+          "type": "int32[_]"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "[device]",
+          "name": "y",
+          "type": "tensor"
+        }
+      ]
+    }
+  },
+  {
+    "name": "chunk",
+    "schema": {
+      "category": "Tensor",
+      "description": "Inverse operation of concat. Assume like y = numpy.split(x, chunks, dim).",
+      "attributes": [
+        {
+          "description": "number to split on dim.",
+          "name": "chunks", "type": "int32"
+        },
+        {
+          "description": "axis to split.",
+          "name": "dim", "type": "int32"
+        }
+      ],
+      "inputs": [
+        {
+          "description": "[device]",
+          "name": "x",
+          "type": "tensor"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "[device]",
+          "name": "chunks",
+          "type": "list[tensor]",
+          "option": "variadic"
+        }
+      ]
+    }
+  },
   {
     "name": "concat",
     "schema": {
       "category": "Tensor",
       "description": "Concat all input tensors.",
       "attributes": [
-        { "name": "test", "type": "int32", "default": 1 }
+        {
+          "description": "axis to concat.",
+          "name": "dim", "type": "int32"
+        }
       ],
       "inputs": [
         {
           "description": "[device] list of tensors",
-          "name": "inputs",
-          "type": "list[tensor]"
+          "name": "tensors",
+          "type": "list[tensor]",
+          "option": "variadic"
         }
       ],
       "outputs": [
         {
           "description": "[device] output tensor",
-          "name": "concat_value",
+          "name": "y",
+          "type": "tensor"
+        }
+      ]
+    }
+  },
+  {
+    "name": "conv2d",
+    "schema": {
+      "category": "Layer",
+      "description": "2D Convolution.",
+      "attributes": [
+        {
+          "description": "in [NCHW, NHWC]",
+          "name": "format", "type": "string", "default": "NCHW"
+        },
+        {
+          "description": "",
+          "name": "padding", "type": "int32[4, 2]", "default": [0, 0, 0, 0, 0, 0, 0, 0]
+        },
+        {
+          "description": "",
+          "name": "padding_value", "type": "float32", "default": 0
+        },
+        {
+          "description": "",
+          "name": "stride", "type": "int32[4]", "default": [1, 1, 1, 1]
+        },
+        {
+          "description": "",
+          "name": "dilation", "type": "int32[4]", "default": [1, 1, 1, 1]
+        }
+      ],
+      "inputs": [
+        {
+          "description": "[device] compuating data, in NCHW(default) or NHWC format.",
+          "name": "x",
+          "type": "[N, _, _, _]"
+        },
+        {
+          "description": "[device] convolution kernel: [output_channels, input_channels, kernel_height, kernel_width].",
+          "name": "w",
+          "type": "[_, _, _, _]"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "[device]",
+          "name": "y",
+          "type": "[N, _, _, _]"
+        }
+      ],
+      "examples": [
+        {
+          "code": "pad_h = pad_h_top + pad_h_bottom; \npad_w = pad_w_left + pad_h_right; \noutput_h = floor((height + pad_h - (dilation_h * (kernel_h - 1) + 1)) / stride_h + 1); \noutput_w = floor((width + pad_w - (dilation_w * (kernel_w - 1) + 1)) / stride_w + 1);",
+          "summary": "output_shape"
+        }
+      ]
+    }
+  },
+  {
+    "name": "conv2d_v2",
+    "schema": {
+      "category": "Layer",
+      "description": "2D Convolution.",
+      "attributes": [
+        {
+          "description": "in [NCHW, NHWC]",
+          "name": "format", "type": "string", "default": "NCHW"
+        },
+        {
+          "description": "",
+          "name": "padding_value", "type": "float32", "default": 0
+        },
+        {
+          "description": "",
+          "name": "stride", "type": "int32[4]", "default": [1, 1, 1, 1]
+        },
+        {
+          "description": "",
+          "name": "dilation", "type": "int32[4]", "default": [1, 1, 1, 1]
+        }
+      ],
+      "inputs": [
+        {
+          "description": "[device] compuating data, in NCHW(default) or NHWC format.",
+          "name": "x",
+          "type": "[N, _, _, _]"
+        },
+        {
+          "description": "[host] dynamic padding.",
+          "name": "padding",
+          "type": "int32[4, 2]"
+        },
+        {
+          "description": "[device] convolution kernel: [output_channels, input_channels, kernel_height, kernel_width].",
+          "name": "w",
+          "type": "[_, _, _, _]"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "[device]",
+          "name": "y",
+          "type": "[N, _, _, _]"
+        }
+      ],
+      "examples": [
+        {
+          "code": "pad_h = pad_h_top + pad_h_bottom; \npad_w = pad_w_left + pad_h_right; \noutput_h = floor((height + pad_h - (dilation_h * (kernel_h - 1) + 1)) / stride_h + 1); \noutput_w = floor((width + pad_w - (dilation_w * (kernel_w - 1) + 1)) / stride_w + 1);",
+          "summary": "output_shape"
+        }
+      ]
+    }
+  },
+  {
+    "name": "dcn_v2_forward",
+    "schema": {
+      "category": "Layer",
+      "description": "DCN v2, see [DCNv2](https://github.com/CharlesShang/DCNv2) for more infromation.",
+      "attributes": [
+        {
+          "description": "in [NCHW, NHWC]",
+          "name": "format", "type": "string", "default": "NCHW"
+        },
+        {
+          "description": "",
+          "name": "padding", "type": "int32[4, 2]", "default": [0, 0, 0, 0, 0, 0, 0, 0]
+        },
+        {
+          "description": "",
+          "name": "stride", "type": "int32[4]", "default": [1, 1, 1, 1]
+        },
+        {
+          "description": "",
+          "name": "dilation", "type": "int32[4]", "default": [1, 1, 1, 1]
+        },
+        {
+          "description": "",
+          "name": "deformable_groups", "type": "int32"
+        }
+      ],
+      "inputs": [
+        {
+          "description": "[device] compuating data, in NCHW(default) or NHWC format.",
+          "name": "x",
+          "type": "[N, _, _, _]"
+        },
+        {
+          "description": "[device] convolution kernel: [output_channels, input_channels, kernel_height, kernel_width].",
+          "name": "w",
+          "type": "[_, _, _, _]"
+        },
+        {
+          "description": "[device] convolution bias: [output_channels].",
+          "name": "b",
+          "type": "[_]"
+        },
+        {
+          "description": "[device]",
+          "name": "offset",
+          "type": "tensor"
+        },
+        {
+          "description": "[device]",
+          "name": "mask",
+          "type": "tensor"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "[device]",
+          "name": "y",
+          "type": "[N, _, _, _]"
+        }
+      ]
+    }
+  },
+  {
+    "name": "depthwise_conv2d",
+    "schema": {
+      "category": "Layer",
+      "description": "Depthwise 2D Convolution.",
+      "attributes": [
+        {
+          "description": "in [NCHW, NHWC]",
+          "name": "format", "type": "string", "default": "NCHW"
+        },
+        {
+          "description": "",
+          "name": "padding", "type": "int32[4, 2]", "default": [0, 0, 0, 0, 0, 0, 0, 0]
+        },
+        {
+          "description": "",
+          "name": "padding_value", "type": "float32", "default": 0
+        },
+        {
+          "description": "",
+          "name": "stride", "type": "int32[4]", "default": [1, 1, 1, 1]
+        },
+        {
+          "description": "",
+          "name": "dilation", "type": "int32[4]", "default": [1, 1, 1, 1]
+        }
+      ],
+      "inputs": [
+        {
+          "description": "[device] compuating data, in NCHW(default) or NHWC format.",
+          "name": "x",
+          "type": "[N, _, _, _]"
+        },
+        {
+          "description": "[device] convolution kernel: [multiplier_channels, input_channels, kernel_height, kernel_width].",
+          "name": "w",
+          "type": "[_, _, _, _]"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "[device] output_channel = multiplier_channels * input_channels",
+          "name": "y",
+          "type": "[N, _, _, _]"
+        }
+      ],
+      "examples": [
+        {
+          "code": "pad_h = pad_h_top + pad_h_bottom; \npad_w = pad_w_left + pad_h_right; \noutput_h = floor((height + pad_h - (dilation_h * (kernel_h - 1) + 1)) / stride_h + 1); \noutput_w = floor((width + pad_w - (dilation_w * (kernel_w - 1) + 1)) / stride_w + 1);",
+          "summary": "output_shape"
+        }
+      ]
+    }
+  },
+  {
+    "name": "depthwise_conv2d_v2",
+    "schema": {
+      "category": "Layer",
+      "description": "Depthwise 2D Convolution.",
+      "attributes": [
+        {
+          "description": "in [NCHW, NHWC]",
+          "name": "format", "type": "string", "default": "NCHW"
+        },
+        {
+          "description": "",
+          "name": "padding_value", "type": "float32", "default": 0
+        },
+        {
+          "description": "",
+          "name": "stride", "type": "int32[4]", "default": [1, 1, 1, 1]
+        },
+        {
+          "description": "",
+          "name": "dilation", "type": "int32[4]", "default": [1, 1, 1, 1]
+        }
+      ],
+      "inputs": [
+        {
+          "description": "[device] compuating data, in NCHW(default) or NHWC format.",
+          "name": "x",
+          "type": "[N, _, _, _]"
+        },
+        {
+          "description": "[host] dynamic padding.",
+          "name": "padding",
+          "type": "int32[4, 2]"
+        },
+        {
+          "description": "[device] convolution kernel: [multiplier_channels, input_channels, kernel_height, kernel_width].",
+          "name": "w",
+          "type": "[_, _, _, _]"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "[device] output_channel = multiplier_channels * input_channels",
+          "name": "y",
+          "type": "[N, _, _, _]"
+        }
+      ],
+      "examples": [
+        {
+          "code": "pad_h = pad_h_top + pad_h_bottom; \npad_w = pad_w_left + pad_h_right; \noutput_h = floor((height + pad_h - (dilation_h * (kernel_h - 1) + 1)) / stride_h + 1); \noutput_w = floor((width + pad_w - (dilation_w * (kernel_w - 1) + 1)) / stride_w + 1);",
+          "summary": "output_shape"
+        }
+      ]
+    }
+  },
+  {
+    "name": "div",
+    "schema": {
+      "category": "Tensor",
+      "description": "y = lhs / rhs. Support broadcast.",
+      "attributes": [],
+      "inputs": [
+        {
+          "description": "",
+          "name": "lhs",
+          "type": "tensor"
+        },
+        {
+          "description": "",
+          "name": "rhs",
+          "type": "tensor"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "lhs / rhs",
+          "name": "y",
+          "type": "tensor"
+        }
+      ]
+    }
+  },
+  {
+    "name": "divided",
+    "schema": {
+      "category": "Tensor",
+      "description": "Adjust input x' shape to witch can be divide exactly.",
+      "attributes": [
+        {
+          "description": "-1 for no adjustment, $size.size == $x.dims.",
+          "name": "size", "type": "int32[_]"
+        },
+        {
+          "description": "padding value when pad input tensor.",
+          "name": "padding_value", "type": "float", "default": 0
+        }
+      ],
+      "inputs": [
+        {
+          "description": "[device]",
+          "name": "x",
+          "type": "tensor"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "[device]",
+          "name": "y",
+          "type": "tensor"
+        }
+      ]
+    }
+  },
+  {
+    "name": "exp",
+    "schema": {
+      "category": "Tensor",
+      "description": "y = exp(x)",
+      "attributes": [],
+      "inputs": [
+        {
+          "description": "[device]",
+          "name": "x",
+          "type": "tensor"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "[device]",
+          "name": "y",
+          "type": "tensor"
+        }
+      ]
+    }
+  },
+  {
+    "name": "flatten",
+    "schema": {
+      "category": "Shape",
+      "description": "Flatten tensor. Reduction axes after `dim`",
+      "attributes": [
+        {
+          "description": "reduction axes after `dim`.",
+          "name": "dims", "type": "int32"
+        }
+      ],
+      "inputs": [
+        {
+          "description": "[device]",
+          "name": "x",
+          "type": "tensor"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "[device]",
+          "name": "y",
+          "type": "tensor"
+        }
+      ]
+    }
+  },
+  {
+    "name": "force_color",
+    "schema": {
+      "category": "Custom",
+      "description": "Force convert input data to color mode. Assume that channel is last dim.",
+      "attributes": [
+        {
+          "description": "reduction axes after `dim`.",
+          "name": "dims", "type": "int32"
+        }
+      ],
+      "inputs": [
+        {
+          "description": "[device]",
+          "name": "x",
+          "type": "[..., C]"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "[device]",
+          "name": "y",
+          "type": "[..., 3]"
+        }
+      ]
+    }
+  },
+  {
+    "name": "force_gray",
+    "schema": {
+      "category": "Custom",
+      "description": "Force convert input data to gray mode. Assume that channel is last dim.",
+      "attributes": [
+        {
+          "description": "How to convert color format to gray, y = [b, g, r] * scale. [0.114, 0.587, 0.299] is for bgr2gray.",
+          "name": "scale", "type": "float32[_]", "default": [0.114, 0.587, 0.299]
+        }
+      ],
+      "inputs": [
+        {
+          "description": "[device]",
+          "name": "x",
+          "type": "[..., C]"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "[device]",
+          "name": "y",
+          "type": "[..., 3]"
+        }
+      ]
+    }
+  },
+  {
+    "name": "fused_batch_norm",
+    "schema": {
+      "category": "Normalization",
+      "description": "y = batch_scale(batch_norm(x, mean, variance), scale, bias)",
+      "attributes": [
+        {
+          "description": "data channel, in [-$x.dims, $x.dims)",
+          "name": "dim", "type": "int32"
+        },
+        {
+          "description": "incase of divide zero.",
+          "name": "epsilon", "type": "float32", "default": 1e-5
+        }
+      ],
+      "inputs": [
+        {
+          "description": "[device]",
+          "name": "x",
+          "type": "tensor"
+        },
+        {
+          "description": "[device] $mean.size == $x.shape(dim)",
+          "name": "mean",
+          "type": "array"
+        },
+        {
+          "description": "[device] $variance.size == $x.shape(dim)",
+          "name": "variance",
+          "type": "array"
+        },
+        {
+          "description": "[device] $scale.size == $x.shape(dim)",
+          "name": "scale",
+          "type": "array"
+        },
+        {
+          "description": "[device] $bias.size == $x.shape(dim)",
+          "name": "bias",
+          "type": "array"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "[device]",
+          "name": "y",
+          "type": "tensor"
+        }
+      ]
+    }
+  },
+  {
+    "name": "gather",
+    "schema": {
+      "category": "Transform",
+      "description": "y = numpy.take(x, indices, axis=axis)",
+      "attributes": [
+        {
+          "description": "",
+          "name": "axis", "type": "int32"
+        }
+      ],
+      "inputs": [
+        {
+          "description": "[device]",
+          "name": "x",
+          "type": "tensor"
+        },
+        {
+          "description": "[host]",
+          "name": "indices",
+          "type": "int32[_]"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "[device]",
+          "name": "y",
+          "type": "tensor"
+        }
+      ]
+    }
+  },
+
+
+
+
+
+  {
+    "name": "_field",
+    "schema": {
+      "category": "Custom",
+      "description": "Get field from packed tensor.",
+      "attributes": [
+        {
+          "description": "offset of packed tensor.",
+          "name": "offset", "type": "int32"
+        }
+      ],
+      "inputs": [
+        {
+          "description": "[device] packed tensor",
+          "name": "x",
+          "type": "tensor"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "[device]",
+          "name": "field",
+          "type": "tensor"
+        }
+      ]
+    }
+  },
+  {
+    "name": "_pack",
+    "schema": {
+      "category": "Custom",
+      "description": "Pack input tensors.",
+      "attributes": [],
+      "inputs": [
+        {
+          "description": "[device] list of tensors",
+          "name": "tensors",
+          "type": "list[tensor]",
+          "option": "variadic"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "[device] output tensor",
+          "name": "y",
+          "type": "tensor"
+        }
+      ]
+    }
+  },
+  {
+    "name": "<param>",
+    "schema": {
+      "category": "Data",
+      "description": "Import parameter",
+      "attributes": [],
+      "inputs": [],
+      "outputs": [
+        {
+          "description": "[device] input parameter.",
+          "name": "param",
+          "type": "tensor"
+        }
+      ]
+    }
+  },
+  {
+    "name": "<const>",
+    "schema": {
+      "category": "Data",
+      "description": "Constant value.",
+      "attributes": [
+        {
+          "description": "constant value.",
+          "name": "value", "type": "tensor"
+        }
+      ],
+      "inputs": [],
+      "outputs": [
+        {
+          "description": "[device] const value",
+          "name": "const",
           "type": "tensor"
         }
       ]

@@ -210,7 +210,7 @@ tennis.Node = class {
         } else {
             for (let i = 0; i < node.inputs.length; ++i) {
                 schema_inputs.push({
-                    name: node.inputs.length > 1 ? "input " + i : "inputs",
+                    name: "input " + i,
                     type: "tensor",
                     description: "",
                 })
@@ -221,28 +221,52 @@ tennis.Node = class {
                 description: "",
             })
         }
-        if (schema_inputs.length == 1 && node.inputs.length > 1) {
-            const input = schema_inputs[0];
-            let args = [];
-            for (let i = 0; i < node.inputs.length; ++i) {
-                args.push(new tennis.Argument(node.input(i), null, null, null));
+        // set inputs which have schema
+        let i = null;
+        for (i = 0; i < schema_inputs.length; ++i) {
+            if (i >= node.inputs.length) break;
+            const input = schema_inputs[i];
+            if (input.option == "variadic") {
+                let args = node.inputs.slice(i, node.inputs.length).map((v, j) => {
+                    return new tennis.Argument(node.input(j), null, null, null);
+                });
+                this._inputs.push(new tennis.Parameter(input.name, true, args));
+                i = node.inputs.length;
+                break;
             }
-            this._inputs.push(new tennis.Parameter(input.name, true, args));
-        } else {
-            for (let i = 0; i < node.inputs.length; ++i) {
-                let input = {name: "input " + i, type: "tensor", description: ""};
-                if (i < schema_inputs.length) {
-                    input = schema_inputs[i];
-                }
-                this._inputs.push(new tennis.Parameter(input.name, true, [
-                    new tennis.Argument(node.input(i), input.type, input.description)
-                ]));
-            }
+            this._inputs.push(new tennis.Parameter(input.name, true, [
+                new tennis.Argument(node.input(i), input.type, input.description)
+            ]));
         }
-        for (let i = 0; i < schema_outputs.length; ++i) {
-            let output = schema_outputs[i];
+        // set inputs with out schema
+        for (;i < node.inputs.length; ++i) {
+            let input = {name: "input " + i, type: "tensor", description: ""};
+            this._inputs.push(new tennis.Parameter(input.name, true, [
+                new tennis.Argument(node.input(i), input.type, input.description)
+            ]));
+        }
+        // set output with schema
+        for (i = 0; i < node.outputs.length; ++i) {
+            if (i >= schema_outputs.length) break;
+            const output = schema_outputs[i];
+            // do not check option, for node.outputs.length always be 1
             this._outputs.push(new tennis.Parameter(output.name, true, [
-                new tennis.Argument(node, output.type, output.description)
+                new tennis.Argument(node.output(i), output.type, output.description)
+            ]));
+        }
+        // set output without schema
+        for (; i < node.outputs.length; ++i) {
+            let output = {name: "output " + i, type: "tensor", description: ""};
+            this._outputs.push(new tennis.Parameter(output.name, true, [
+                new tennis.Argument(node.output(i), output.type, output.description)
+            ]));
+        }
+        // set output only schema
+        for (; i < schema_outputs.length; ++i) {
+            let output = schema_outputs[i];
+            let node_output = {arg_id: "null", proto: output.type, op: "<fake>"}; // for inner used
+            this._outputs.push(new tennis.Parameter(output.name, true, [
+                new tennis.Argument(node_output, output.type, output.description)
             ]));
         }
 

@@ -503,6 +503,7 @@ tennis.Node = class {
         this._shape = this.get("#shape");
         this._dtype = this.get("#dtype");
         this._inputs = []
+        this._outputs = [this]
 
         if (!(this._dtype === null)) {
             this._dtype = this._dtype.value;
@@ -524,7 +525,7 @@ tennis.Node = class {
      * @return {string} arg_id
      */
     get arg_id() {
-        return this._id.toString() + ":" + this._name;
+        return this._id.toString() + ": " + this._name;
     }
 
     /**
@@ -602,12 +603,27 @@ tennis.Node = class {
     }
 
     /**
+     * @return {[tennis.Node]}
+     */
+    get outputs() {
+        return this._outputs;
+    }
+
+    /**
      * 
      * @param {number} i 
      * @return {tennis.Node}
      */
     input(i) {
         return this._inputs[i];
+    }
+    /**
+     * 
+     * @param {number} i 
+     * @return {tennis.Node}
+     */
+    output(i) {
+        return this._outputs[i];
     }
 }
 
