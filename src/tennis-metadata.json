@@ -304,7 +304,7 @@
   {
     "name": "_nhwc_center_crop2d",
     "schema": {
-      "category": "Tensor",
+      "category": "Custom",
       "description": "Center crop tensor from given NHWC format tensor.",
       "attributes": [
         {
@@ -331,7 +331,7 @@
   {
     "name": "_nhwc_letterbox",
     "schema": {
-      "category": "Tensor",
+      "category": "Custom",
       "description": "Adjust image within letterbox, resize image and pad with outer_value.",
       "attributes": [
         {
@@ -895,7 +895,7 @@
   {
     "name": "batch_to_space4d",
     "schema": {
-      "category": "Normalization",
+      "category": "Transform",
       "description": "Rearranges (permutes) data from batch into blocks of spatial data, followed by cropping. Only support NCHW format. \n See tf.[BatchToSapceND](https://www.w3cschool.cn/tensorflow_python/tensorflow_python-bnyg2ckl.html) for more information.",
       "attributes": [
         {
@@ -953,7 +953,7 @@
   {
     "name": "chunk",
     "schema": {
-      "category": "Tensor",
+      "category": "Transform",
       "description": "Inverse operation of concat. Assume like y = numpy.split(x, chunks, dim).",
       "attributes": [
         {
@@ -985,7 +985,7 @@
   {
     "name": "concat",
     "schema": {
-      "category": "Tensor",
+      "category": "Transform",
       "description": "Concat all input tensors.",
       "attributes": [
         {
@@ -1321,7 +1321,7 @@
   {
     "name": "divided",
     "schema": {
-      "category": "Tensor",
+      "category": "Custom",
       "description": "Adjust input x' shape to witch can be divide exactly.",
       "attributes": [
         {
