@@ -17,14 +17,14 @@ utils.Stream = class {
             this._dataview = data;
             this._offset = offset;
         } else if (data instanceof Buffer) {
-            this._dataview = new DataView(data.buffer, data.byteOffset, data.length)
+            this._dataview = new DataView(data.buffer, data.byteOffset, data.length);
             this._offset = offset;
         } else if (data instanceof ArrayBuffer ||
                 data instanceof SharedArrayBuffer) {
-            this._dataview = new DataView(data)
+            this._dataview = new DataView(data);
             this._offset = offset;
         } else {
-            throw utils.Error("Stream param 1 must be DataView or ArrayBuffer")
+            throw utils.Error("Stream param 1 must be DataView or ArrayBuffer");
         }
     }
 
@@ -54,13 +54,13 @@ utils.Stream = class {
     }
 
     float32() {
-        const value = this._dataview.getFloat32(this._offset, true)
+        const value = this._dataview.getFloat32(this._offset, true);
         this._offset += 4;
         return value;
     }
 
     float64() {
-        const value = this._dataview.getFloat64(this._offset, true)
+        const value = this._dataview.getFloat64(this._offset, true);
         this._offset += 8;
         return value;
     }
@@ -76,7 +76,7 @@ utils.Stream = class {
      * @return {number}
      */
     int8() {
-        const value = this._dataview.getInt8(this._offset, true)
+        const value = this._dataview.getInt8(this._offset, true);
         this._offset += 1;
         return value;
     }
@@ -85,7 +85,7 @@ utils.Stream = class {
      * @return {number}
      */
     int16() {
-        const value = this._dataview.getInt16(this._offset, true)
+        const value = this._dataview.getInt16(this._offset, true);
         this._offset += 2;
         return value;
     }
@@ -94,7 +94,7 @@ utils.Stream = class {
      * @return {number}
      */
     int32() {
-        const value = this._dataview.getInt32(this._offset, true)
+        const value = this._dataview.getInt32(this._offset, true);
         this._offset += 4;
         return value;
     }
@@ -103,7 +103,7 @@ utils.Stream = class {
      * @return {number}
      */
     uint8() {
-        const value = this._dataview.getUint8(this._offset, true)
+        const value = this._dataview.getUint8(this._offset, true);
         this._offset += 1;
         return value;
     }
@@ -112,7 +112,7 @@ utils.Stream = class {
      * @return {number}
      */
     uint16() {
-        const value = this._dataview.getUint16(this._offset, true)
+        const value = this._dataview.getUint16(this._offset, true);
         this._offset += 2;
         return value;
     }
@@ -121,7 +121,7 @@ utils.Stream = class {
      * @return {number}
      */
     uint32() {
-        const value = this._dataview.getUint32(this._offset, true)
+        const value = this._dataview.getUint32(this._offset, true);
         this._offset += 4;
         return value;
     }
@@ -282,15 +282,15 @@ utils.Tensor = class {
      * @param {object} value 
      */
     constructor(shape, dtype, data, value=null) {
-        this._shape = shape
+        this._shape = shape;
         this._dtype = dtype;
-        this._data = data // can be null
-        this._field = []
+        this._data = data; // can be null
+        this._field = [];
         
         if (value) {
             this._value = value;
         } else {
-            this._value = null  // for js readable value
+            this._value = null;  // for js readable value
         }
     }
 
@@ -324,7 +324,7 @@ utils.Tensor = class {
         const count = this.count;
         let list = [];
         for (let i = 0; i < count; ++i) {
-            list.push(decoder())
+            list.push(decoder());
         }
         return list;
     }
@@ -451,7 +451,7 @@ utils.Tensor = class {
                     array.push("...");
                     return array;
                 }
-                array.push(this._view(context, dim + 1))
+                array.push(this._view(context, dim + 1));
             }
         }
         return array;
@@ -492,18 +492,18 @@ utils.Node = class {
      * @param {{}} params 
      */
     constructor(params, id=null) {
-        for (let param in params) {
-            // no use code
-            let value = params[param];
-        }
+        // for (let param in params) {
+        //     // no use code
+        //     let value = params[param];
+        // }
         this._id = id;
         this._params = params;
         this._name = this.get("#name").value;
         this._op = this.get("#op").value;
         this._shape = this.get("#shape");
         this._dtype = this.get("#dtype");
-        this._inputs = []
-        this._outputs = [this]
+        this._inputs = [];
+        this._outputs = [this];
 
         if (!(this._dtype === null)) {
             this._dtype = this._dtype.value;
@@ -677,8 +677,8 @@ utils.Module = class {
         let outputs = stream.int32_array();
         this._nodes = [];
         this._read_graph(stream);
-        this._inputs = []
-        this._outputs = []
+        this._inputs = [];
+        this._outputs = [];
         for (const i of inputs) {
             this._inputs.push(this._nodes[i]);
         }
@@ -770,7 +770,7 @@ utils.Module = class {
         for (let i = 0; i < size; ++i) {
             let inputs = [];
             for (const j of node_inputs[i]) {
-                inputs.push(nodes[j])
+                inputs.push(nodes[j]);
             }
             nodes[i].inputs = inputs;
         }

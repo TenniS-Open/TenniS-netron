@@ -6,16 +6,16 @@ var tennis = tennis || {};
 var base = base || require('./base');
 var long = long || { Long: require('long') };
 var marked = marked || require('marked');
-var utils = utils || require("./tennis-utils")
+var utils = utils || require("./tennis-utils");
 
 tennis.ModelFactory = class {
 
     match(context) {
         // const extension = context.identifier.split('.').pop().toLowerCase();
         const b = context.buffer;
-        let stream = new utils.Stream(b)
-        stream.skip(4)
-        const mask = stream.int32()
+        let stream = new utils.Stream(b);
+        stream.skip(4);
+        const mask = stream.int32();
         return mask == 0x19910929;
     }
 
@@ -26,6 +26,7 @@ tennis.ModelFactory = class {
             return this._openModel(metadata, stream, identifier);
         });
     }
+
     _openModel(metadata, stream, identifier) {
         try {
             return new tennis.Model(metadata, stream);
@@ -75,10 +76,10 @@ tennis.Graph = class {
         this._mask = graph.mask;
 
         for (const input of graph.inputs) {
-            this._inputs.push(new tennis.Parameter(input.name, true, [new tennis.Argument(input, input.proto, "", null)]))
+            this._inputs.push(new tennis.Parameter(input.name, true, [new tennis.Argument(input, input.proto, "", null)]));
         }
         for (const output of graph.outputs) {
-            this._outputs.push(new tennis.Parameter(output.name, true, [new tennis.Argument(output, output.proto, "", null)]))
+            this._outputs.push(new tennis.Parameter(output.name, true, [new tennis.Argument(output, output.proto, "", null)]));
         }
 
         let map_node = {};
@@ -213,13 +214,13 @@ tennis.Node = class {
                     name: "input " + i,
                     type: "tensor",
                     description: "",
-                })
+                });
             }
             schema_outputs.push({
                 name: "output",
                 type: "tensor",
                 description: "",
-            })
+            });
         }
         // set inputs which have schema
         let i = null;   // for schema index
