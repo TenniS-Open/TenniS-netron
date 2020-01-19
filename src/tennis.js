@@ -16,6 +16,7 @@ utils.Stream = class {
      */
     constructor(data, offset=0) {
         var Buffer = Buffer || class {};
+        var SharedArrayBuffer = SharedArrayBuffer || class {};
         if (data instanceof DataView) {
             this._dataview = data;
             this._offset = offset;
@@ -179,39 +180,39 @@ utils.Stream = class {
     }
 };
 
-utils.dtype = class {
-    static VOID = 0;
-    static INT8 = 1;
-    static UINT8 = 2;
-    static INT16 = 3;
-    static UINT16 = 4;
-    static INT32 = 5;
-    static UINT32 = 6;
-    static INT64 = 7;
-    static UINT64 = 8;
-    static FLOAT16 = 9;
-    static FLOAT32 = 10;
-    static FLOAT64 = 11;
-    static PTR = 12;
-    static CHAR8 = 13;
-    static CHAR16 = 14;
-    static CHAR32 = 15;
-    static UNKNOWN8 = 16;
-    static UNKNOWN16 = 17;
-    static UNKNOWN32 = 18;
-    static UNKNOWN64 = 19;
-    static UNKNOWN128 = 20;
-    static BOOLEAN = 21;
-    static COMPLEX32 = 22;
-    static COMPLEX64 = 23;
-    static COMPLEX128 = 24;
+utils.dtype = {
+    VOID: 0,
+    INT8: 1,
+    UINT8: 2,
+    INT16: 3,
+    UINT16: 4,
+    INT32: 5,
+    UINT32: 6,
+    INT64: 7,
+    UINT64: 8,
+    FLOAT16: 9,
+    FLOAT32: 10,
+    FLOAT64: 11,
+    PTR: 12,
+    CHAR8: 13,
+    CHAR16: 14,
+    CHAR32: 15,
+    UNKNOWN8: 16,
+    UNKNOWN16: 17,
+    UNKNOWN32: 18,
+    UNKNOWN64: 19,
+    UNKNOWN128: 20,
+    BOOLEAN: 21,
+    COMPLEX32: 22,
+    COMPLEX64: 23,
+    COMPLEX128: 24,
 
     /**
      * 
      * @param {number} dtype
      * @return {number} 
      */
-    static type_bytes(dtype) {
+    type_bytes: function(dtype) {
         switch (dtype) {
             case this.VOID: return 0;
             case this.INT8: return 1;
@@ -241,14 +242,14 @@ utils.dtype = class {
                 break;
         }
         throw utils.Error("Not support dtype = " + dtype);
-    }
+    },
 
     /**
      * 
      * @param {number} dtype
      * @return {string} 
      */
-    static type_str(dtype) {
+    type_str: function(dtype) {
         switch (dtype) {
             case this.VOID: return "void";
             case this.INT8: return "int8";
@@ -276,7 +277,7 @@ utils.dtype = class {
             case this.COMPLEX128: return "complex128";
             default: return "unkown";
         }
-    }
+    },
 };
 
 utils.Tensor = class {
