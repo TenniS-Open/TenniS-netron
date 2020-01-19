@@ -211,13 +211,13 @@ tennis.Node = class {
         } else {
             for (let i = 0; i < node.inputs.length; ++i) {
                 schema_inputs.push({
-                    name: "input " + i,
+                    name: "" + i,
                     type: "tensor",
                     description: "",
                 });
             }
             schema_outputs.push({
-                name: "output",
+                name: "" + 0,
                 type: "tensor",
                 description: "",
             });
@@ -245,7 +245,7 @@ tennis.Node = class {
         }
         // set inputs with out schema
         for (i = ii; i < node.inputs.length; ++i) {
-            let input = {name: "input " + i, type: "tensor", description: ""};
+            let input = {name: "" + i, type: "tensor", description: ""};
             this._inputs.push(new tennis.Parameter(input.name, true, [
                 new tennis.Argument(node.input(i), input.type, input.description)
             ]));
@@ -261,7 +261,7 @@ tennis.Node = class {
         }
         // set output without schema
         for (; i < node.outputs.length; ++i) {
-            let output = {name: "output " + i, type: "tensor", description: ""};
+            let output = {name: "" + i, type: "tensor", description: ""};
             this._outputs.push(new tennis.Parameter(output.name, true, [
                 new tennis.Argument(node.output(i), output.type, output.description)
             ]));
