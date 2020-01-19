@@ -55,7 +55,7 @@
   {
     "name": "_dims",
     "schema": {
-      "category": "Custom",
+      "category": "Tensor",
       "description": "Get input tensor's dims.",
       "attributes": [],
       "inputs": [
@@ -527,7 +527,7 @@
   {
     "name": "_shape",
     "schema": {
-      "category": "Custom",
+      "category": "Tensor",
       "description": "Get input tensor's shape.",
       "attributes": [],
       "inputs": [
@@ -718,7 +718,7 @@
   {
     "name": "add_bias",
     "schema": {
-      "category": "Tensor",
+      "category": "Normalization",
       "description": "Add bias on `dim`. Broadcast add. b.size == x.shape(dim)",
       "attributes": [
         {
@@ -919,6 +919,12 @@
           "description": "[device]",
           "name": "y",
           "type": "tensor"
+        }
+      ],
+      "examples": [
+        {
+          "summary": "output shape",
+          "code" : "output_shape[0] = input_shape[0] / (block_height * block_width);\noutput_shape[2] = input_shape[2] * block_height - crop_top - crop_bottom;\noutput_shape[3] = input_shape[3] * block_width - crop_left - crop_right;\noutput_shape[1] = input_shape[1];"
         }
       ]
     }
@@ -2271,11 +2277,187 @@
       ]
     }
   },
-
-
-
-
-
+  {
+    "name": "range",
+    "schema": {
+      "category": "Custom",
+      "description": "Generate a sequence of numbers starting at `start` and extending `delta` increments to a sequence that does not include a `limit`",
+      "attributes": [],
+      "inputs": [
+        {
+          "description": "[host] start of the sequence.",
+          "name": "start",
+          "type": "scalar"
+        },
+        {
+          "description": "[host] end of the sequence, [start, limit)",
+          "name": "limit",
+          "type": "scalar"
+        },
+        {
+          "description": "[host] step of the sequence.",
+          "name": "delta",
+          "type": "scalar"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "[device] sequence",
+          "name": "array",
+          "type": "array"
+        }
+      ]
+    }
+  },
+  {
+    "name": "reduce_mean",
+    "schema": {
+      "category": "Tensor",
+      "description": "Computes the mean of the input tensor's element along the provided axes. The resulted\ntensor has the same rank as the input if keepdims equal 1. If keepdims equal 0, then\nthe resulted tensor have the reduced dimension pruned.\n\nThe above behavior is similar to numpy, with the exception that numpy default keepdims to\nFalse instead of True.",
+      "attributes": [
+        {
+          "description": "A list of integers, along which to reduce. The default is to reduce over all the dimensions of the input tensor. All elements need to be adjacent for this version.",
+          "name": "dims", "type": "int32[_]",
+          "required": true
+        },
+        {
+          "description": "Keep the reduced dimension or not, default 1 mean keep reduced dimension.",
+          "name": "keep_dims", "type": "bool", "default": true
+        }
+      ],
+      "inputs": [
+        {
+          "description": "[device] input tensor.",
+          "name": "x",
+          "type": "tensor"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "[device] reduced tensor.",
+          "name": "y",
+          "type": "tensor"
+        }
+      ]
+    }
+  },
+  {
+    "name": "reduce_sum",
+    "schema": {
+      "category": "Tensor",
+      "description": "Computes the sum of the input tensor's element along the provided axes. The resulted\ntensor has the same rank as the input if keepdims equal 1. If keepdims equal 0, then\nthe resulted tensor have the reduced dimension pruned.\n\nThe above behavior is similar to numpy, with the exception that numpy default keepdims to\nFalse instead of True.",
+      "attributes": [
+        {
+          "description": "A list of integers, along which to reduce. The default is to reduce over all the dimensions of the input tensor. dims.size must be 1 for this version.",
+          "name": "dims", "type": "int32[_]",
+          "required": true
+        },
+        {
+          "description": "Keep the reduced dimension or not, default 1 mean keep reduced dimension.",
+          "name": "keep_dims", "type": "bool", "default": true
+        }
+      ],
+      "inputs": [
+        {
+          "description": "[device] input tensor.",
+          "name": "x",
+          "type": "tensor"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "[device] reduced tensor.",
+          "name": "y",
+          "type": "tensor"
+        }
+      ]
+    }
+  },
+  {
+    "name": "relu",
+    "schema": {
+      "category": "Activation",
+      "description": "y = x > 0 ? x : 0",
+      "attributes": [],
+      "inputs": [
+        {
+          "description": "[device]",
+          "name": "x",
+          "type": "tensor"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "[device] y.shape == x.shape.",
+          "name": "y",
+          "type": "tensor"
+        }
+      ]
+    }
+  },
+  {
+    "name": "relu_max",
+    "schema": {
+      "category": "Activation",
+      "description": "y = min(x > 0 ? x : 0, max)",
+      "attributes": [
+        {
+          "description": "max value to clip.",
+          "name": "max", "type": "float32"
+        }
+      ],
+      "inputs": [
+        {
+          "description": "[device]",
+          "name": "x",
+          "type": "tensor"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "[device] y.shape == x.shape.",
+          "name": "y",
+          "type": "tensor"
+        }
+      ]
+    }
+  },
+  {
+    "name": "resize_nearest_neighbor",
+    "schema": {
+      "category": "Tensor",
+      "description": "Resize tensor to given size, only 2d resize support. Resize on [dim, dim + 1]. Reisze by nearest.",
+      "attributes": [
+        {
+          "description": "Oh hard to describe.",
+          "name": "align_corners", "type": "bool", "default": false
+        },
+        {
+          "description": "resize on [dim, dim + 1].",
+          "name": "dim", "type": "int32"
+        }
+      ],
+      "inputs": [
+        {
+          "description": "[device]",
+          "name": "x",
+          "type": "tensor"
+        },
+        {
+          "description": "[host]",
+          "name": "size",
+          "type": "int32[2]"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "[device]",
+          "name": "y",
+          "type": "tensor"
+        }
+      ]
+    }
+  },
   {
     "name": "roi_align",
     "schema": {
@@ -2320,6 +2502,341 @@
       ]
     }
   },
+  {
+    "name": "rsqrt",
+    "schema": {
+      "category": "Tensor",
+      "description": "y = 1 / sqrt(x)",
+      "attributes": [],
+      "inputs": [
+        {
+          "description": "[device]",
+          "name": "x",
+          "type": "tensor"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "[device]",
+          "name": "y",
+          "type": "tensor"
+        }
+      ]
+    }
+  },
+  {
+    "name": "sample2d",
+    "schema": {
+      "category": "Tensor",
+      "description": "Sample 2d on input tensor, assume that image [height, width] is [dim, dim + 1].",
+      "attributes": [
+        {
+          "description": "sample image method, in [linear=0, cubic=1, nearest=2, hard=3].",
+          "name": "type", "type": "enum", "default": "nearest",
+          "enum": ["linear", "cubic", "nearest", "hard"]
+        },
+        {
+          "description": "[dim, dim + 1] for image.",
+          "name": "dim", "type": "int32", "default": "-2"
+        },
+        {
+          "description": "",
+          "name": "scale", "type": "float32"
+        }
+      ],
+      "inputs": [
+        {
+          "description": "[device]",
+          "name": "x",
+          "type": "tensor"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "[device] the output shape $output_i = floor(input_i * scale)$.",
+          "name": "y",
+          "type": "tensor"
+        }
+      ]
+    }
+  },
+  {
+    "name": "sample2d_v2",
+    "schema": {
+      "category": "Tensor",
+      "description": "Sample 2d on input tensor, assume that image [height, width] is [dim, dim + 1].",
+      "attributes": [
+        {
+          "description": "sample image method, in [linear=0, cubic=1, nearest=2, hard=3].",
+          "name": "type", "type": "enum", "default": "nearest",
+          "enum": ["linear", "cubic", "nearest", "hard"]
+        }
+      ],
+      "inputs": [
+        {
+          "description": "[device]",
+          "name": "x",
+          "type": "tensor"
+        },
+        {
+          "description": "[host] scale.size == x.dims.",
+          "name": "scale",
+          "type": "float32[_]"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "[device] the output shape $output_i = floor(input_i * scale_i)$.",
+          "name": "y",
+          "type": "tensor"
+        }
+      ]
+    }
+  },
+  {
+    "name": "shape_index_patch",
+    "schema": {
+      "category": "Transform",
+      "description": "Get crop [x_patch_h, x_patch_w] on x, according to pos. pos.number == x.number.",
+      "attributes": [
+        {
+          "description": "sample image method, in [linear=0, cubic=1, nearest=2, hard=3].",
+          "name": "type", "type": "enum", "default": "nearest",
+          "enum": ["linear", "cubic", "nearest", "hard"]
+        }
+      ],
+      "inputs": [
+        {
+          "description": "[device] shape is [number, channels, height, width]",
+          "name": "x",
+          "type": "[_, _, _, _]"
+        },
+        {
+          "description": "[device] shape is [number, landmark, 1, 1].",
+          "name": "pos",
+          "type": "[_, _, _, _]"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "[device] output shape is [number, channels, x_patch_h, landmark / 2, x_patch_w], x_patch_h = int(origin_patch.h * x.height / origin.h + 0.5), x_patch_w = int(origin_patch.w * x.width / origin.w + 0.5).",
+          "name": "y",
+          "type": "[_, _, _, _, _]"
+        }
+      ]
+    }
+  },
+  {
+    "name": "sigmoid",
+    "schema": {
+      "category": "Activation",
+      "description": "y = 1 / (1 + exp(-x))",
+      "attributes": [],
+      "inputs": [
+        {
+          "description": "[device]",
+          "name": "x",
+          "type": "tensor"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "[device] y.shape == x.shape.",
+          "name": "y",
+          "type": "tensor"
+        }
+      ]
+    }
+  },
+  {
+    "name": "slice",
+    "schema": {
+      "category": "Tensor",
+      "description": "Slice input tensor. y = x[begin: begin + size].",
+      "attributes": [
+        {
+          "description": "begin.size == x.dims",
+          "name": "begin", "type": "int32[_]"
+        },
+        {
+          "description": "size.size == x.dims",
+          "name": "size", "type": "int32[_]"
+        }
+      ],
+      "inputs": [
+        {
+          "description": "[device]",
+          "name": "x",
+          "type": "tensor"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "[device] y.shape == size.",
+          "name": "y",
+          "type": "tensor"
+        }
+      ]
+    }
+  },
+  {
+    "name": "slice_v2",
+    "schema": {
+      "category": "Tensor",
+      "description": "Slice input tensor. y = x[begin: begin + size].",
+      "attributes": [],
+      "inputs": [
+        {
+          "description": "[device]",
+          "name": "x",
+          "type": "tensor"
+        },
+        {
+          "description": "[host] begin.size == x.dims",
+          "name": "begin",
+          "type": "int32[_]"
+        },
+        {
+          "description": "[host] size.size == x.dims",
+          "name": "size",
+          "type": "int32[_]"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "[device] y.shape == size.",
+          "name": "y",
+          "type": "tensor"
+        }
+      ]
+    }
+  },
+  {
+    "name": "slice_v3",
+    "schema": {
+      "category": "Tensor",
+      "description": "Produces a slice of the input tensor along multiple axes. Similar to numpy: https://docs.scipy.org/doc/numpy/reference/arrays.indexing.html. See onnx.[Slice](https://github.com/onnx/onnx/blob/master/docs/Operators.md#Slice).",
+      "attributes": [],
+      "inputs": [
+        {
+          "description": "[device]",
+          "name": "x",
+          "type": "tensor"
+        },
+        {
+          "description": "[host]",
+          "name": "starts",
+          "type": "int32[_]"
+        },
+        {
+          "description": "[host]",
+          "name": "ends",
+          "type": "int32[_]"
+        },
+        {
+          "description": "[host]",
+          "name": "axes",
+          "type": "int32[_]",
+          "option": "optional"
+        },
+        {
+          "description": "[host]",
+          "name": "steps",
+          "type": "int32[_]",
+          "option": "optional"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "[device]",
+          "name": "y",
+          "type": "tensor"
+        }
+      ]
+    }
+  },
+  {
+    "name": "softmax",
+    "schema": {
+      "category": "Activation",
+      "description": "If not smooth: $y_i = exp(x_i) / \\sum{exp(x_i)}$. ",
+      "attributes": [
+        {
+          "description": "softmax dimension",
+          "name": "dim", "type": "int32", "default": 1
+        },
+        {
+          "description": "If do smooth softmax.",
+          "name": "smooth", "type": "bool", "default": true
+        }
+      ],
+      "inputs": [
+        {
+          "description": "[device] input tensor.",
+          "name": "x",
+          "type": "tensor"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "[device] reduced tensor.",
+          "name": "y",
+          "type": "tensor"
+        }
+      ],
+      "examples" : [
+        {
+          "summary": "smooth = false",
+          "code": "y_i = exp(x_i) / \\sum{exp(x_i)}"
+        },
+        {
+          "summary": "smooth = true",
+          "code": "t_i = x_i - max(x) \nt_i = x_i - max(x)"
+        }
+      ]
+    }
+  },
+  {
+    "name": "space_to_batch4d",
+    "schema": {
+      "category": "Transform",
+      "description": "This operation divides \"spatial\" dimensions `[1, ..., M]` of the input into a\ngrid of blocks of shape `block_shape`, and interleaves these blocks with the\n\"batch\" dimension (0) such that in the output, the spatial dimensions\n`[1, ..., M]` correspond to the position within the grid, and the batch\ndimension combines both the position within a spatial block and the original\nbatch position. Only support NCHW format. \n See tf.[BatchToSapceND](https://www.w3cschool.cn/tensorflow_python/tensorflow_python-wygr2kbg.html) for more information.",
+      "attributes": [
+        {
+          "description": "[[padding_top, padding_bottom], [padding_left, padding_right]]",
+          "name": "padding", "type": "int32[2, 2]"
+        },
+        {
+          "description": "[block_height, block_width]",
+          "name": "block_shape", "type": "int32[2]"
+        }
+      ],
+      "inputs": [
+        {
+          "description": "[device]",
+          "name": "x",
+          "type": "tensor"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "[device]",
+          "name": "y",
+          "type": "tensor"
+        }
+      ],
+      "examples": [
+        {
+          "summary": "output shape",
+          "code" : "output_shape[0] = input_shape[0] * block_height * block_width;\noutput_shape[2] = (input_shape[2] + padding_top + padding_bottom) / block_height;\noutput_shape[3] = (input_shape[3] + padding_left + padding_right) / block_width;\noutput_shape[1] = input_shape[1];"
+        }
+      ]
+    }
+  },
+
+
+
+
 
 
 
