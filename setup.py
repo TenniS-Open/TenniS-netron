@@ -116,7 +116,7 @@ setuptools.setup(
             'view-grapher.css', 'view-grapher.js',
             'view-sidebar.css', 'view-sidebar.js',
             'view.js', 'view.css',
-            'tennis.js', 'tennis-metadata.json', 'tennis-utils.js',
+            'tennis.js', 'tennis-metadata.json',
             'server.py'
         ]
     },
