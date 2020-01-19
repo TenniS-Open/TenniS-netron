@@ -6,14 +6,14 @@ var tennis = tennis || {};
 var base = base || require('./base');
 var long = long || { Long: require('long') };
 var marked = marked || require('marked');
-var ts = ts || require("./tennis-utils")
+var utils = utils || require("./tennis-utils")
 
 tennis.ModelFactory = class {
 
     match(context) {
         // const extension = context.identifier.split('.').pop().toLowerCase();
         const b = context.buffer;
-        let stream = new ts.Stream(b)
+        let stream = new utils.Stream(b)
         stream.skip(4)
         const mask = stream.int32()
         return mask == 0x19910929;
@@ -22,7 +22,7 @@ tennis.ModelFactory = class {
     open(context, host) {
         return tennis.Metadata.open(host).then((metadata) => {
             const identifier = context.identifier;
-            let stream = new ts.Stream(context.buffer);
+            let stream = new utils.Stream(context.buffer);
             return this._openModel(metadata, stream, identifier);
         });
     }
@@ -71,7 +71,7 @@ tennis.Graph = class {
         this._outputs = [];
         this._nodes = [];
 
-        let graph = new ts.Module(stream);
+        let graph = new utils.Module(stream);
         this._mask = graph.mask;
 
         for (const input of graph.inputs) {
@@ -133,7 +133,7 @@ tennis.Parameter = class {
 tennis.Argument = class {
     /**
      * 
-     * @param {ts.Node} node 
+     * @param {utils.Node} node 
      * @param {object} type 
      * @param {string} description 
      * @param {object} initializer 
@@ -186,7 +186,7 @@ tennis.Node = class {
     /**
      * 
      * @param {tennis.Metadata} metadata 
-     * @param {ts.Node} node 
+     * @param {utils.Node} node 
      */
     constructor(metadata, node) {
         this._name = node.name;
@@ -371,7 +371,7 @@ tennis.Attribute = class {
      * @param {tennis.Metadata} metadata 
      * @param {string} operator 
      * @param {string} name 
-     * @param {ts.Tensor} value 
+     * @param {utils.Tensor} value 
      */
     constructor(metadata, operator, name, value) {
         this._name = name;
@@ -445,11 +445,11 @@ tennis.Tensor = class {
 
     /**
      * 
-     * @param {ts.Tensor} tensor 
+     * @param {utils.Tensor} tensor 
      */
     constructor(tensor, name=null) {
         this._type = new tennis.TensorType(
-            ts.dtype.type_str(tensor.dtype),
+            utils.dtype.type_str(tensor.dtype),
             new tennis.TensorShape(tensor.shape));
         // this._value = tensor.value;  // do not decode by default
         this._name = name || '';
@@ -492,14 +492,14 @@ tennis.Tensor = class {
             return "";
         }
         if (false ||
-                this._tensor.dtype == ts.dtype.INT8 ||
-                this._tensor.dtype == ts.dtype.INT16 ||
-                this._tensor.dtype == ts.dtype.INT32 ||
-                this._tensor.dtype == ts.dtype.INT64 ||
-                this._tensor.dtype == ts.dtype.UINT8 ||
-                this._tensor.dtype == ts.dtype.UINT16 ||
-                this._tensor.dtype == ts.dtype.UINT32 ||
-                this._tensor.dtype == ts.dtype.UINT64) {
+                this._tensor.dtype == utils.dtype.INT8 ||
+                this._tensor.dtype == utils.dtype.INT16 ||
+                this._tensor.dtype == utils.dtype.INT32 ||
+                this._tensor.dtype == utils.dtype.INT64 ||
+                this._tensor.dtype == utils.dtype.UINT8 ||
+                this._tensor.dtype == utils.dtype.UINT16 ||
+                this._tensor.dtype == utils.dtype.UINT32 ||
+                this._tensor.dtype == utils.dtype.UINT64) {
             if (this._tensor.shape.length == 1 && this._tensor.shape[0] <= limit) {
                 return JSON.stringify(value, null); // parse to single line
             }
@@ -531,7 +531,7 @@ tennis.TensorShape = class {
 
     /**
      * 
-     * @param {ts.Tensor} tensor 
+     * @param {utils.Tensor} tensor 
      */
     constructor(dimensions) {
         if (dimensions.some((dimension) => dimension === 0 || dimension === undefined || isNaN(dimension))) {

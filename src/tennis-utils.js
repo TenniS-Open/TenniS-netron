@@ -2,11 +2,11 @@
 /* eslint "indent": [ "error", 4, { "SwitchCase": 1 } ] */
 /* TenniS: Tensor based Edge Neural Network Inference System */
 
-var tennis = tennis || {};
+var utils = utils || {};
 var base = base || require('./base');
 var long = long || { Long: require('long') };
 
-tennis.Stream = class {
+utils.Stream = class {
     /**
      * 
      * @param {DataView|ArrayBuffer} data 
@@ -24,7 +24,7 @@ tennis.Stream = class {
             this._dataview = new DataView(data)
             this._offset = offset;
         } else {
-            throw tennis.Error("Stream param 1 must be DataView or ArrayBuffer")
+            throw utils.Error("Stream param 1 must be DataView or ArrayBuffer")
         }
     }
 
@@ -173,7 +173,7 @@ tennis.Stream = class {
     }
 }
 
-tennis.dtype = class {
+utils.dtype = class {
     static VOID = 0;
     static INT8 = 1;
     static UINT8 = 2;
@@ -234,7 +234,7 @@ tennis.dtype = class {
             default:
                 break;
         }
-        throw tennis.Error("Not support dtype = " + dtype)
+        throw utils.Error("Not support dtype = " + dtype)
     }
 
     /**
@@ -273,7 +273,7 @@ tennis.dtype = class {
     }
 }
 
-tennis.Tensor = class {
+utils.Tensor = class {
     /**
      * 
      * @param {[number]} shape 
@@ -311,7 +311,7 @@ tennis.Tensor = class {
     }
 
     get proto() {
-        return new tennis.Prototype(this._dtype, this._shape);
+        return new utils.Prototype(this._dtype, this._shape);
     }
     /**
      * 
@@ -330,29 +330,29 @@ tennis.Tensor = class {
     }
 
     _decode() {
-        let stream = new tennis.Stream(this._data);
+        let stream = new utils.Stream(this._data);
         switch (this._dtype) {
-        case tennis.dtype.INT8:
+        case utils.dtype.INT8:
             return this._decode_core(function() {return stream.int8(); });
-        case tennis.dtype.INT16:
+        case utils.dtype.INT16:
             return this._decode_core(function() {return stream.int16(); });
-        case tennis.dtype.INT32:
+        case utils.dtype.INT32:
             return this._decode_core(function() {return stream.int32(); });
-        case tennis.dtype.INT64:
+        case utils.dtype.INT64:
             return this._decode_core(function() {return stream.int64(); });
-        case tennis.dtype.UINT8:
+        case utils.dtype.UINT8:
             return this._decode_core(function() {return stream.uint8(); });
-        case tennis.dtype.UINT16:
+        case utils.dtype.UINT16:
             return this._decode_core(function() {return stream.uint16(); });
-        case tennis.dtype.UINT32:
+        case utils.dtype.UINT32:
             return this._decode_core(function() {return stream.uint32(); });
-        case tennis.dtype.UINT64:
+        case utils.dtype.UINT64:
             return this._decode_core(function() {return stream.uinst64(); });
-        case tennis.dtype.FLOAT32:
+        case utils.dtype.FLOAT32:
             return this._decode_core(function() {return stream.float32(); });
-        case tennis.dtype.FLOAT64:
+        case utils.dtype.FLOAT64:
             return this._decode_core(function() {return stream.float64(); });
-        case tennis.dtype.BOOLEAN:
+        case utils.dtype.BOOLEAN:
             return this._decode_core(function() {return stream.int8() ? true : false; });
         }
         return null;
@@ -363,7 +363,7 @@ tennis.Tensor = class {
             return this._value;
         }
         switch (this._dtype) {
-        case tennis.dtype.CHAR8:
+        case utils.dtype.CHAR8:
             {
                 this._value = String.fromCharCode.apply(null, new Int8Array(this._data));
                 break;
@@ -378,30 +378,30 @@ tennis.Tensor = class {
 
     _context() {
         let context = {};
-        context.stream = new tennis.Stream(this._data);
+        context.stream = new utils.Stream(this._data);
         let decoder = null;
         switch (this._dtype) {
-            case tennis.dtype.INT8:
+            case utils.dtype.INT8:
                 decoder = function(stream) {return stream.int8(); }; break;
-            case tennis.dtype.INT16:
+            case utils.dtype.INT16:
                 decoder = function(stream) {return stream.int16(); }; break;
-            case tennis.dtype.INT32:
+            case utils.dtype.INT32:
                 decoder = function(stream) {return stream.int32(); }; break;
-            case tennis.dtype.INT64:
+            case utils.dtype.INT64:
                 decoder = function(stream) {return stream.int64(); }; break;
-            case tennis.dtype.UINT8:
+            case utils.dtype.UINT8:
                 decoder = function(stream) {return stream.uint8(); }; break;
-            case tennis.dtype.UINT16:
+            case utils.dtype.UINT16:
                 decoder = function(stream) {return stream.uint16(); }; break;
-            case tennis.dtype.UINT32:
+            case utils.dtype.UINT32:
                 decoder = function(stream) {return stream.uint32(); }; break;
-            case tennis.dtype.UINT64:
+            case utils.dtype.UINT64:
                 decoder = function(stream) {return stream.uint64(); }; break;
-            case tennis.dtype.FLOAT32:
+            case utils.dtype.FLOAT32:
                 decoder = function(stream) {return stream.float32(); }; break;
-            case tennis.dtype.FLOAT64:
+            case utils.dtype.FLOAT64:
                 decoder = function(stream) {return stream.float64(); }; break;
-            case tennis.dtype.BOOLEAN:
+            case utils.dtype.BOOLEAN:
                 decoder = function(stream) {return stream.uint8(); }; break;
             }
         if (decoder === null) {
@@ -417,17 +417,17 @@ tennis.Tensor = class {
 
     get viewable() {
         return (false ||
-            this._dtype == tennis.dtype.INT8 ||
-            this._dtype == tennis.dtype.INT16 ||
-            this._dtype == tennis.dtype.INT32 ||
-            this._dtype == tennis.dtype.INT64 ||
-            this._dtype == tennis.dtype.UINT8 ||
-            this._dtype == tennis.dtype.UINT16 ||
-            this._dtype == tennis.dtype.UINT32 ||
-            this._dtype == tennis.dtype.UINT64 ||
-            this._dtype == tennis.dtype.FLOAT32 ||
-            this._dtype == tennis.dtype.FLOAT64 ||
-            this._dtype == tennis.dtype.BOOLEAN);
+            this._dtype == utils.dtype.INT8 ||
+            this._dtype == utils.dtype.INT16 ||
+            this._dtype == utils.dtype.INT32 ||
+            this._dtype == utils.dtype.INT64 ||
+            this._dtype == utils.dtype.UINT8 ||
+            this._dtype == utils.dtype.UINT16 ||
+            this._dtype == utils.dtype.UINT32 ||
+            this._dtype == utils.dtype.UINT64 ||
+            this._dtype == utils.dtype.FLOAT32 ||
+            this._dtype == utils.dtype.FLOAT64 ||
+            this._dtype == utils.dtype.BOOLEAN);
     }
 
     _view(context, dim=0) {
@@ -467,12 +467,12 @@ tennis.Tensor = class {
     }
 
     /**
-     * @param {[tennis.Tensor]} fields
-     * @return {tennis.Tensor}
+     * @param {[utils.Tensor]} fields
+     * @return {utils.Tensor}
      */
     static Pack(fields) {
         if (fields.length == 0) {
-            new tennis.Tensor([], tennis.dtype.VOID, null);
+            new utils.Tensor([], utils.dtype.VOID, null);
         } else if (fields.length == 1) {
             return fields[0];
         }
@@ -480,13 +480,13 @@ tennis.Tensor = class {
         for (let i = 1; i < fields.length; ++i) {
             extra.push(fields[i]);
         }
-        let packed = new tennis.Tensor(this._shape, this._dtype, this._data, this._value);
+        let packed = new utils.Tensor(this._shape, this._dtype, this._data, this._value);
         packed._field = extra;
         return packed;
     }
 }
 
-tennis.Node = class {
+utils.Node = class {
     /**
      * 
      * @param {{}} params 
@@ -518,7 +518,7 @@ tennis.Node = class {
         if (this._dtype === null && this._shape === null) {
             return null;
         }
-        return new tennis.Prototype(this._dtype, this._shape);
+        return new utils.Prototype(this._dtype, this._shape);
     }
 
     /**
@@ -589,21 +589,21 @@ tennis.Node = class {
     }
 
     /**
-     * @return {[tennis.Node]}
+     * @return {[utils.Node]}
      */
     get inputs() {
         return this._inputs;
     }
 
     /**
-     * @param {[tennis.Node]} nodes 
+     * @param {[utils.Node]} nodes 
      */
     set inputs(v) {
         this._inputs = v;
     }
 
     /**
-     * @return {[tennis.Node]}
+     * @return {[utils.Node]}
      */
     get outputs() {
         return this._outputs;
@@ -612,7 +612,7 @@ tennis.Node = class {
     /**
      * 
      * @param {number} i 
-     * @return {tennis.Node}
+     * @return {utils.Node}
      */
     input(i) {
         return this._inputs[i];
@@ -620,14 +620,14 @@ tennis.Node = class {
     /**
      * 
      * @param {number} i 
-     * @return {tennis.Node}
+     * @return {utils.Node}
      */
     output(i) {
         return this._outputs[i];
     }
 }
 
-tennis.Prototype =  class {
+utils.Prototype =  class {
     /**
      * 
      * @param {number} dtype 
@@ -639,7 +639,7 @@ tennis.Prototype =  class {
     }
 
     toString() {
-        let part1 = this._dtype === null ? "" : tennis.dtype.type_str(this._dtype);
+        let part1 = this._dtype === null ? "" : utils.dtype.type_str(this._dtype);
         let part2 = "";
         if (this._shape === null) {
             part2 = part1.length > 0 ? "[...]" : "tensor";
@@ -660,16 +660,16 @@ tennis.Prototype =  class {
     }
 }
 
-tennis.Module = class {
+utils.Module = class {
     /**
      * 
-     * @param {tennis.Stream} stream 
+     * @param {utils.Stream} stream 
      */
     constructor(stream) {
         stream.skip(4);
         let mask = stream.int32();
         if (mask != 0x19910929) {
-            throw tennis.Error("TenniS Module not valid.");
+            throw utils.Error("TenniS Module not valid.");
         }
         this._mask = mask;
         stream.skip(120);
@@ -693,17 +693,17 @@ tennis.Module = class {
     get mask() { return this._mask; }
 
     /**
-     * @return {[tennis.Node]} inputs
+     * @return {[utils.Node]} inputs
      */
     get inputs() { return this._inputs; }
 
     /**
-     * @return {[tennis.Node]} outputs
+     * @return {[utils.Node]} outputs
      */
     get outputs() { return this._outputs; }
 
     /**
-     * @return {[tennis.Node]} nodes
+     * @return {[utils.Node]} nodes
      */
     get nodes() { return this._nodes; }
 
@@ -721,8 +721,8 @@ tennis.Module = class {
 
     /**
      * 
-     * @param {tennis.Stream} stream
-     * @return {tennis.Tensor} 
+     * @param {utils.Stream} stream
+     * @return {utils.Tensor} 
      */
     _read_tensor(stream) {
         let size = stream.int32();
@@ -730,19 +730,19 @@ tennis.Module = class {
         for (let i = 0; i < size; ++i) {
             let dtype = stream.int8();
             let shape = stream.int32_array();
-            let data_size = tennis.dtype.type_bytes(dtype) * this._prod(shape);
+            let data_size = utils.dtype.type_bytes(dtype) * this._prod(shape);
             let data = stream.buffer(data_size);
-            let tensor = new tennis.Tensor(shape, dtype, data);
+            let tensor = new utils.Tensor(shape, dtype, data);
             fileds.push(tensor);
         }
-        return tennis.Tensor.Pack(fileds);
+        return utils.Tensor.Pack(fileds);
     }
 
     /**
      * 
-     * @param {tennis.Stream} stream
+     * @param {utils.Stream} stream
      * @param {number} id
-     * @return {tennis.Node} 
+     * @return {utils.Node} 
      */
     _read_bubble(stream, id=null) {
         let size = stream.int32();
@@ -752,12 +752,12 @@ tennis.Module = class {
             let value = this._read_tensor(stream);
             params[name] = value;
         }
-        return new tennis.Node(params, id);
+        return new utils.Node(params, id);
     }
 
     /**
      * 
-     * @param {tennis.Stream} stream 
+     * @param {utils.Stream} stream 
      */
     _read_graph(stream) {
         let size = stream.int32();
@@ -778,7 +778,7 @@ tennis.Module = class {
     }
 };
 
-tennis.Error = class extends Error {
+utils.Error = class extends Error {
     constructor(message) {
         super(message);
         this.name = 'Error running tennis utils.';
@@ -786,5 +786,5 @@ tennis.Error = class extends Error {
 };
 
 if (typeof module !== 'undefined' && typeof module.exports === 'object') {
-    module.exports = tennis
+    module.exports = utils;
 }
