@@ -13,6 +13,7 @@ utils.Stream = class {
      * @param {number} offset
      */
     constructor(data, offset=0) {
+        var Buffer = Buffer || class {};
         if (data instanceof DataView) {
             this._dataview = data;
             this._offset = offset;
@@ -22,6 +23,9 @@ utils.Stream = class {
         } else if (data instanceof ArrayBuffer ||
                 data instanceof SharedArrayBuffer) {
             this._dataview = new DataView(data);
+            this._offset = offset;
+        } else if (data instanceof Uint8Array) {
+            this._dataview = new DataView(data.buffer);
             this._offset = offset;
         } else {
             throw utils.Error("Stream param 1 must be DataView or ArrayBuffer");
@@ -171,7 +175,7 @@ utils.Stream = class {
         }
         return array;
     }
-}
+};
 
 utils.dtype = class {
     static VOID = 0;
@@ -234,7 +238,7 @@ utils.dtype = class {
             default:
                 break;
         }
-        throw utils.Error("Not support dtype = " + dtype)
+        throw utils.Error("Not support dtype = " + dtype);
     }
 
     /**
@@ -271,7 +275,7 @@ utils.dtype = class {
             default: return "unkown";
         }
     }
-}
+};
 
 utils.Tensor = class {
     /**
@@ -484,7 +488,7 @@ utils.Tensor = class {
         packed._field = extra;
         return packed;
     }
-}
+};
 
 utils.Node = class {
     /**
@@ -625,7 +629,7 @@ utils.Node = class {
     output(i) {
         return this._outputs[i];
     }
-}
+};
 
 utils.Prototype =  class {
     /**
@@ -658,7 +662,7 @@ utils.Prototype =  class {
         }
         return part1 + part2;
     }
-}
+};
 
 utils.Module = class {
     /**
