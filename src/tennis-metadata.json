@@ -1065,7 +1065,7 @@
       "examples": [
         {
           "code": "pad_h = pad_h_top + pad_h_bottom; \npad_w = pad_w_left + pad_h_right; \noutput_h = floor((height + pad_h - (dilation_h * (kernel_h - 1) + 1)) / stride_h + 1); \noutput_w = floor((width + pad_w - (dilation_w * (kernel_w - 1) + 1)) / stride_w + 1);",
-          "summary": "output_shape"
+          "summary": "output shape"
         }
       ]
     }
@@ -1123,7 +1123,7 @@
       "examples": [
         {
           "code": "pad_h = pad_h_top + pad_h_bottom; \npad_w = pad_w_left + pad_h_right; \noutput_h = floor((height + pad_h - (dilation_h * (kernel_h - 1) + 1)) / stride_h + 1); \noutput_w = floor((width + pad_w - (dilation_w * (kernel_w - 1) + 1)) / stride_w + 1);",
-          "summary": "output_shape"
+          "summary": "output shape"
         }
       ]
     }
@@ -1178,7 +1178,7 @@
       "examples": [
         {
           "code": "pad_h = pad_h_top + pad_h_bottom; \npad_w = pad_w_left + pad_h_right; \noutput_h = floor((height + pad_h - (dilation_h * (kernel_h - 1) + 1)) / stride_h + 1); \noutput_w = floor((width + pad_w - (dilation_w * (kernel_w - 1) + 1)) / stride_w + 1);",
-          "summary": "output_shape"
+          "summary": "output shape"
         }
       ]
     }
@@ -1295,7 +1295,7 @@
       "examples": [
         {
           "code": "pad_h = pad_h_top + pad_h_bottom; \npad_w = pad_w_left + pad_h_right; \noutput_h = floor((height + pad_h - (dilation_h * (kernel_h - 1) + 1)) / stride_h + 1); \noutput_w = floor((width + pad_w - (dilation_w * (kernel_w - 1) + 1)) / stride_w + 1);",
-          "summary": "output_shape"
+          "summary": "output shape"
         }
       ]
     }
@@ -1350,7 +1350,7 @@
       "examples": [
         {
           "code": "pad_h = pad_h_top + pad_h_bottom; \npad_w = pad_w_left + pad_h_right; \noutput_h = floor((height + pad_h - (dilation_h * (kernel_h - 1) + 1)) / stride_h + 1); \noutput_w = floor((width + pad_w - (dilation_w * (kernel_w - 1) + 1)) / stride_w + 1);",
-          "summary": "output_shape"
+          "summary": "output shape"
         }
       ]
     }
@@ -2833,13 +2833,464 @@
       ]
     }
   },
-
-
-
-
-
-
-
+  {
+    "name": "sqrt",
+    "schema": {
+      "category": "Tensor",
+      "description": "y = sqrt(x)",
+      "attributes": [],
+      "inputs": [
+        {
+          "description": "[device]",
+          "name": "x",
+          "type": "tensor"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "[device]",
+          "name": "y",
+          "type": "tensor"
+        }
+      ]
+    }
+  },
+  {
+    "name": "square",
+    "schema": {
+      "category": "Tensor",
+      "description": "y = x ** 2",
+      "attributes": [],
+      "inputs": [
+        {
+          "description": "[device]",
+          "name": "x",
+          "type": "tensor"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "[device]",
+          "name": "y",
+          "type": "tensor"
+        }
+      ]
+    }
+  },
+  {
+    "name": "squeeze",
+    "schema": {
+      "category": "Shape",
+      "description": "Remove dimensions witch equals to 1.",
+      "attributes": [
+        {
+          "description": "axes to remove. if axes not set, then remove all dim equals to 1.",
+          "name": "axes", "type": "int32[_]"
+        }
+      ],
+      "inputs": [
+        {
+          "description": "[device]",
+          "name": "x",
+          "type": "tensor"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "[device]",
+          "name": "y",
+          "type": "tensor"
+        }
+      ]
+    }
+  },
+  {
+    "name": "stack",
+    "schema": {
+      "category": "Transform",
+      "description": "Equals to numpy.stack.",
+      "attributes": [
+        {
+          "description": "axis to stack.",
+          "name": "axis", "type": "int32"
+        }
+      ],
+      "inputs": [
+        {
+          "description": "[device] list of tensors",
+          "name": "tensors",
+          "type": "list[tensor]",
+          "option": "variadic"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "[device] output tensor",
+          "name": "y",
+          "type": "tensor"
+        }
+      ]
+    }
+  },
+  {
+    "name": "strided_slice",
+    "schema": {
+      "category": "Tensor",
+      "description": "Produces a slice of the input tensor along multiple axes. Similar to numpy: https://docs.scipy.org/doc/numpy/reference/arrays.indexing.html. See tf.[strided_slice]().",
+      "attributes": [
+        {
+          "description": "",
+          "name": "begin", "type": "int32[_]"
+        },
+        {
+          "description": "",
+          "name": "end", "type": "int32[_]"
+        },
+        {
+          "description": "",
+          "name": "stride", "type": "int32[_]"
+        },
+        {
+          "description": "binary coded mask, represent min begin",
+          "name": "begin_mask", "type": "int32"
+        },
+        {
+          "description": "binary coded mask, represent max end",
+          "name": "end_mask", "type": "int32"
+        },
+        {
+          "description": "binary coded mask, represent ... in numpy.slice",
+          "name": "ellipsis_mask", "type": "int32"
+        },
+        {
+          "description": "binary coded mask, represent newaxis in numpy.slice",
+          "name": "new_axis_mask", "type": "int32"
+        },
+        {
+          "description": "binary coded mask, represent shrink axis then output",
+          "name": "shrink_axis_mask", "type": "int32"
+        }
+      ],
+      "inputs": [
+        {
+          "description": "[device]",
+          "name": "x",
+          "type": "tensor"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "[device]",
+          "name": "y",
+          "type": "tensor"
+        }
+      ]
+    }
+  },
+  {
+    "name": "sub",
+    "schema": {
+      "category": "Tensor",
+      "description": "`y = lhs - rhs`. Support broadcast.",
+      "attributes": [],
+      "inputs": [
+        {
+          "description": "[device]",
+          "name": "lhs",
+          "type": "tensor"
+        },
+        {
+          "description": "[device]",
+          "name": "rhs",
+          "type": "tensor"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "[device] `lhs - rhs`",
+          "name": "y",
+          "type": "tensor"
+        }
+      ]
+    }
+  },
+  {
+    "name": "tanh",
+    "schema": {
+      "category": "Activation",
+      "description": "Return \frac{exp(x)-exp(-x)}{exp(x)+exp(-x)}, equals 2 * sigmoid(2 * x) - 1.",
+      "attributes": [],
+      "inputs": [
+        {
+          "description": "[device]",
+          "name": "x",
+          "type": "tensor"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "[device] y.shape == x.shape.",
+          "name": "y",
+          "type": "tensor"
+        }
+      ]
+    }
+  },
+  {
+    "name": "tile",
+    "schema": {
+      "category": "Transform",
+      "description": "y = numpy.tile(x, repeats)",
+      "attributes": [
+        {
+          "description": "repeats.size == x.dims, repeat x on each repeat axis.",
+          "name": "repeats", "type": "int32[_]"
+        }
+      ],
+      "inputs": [
+        {
+          "description": "[device]",
+          "name": "x",
+          "type": "tensor"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "[device] y = numpy.tile(x, repeats).",
+          "name": "y",
+          "type": "tensor"
+        }
+      ]
+    }
+  },
+  {
+    "name": "to_float",
+    "schema": {
+      "category": "Custom",
+      "description": "Cast input to `float32`.",
+      "attributes": [],
+      "inputs": [
+        {
+          "description": "[device]",
+          "name": "x",
+          "type": "tensor"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "[device]",
+          "name": "y",
+          "type": "float32[...]"
+        }
+      ]
+    }
+  },
+  {
+    "name": "topkv2",
+    "schema": {
+      "category": "Tensor",
+      "description": "Get top `number` max values and indices on the last dimension.",
+      "attributes": [
+        {
+          "description": "number of output values and indices on the last dimension.",
+          "name": "number", "type": "int32"
+        },
+        {
+          "description": "if sort all outputs by scores.",
+          "name": "sorted", "type": "bool", "default": false
+        }
+      ],
+      "inputs": [
+        {
+          "description": "[device]",
+          "name": "x",
+          "type": "tensor"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "[device]",
+          "name": "values",
+          "type": "tensor"
+        },
+        {
+          "description": "[device]",
+          "name": "indices",
+          "type": "int[...]"
+        }
+      ]
+    }
+  },
+  {
+    "name": "transpose_conv2d",
+    "schema": {
+      "category": "Layer",
+      "description": "Do inverse 2D Convolution.",
+      "attributes": [
+        {
+          "description": "in [NCHW, NHWC]",
+          "name": "format", "type": "string", "default": "NCHW"
+        },
+        {
+          "description": "",
+          "name": "padding", "type": "int32[4, 2]", "default": [0, 0, 0, 0, 0, 0, 0, 0]
+        },
+        {
+          "description": "",
+          "name": "padding_value", "type": "float32", "default": 0
+        },
+        {
+          "description": "",
+          "name": "stride", "type": "int32[4]", "default": [1, 1, 1, 1]
+        },
+        {
+          "description": "",
+          "name": "dilation", "type": "int32[4]", "default": [1, 1, 1, 1]
+        }
+      ],
+      "inputs": [
+        {
+          "description": "[device] compuating data, in NCHW(default) or NHWC format.",
+          "name": "x",
+          "type": "[N, _, _, _]"
+        },
+        {
+          "description": "[device] convolution kernel: [output_channels, input_channels, kernel_height, kernel_width].",
+          "name": "w",
+          "type": "[_, _, _, _]"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "[device]",
+          "name": "y",
+          "type": "[N, _, _, _]"
+        }
+      ],
+      "examples": [
+        {
+          "code": "pad_h = pad_h_top + pad_h_bottom\npad_w = pad_w_left + pad_h_right\noutput_h = floor((height + pad_h -\n            (dilation_h * (kernel_h - 1) + 1)) / stride_h + 1);\noutput_w = floor((width + pad_w -\n            (dilation_w * (kernel_w - 1) + 1)) / stride_w + 1);\n",
+          "summary": "output shape"
+        }
+      ]
+    }
+  },
+  {
+    "name": "unsqueeze",
+    "schema": {
+      "category": "Shape",
+      "description": "Expand dimensions with 1, representing numpy.expend_dims(x, axis) for axis in axes.",
+      "attributes": [
+        {
+          "description": "axes to expand.",
+          "name": "axes", "type": "int32[_]"
+        }
+      ],
+      "inputs": [
+        {
+          "description": "[device]",
+          "name": "x",
+          "type": "tensor"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "[device]",
+          "name": "y",
+          "type": "tensor"
+        }
+      ]
+    }
+  },
+  {
+    "name": "yolo",
+    "schema": {
+      "category": "Layer",
+      "description": "Equals to darknet yolo cpu layer forward.",
+      "attributes": [
+        {
+          "description": "number of classes.",
+          "name": "classes", "type": "int32"
+        },
+        {
+          "description": "number of classes.",
+          "name": "mask", "type": "int32[_]"
+        },
+        {
+          "description": "number of classes.",
+          "name": "anchors", "type": "float32[_]"
+        }
+      ],
+      "inputs": [
+        {
+          "description": "[device]",
+          "name": "x",
+          "type": "tensor"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "[device] shape is [batch, maks.size * (classes + 4 + 1), h, w]",
+          "name": "y",
+          "type": "tensor"
+        },
+        {
+          "description": "[host]",
+          "name": "classes",
+          "type": "int32"
+        },
+        {
+          "description": "[host]",
+          "name": "mask",
+          "type": "int32[_]"
+        },
+        {
+          "description": "[host]",
+          "name": "anchors",
+          "type": "float32[_]"
+        }
+      ],
+      "examples": [
+        {
+          "summary": "yolo[cpu]",
+          "code": "template<typename T>\nstatic void compute_run(layer l) {\n    int b, n;\n    auto data = reinterpret_cast<T *>(l.output);\n    for (b = 0; b < l.batch; ++b) {\n        for (n = 0; n < l.n; ++n) {\n            int index = entry_index(l, b, n * l.w * l.h, 0);\n            activate_array<T>(data + index, 2 * l.w * l.h);\n            index = entry_index(l, b, n * l.w * l.h, 4);\n            activate_array<T>(data + index, (1 + l.classes) * l.w * l.h);\n        }\n    }\n}"
+        }
+      ]
+    }
+  },
+  {
+    "name": "yolo_poster",
+    "schema": {
+      "category": "Tensor",
+      "description": "Post process after yolo output to bindingbox.",
+      "attributes": [
+        {
+          "description": "axes to expand.",
+          "name": "axes", "type": "int32[_]"
+        }
+      ],
+      "inputs": [
+        {
+          "description": "[device] net input data",
+          "name": "x",
+          "type": "tensor"
+        },
+        {
+          "description": "[device] yolo output packed tensors",
+          "name": "yolo",
+          "type": "tensor",
+          "option": "variadic"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "[host] shape is [N, M]. N is number of bbox. M = 6, representing 4(box: x, y, w, h) + 1(prob) + 1(label). All coordinates in [0, 1].",
+          "name": "y",
+          "type": "tensor"
+        }
+      ]
+    }
+  },
   {
     "name": "_field",
     "schema": {

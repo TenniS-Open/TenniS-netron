@@ -1009,8 +1009,8 @@ tennis.Node = class {
                 let left_schema = schema_inputs.length - i;
                 let left_input = node.inputs.length - ii;
                 let variadic_count = left_input - left_schema + 1;
-                let args = node.inputs.slice(ii, ii + variadic_count).map((v, j) => {
-                    return new tennis.Argument(node.input(j), null, null, null);
+                let args = node.inputs.slice(ii, ii + variadic_count).map(v => {
+                    return new tennis.Argument(v, null, null, null);
                 });
                 this._inputs.push(new tennis.Parameter(input.name, true, args));
                 ii += variadic_count - 1;
