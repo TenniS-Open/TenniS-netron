@@ -28,7 +28,7 @@ utils.Stream = class {
             this._dataview = new DataView(data);
             this._offset = offset;
         } else if (data instanceof Uint8Array) {
-            this._dataview = new DataView(data.buffer);
+            this._dataview = new DataView(data.buffer, data.byteOffset, data.length);
             this._offset = offset;
         } else {
             throw utils.Error("Stream param 1 must be DataView or ArrayBuffer");
@@ -859,6 +859,7 @@ tennis.Graph = class {
             this._outputs.push(new tennis.Parameter(output.name, true, [new tennis.Argument(output, output.proto, "", null)]));
         }
 
+        // TODO: show dynamic padding as chain
         let map_node = {};
         for (const node of graph.nodes) {
             if (node.op == "<param>") continue;
@@ -1051,6 +1052,10 @@ tennis.Node = class {
                 new tennis.Argument(node_output, output.type, output.description)
             ]));
         }
+
+        /**
+         * TODO: Show the dtype, shape, value for each node frozen debug
+         */
 
         /**
          * add attrubite
@@ -1371,6 +1376,7 @@ tennis.Metadata = class {
     }
 
     getAttributeSchema(operator, name) {
+        // TODO: return common #dtype, #shape, #value infor
         const key = operator + ':' + name;
         if (!this._attributeMap.has(key)) {
             this._attributeMap.set(key, null);
@@ -1394,4 +1400,5 @@ tennis.Error = class extends Error {
 
 if (typeof module !== 'undefined' && typeof module.exports === 'object') {
     module.exports.ModelFactory = tennis.ModelFactory;
+    module.exports.utils = utils;
 }
