@@ -511,6 +511,7 @@ utils.Node = class {
         this._dtype = this.get("#dtype");
         this._inputs = [];
         this._outputs = [this];
+        this._hand_arg_id = null;
 
         if (!(this._dtype === null)) {
             this._dtype = this._dtype.value;
@@ -532,7 +533,14 @@ utils.Node = class {
      * @return {string} arg_id
      */
     get arg_id() {
+        if (this._hand_arg_id) {
+            return this._hand_arg_id;
+        }
         return this._id.toString() + ": " + this._name;
+    }
+
+    set arg_id(v) {
+        this._hand_arg_id = v;
     }
 
     /**
@@ -859,13 +867,35 @@ tennis.Graph = class {
             this._outputs.push(new tennis.Parameter(output.name, true, [new tennis.Argument(output, output.proto, "", null)]));
         }
 
-        // TODO: show dynamic padding as chain
-        let map_node = {};
-        for (const node of graph.nodes) {
+        const node_v2_map = {
+            "conv2d_v2": 1,
+            "depthwise_conv2d_v2": 1,
+            "pooling2d_v2": 1,
+        };
+
+        let draw_nodes = [];
+        for (let node of graph.nodes) {
             if (node.op == "<param>") continue;
             if (node.op == "<const>") continue;
+
+            if (node.op in node_v2_map) {
+                let input = node.input(node_v2_map[node.op]);
+                input.chain = input.chain || [];
+                input.chain.push(node);
+                continue;
+            }
+
+            draw_nodes.push(node);
+        }
+
+        for (const node of draw_nodes) {
             let draw_node = new tennis.Node(metadata, node);
-            map_node[node] = draw_node;
+            if (node.chain && node.chain.length > 0) {
+                draw_node.chain = draw_node.chain || [];
+                for (const chain of node.chain) {
+                    draw_node.chain.push(new tennis.Node(metadata, chain));
+                }
+            }
             this._nodes.push(draw_node);
         }
     }
@@ -1376,7 +1406,6 @@ tennis.Metadata = class {
     }
 
     getAttributeSchema(operator, name) {
-        // TODO: return common #dtype, #shape, #value infor
         const key = operator + ':' + name;
         if (!this._attributeMap.has(key)) {
             this._attributeMap.set(key, null);
