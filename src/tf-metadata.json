@@ -9723,6 +9723,13 @@
           "description": "scalar, dimension of the logits",
           "name": "logits_dimension",
           "type": "int64"
+        },
+        {
+          "default": 1,
+          "description": "Number of groups of split information to process, where a group contains feature\nids that are processed together in BoostedTreesCalculateBestFeatureSplitOpV2.\nINFERRED.",
+          "minimum": 1,
+          "name": "num_groups",
+          "type": "int64"
         }
       ],
       "description": "or by starting a new tree.",
@@ -9735,6 +9742,7 @@
         {
           "description": "Rank 1 tensor with ids for each feature. This is the real id of\nthe feature that will be used in the split.",
           "name": "feature_ids",
+          "numberAttr": "num_groups",
           "type": 3
         },
         {
@@ -10486,6 +10494,67 @@
           "description": "The gradient of `loss`.  3-D, shape:\n`(max_time x batch_size x num_classes)`.",
           "name": "gradient",
           "typeAttr": "T"
+        }
+      ],
+      "summary": "Calculates the CTC Loss (log probability) for each batch entry.  Also calculates"
+    }
+  },
+  {
+    "name": "CTCLossV2",
+    "schema": {
+      "attributes": [
+        {
+          "default": false,
+          "description": "Scalar, if true then repeated labels are\ncollapsed prior to the CTC calculation.",
+          "name": "preprocess_collapse_repeated",
+          "type": "boolean"
+        },
+        {
+          "default": true,
+          "description": "Scalar.  If set to false, *during* CTC calculation\nrepeated non-blank labels will not be merged and are interpreted as\nindividual labels.  This is a simplified version of CTC.",
+          "name": "ctc_merge_repeated",
+          "type": "boolean"
+        },
+        {
+          "default": false,
+          "description": "Scalar. If set to true, during CTC\ncalculation, items that have longer output sequences than input sequences\nare skipped: they don't contribute to the loss term and have zero-gradient.",
+          "name": "ignore_longer_outputs_than_inputs",
+          "type": "boolean"
+        }
+      ],
+      "description": "the gradient.  This class performs the softmax operation for you, so inputs\nshould be e.g. linear projections of outputs by an LSTM.",
+      "inputs": [
+        {
+          "description": "3-D, shape: `(max_time x batch_size x num_classes)`, the logits. Default blank\nlabel is 0 rather num_classes - 1.",
+          "name": "inputs",
+          "type": 1
+        },
+        {
+          "description": "The indices of a `SparseTensor<int32, 2>`.\n`labels_indices(i, :) == [b, t]` means `labels_values(i)` stores the id for\n`(batch b, time t)`.",
+          "name": "labels_indices",
+          "type": 9
+        },
+        {
+          "description": "The values (labels) associated with the given batch and time.",
+          "name": "labels_values",
+          "type": 3
+        },
+        {
+          "description": "A vector containing sequence lengths (batch).",
+          "name": "sequence_length",
+          "type": 3
+        }
+      ],
+      "outputs": [
+        {
+          "description": "A vector (batch) containing log-probabilities.",
+          "name": "loss",
+          "type": 1
+        },
+        {
+          "description": "The gradient of `loss`.  3-D, shape:\n`(max_time x batch_size x num_classes)`.",
+          "name": "gradient",
+          "type": 1
         }
       ],
       "summary": "Calculates the CTC Loss (log probability) for each batch entry.  Also calculates"
@@ -69952,7 +70021,7 @@
           "type": "string"
         }
       ],
-      "description": "Converts each string in the input Tensor to lowercase.",
+      "description": "Example:\n\n>>> tf.strings.lower(\"CamelCase string and ALL CAPS\")\n<tf.Tensor: shape=(), dtype=string, numpy=b'camelcase string and all caps'>\n",
       "inputs": [
         {
           "name": "input",
@@ -69964,7 +70033,8 @@
           "name": "output",
           "type": 7
         }
-      ]
+      ],
+      "summary": "Converts all uppercase characters into their respective lowercase replacements."
     }
   },
   {
@@ -70303,7 +70373,7 @@
           "type": "string"
         }
       ],
-      "description": "Converts each string in the input Tensor to uppercase.",
+      "description": "Example:\n\n>>> tf.strings.upper(\"CamelCase string and ALL CAPS\")\n<tf.Tensor: shape=(), dtype=string, numpy=b'CAMELCASE STRING AND ALL CAPS'>\n",
       "inputs": [
         {
           "name": "input",
@@ -70315,7 +70385,8 @@
           "name": "output",
           "type": 7
         }
-      ]
+      ],
+      "summary": "Converts all lowercase characters into their respective uppercase replacements."
     }
   },
   {

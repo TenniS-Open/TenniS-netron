@@ -1938,13 +1938,6 @@
   },
   {
     "type":   "darknet",
-    "target": "ocr.cfg",
-    "source": "https://github.com/chineseocr/darknet-ocr/blob/master/models/ocr.cfg?raw=true",
-    "format": "Darknet",
-    "link":   "https://github.com/chineseocr/darknet-ocr"
-  },
-  {
-    "type":   "darknet",
     "target": "resnet18.cfg,resnet18.weights",
     "source": "https://github.com/pjreddie/darknet/blob/master/cfg/resnet18.cfg?raw=true,https://pjreddie.com/media/files/resnet18.weights",
     "format": "Darknet",
@@ -2015,10 +2008,10 @@
   },
   {
     "type":   "darknet",
-    "target": "yolov3-tiny_occlusion_track.cfg",
-    "source": "https://github.com/AlexeyAB/darknet/blob/master/cfg/yolov3-tiny_occlusion_track.cfg?raw=true",
+    "target": "yolov3-tiny_3l_shortcut_multilayer_per_feature_softmax.cfg",
+    "source": "https://github.com/lutzroeder/netron/files/4074756/yolov3-tiny_3l_shortcut_multilayer_per_feature_softmax.cfg.zip[yolov3-tiny_3l_shortcut_multilayer_per_feature_softmax.cfg]",
     "format": "Darknet",
-    "link":   "https://github.com/AlexeyAB/darknet"
+    "link":   "https://github.com/lutzroeder/netron/issues/410"
   },
   {
     "type":   "darknet",
@@ -5247,6 +5240,13 @@
     "source": "https://github.com/lutzroeder/netron/files/3963415/netron_issue_386.zip[netron_issue_386.tflite]",
     "format": "TensorFlow Lite v3",
     "link":   "https://github.com/lutzroeder/netron/issues/386"
+  },
+  {
+    "type":   "tflite",
+    "target": "netron_issue_416.tflite",
+    "source": "https://github.com/lutzroeder/netron/files/4089319/netron_issue_416.zip[netron_issue_416.tflite]",
+    "format": "TensorFlow Lite v3",
+    "link":   "https://github.com/lutzroeder/netron/issues/416"
   },
   {
     "type":   "tflite",

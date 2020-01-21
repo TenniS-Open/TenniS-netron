@@ -228,10 +228,15 @@ pickle.Unpickler = class {
                     const state = stack.pop();
                     let obj = stack.pop();
                     if (obj.__setstate__) {
-                        obj.__setstate__(state);
+                        if (obj.__setstate__.__call__) {
+                            obj.__setstate__.__call__([ obj, state ]);
+                        }
+                        else {
+                            obj.__setstate__(state);
+                        }
                     }
                     else {
-                        for (let p in state) {
+                        for (const p in state) {
                             obj[p] = state[p];
                         }
                     }
