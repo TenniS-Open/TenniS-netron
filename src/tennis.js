@@ -873,6 +873,18 @@ tennis.Graph = class {
             "pooling2d_v2": 1,
         };
 
+        const node_copy_map = {
+            "_copy": 0,
+        };
+
+        let node_output_count = {};
+        for (let node of graph.nodes) {
+            node_output_count[node] = 0;
+            for (let input of node.inputs) {
+                node_output_count[input] += 1;
+            }
+        }
+
         let draw_nodes = [];
         for (let node of graph.nodes) {
             if (node.op == "<param>") continue;
@@ -883,6 +895,22 @@ tennis.Graph = class {
                 input.chain = input.chain || [];
                 input.chain.push(node);
                 continue;
+            }
+
+            if (node.op in node_copy_map) {
+                let input = node.input(node_copy_map[node.op]);
+                if (node_output_count[input] == 1) {
+                    while (input.op in node_copy_map) {
+                        let tmp = input.input(node_copy_map[input.op]);
+                        if (node_output_count[tmp] != 1) {
+                            break;
+                        }
+                        input = tmp;
+                    }
+                    input.chain = input.chain || [];
+                    input.chain.push(node);
+                    continue;
+                }
             }
 
             draw_nodes.push(node);
