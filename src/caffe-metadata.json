@@ -114,7 +114,7 @@
   {
     "name": "Scale",
     "schema": {
-      "category": "Data",
+      "category": "Layer",
       "inputs": [
         { "name": "input" },
         { "name": "scale" },
@@ -424,7 +424,7 @@
         { "name": "input" }
       ],
       "outputs": [
-        { "name": "output", "option": "variadic" }
+        { "name": "outputs", "option": "variadic" }
       ]
     }
   },

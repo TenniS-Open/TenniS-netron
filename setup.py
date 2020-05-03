@@ -12,7 +12,6 @@ node_dependencies = [
     ( 'netron', [
         'node_modules/d3/dist/d3.min.js',
         'node_modules/dagre/dist/dagre.min.js',
-        'node_modules/handlebars/dist/handlebars.min.js',
         'node_modules/marked/marked.min.js',
         'node_modules/pako/dist/pako.min.js',
         'node_modules/long/dist/long.js',
@@ -66,7 +65,7 @@ setuptools.setup(
     version=package_version(),
     description="Viewer for neural network, deep learning and machine learning models",
     long_description='Netron is a viewer for neural network, deep learning and machine learning models.\n\n' +
-                     'Netron supports **ONNX** (`.onnx`, `.pb`), **Keras** (`.h5`, `.keras`), **Core ML** (`.mlmodel`), **Caffe** (`.caffemodel`, `.prototxt`), **Caffe2** (`predict_net.pb`), **Darknet** (`.cfg`), **MXNet** (`.model`, `-symbol.json`), ncnn (`.param`) and **TensorFlow Lite** (`.tflite`). Netron has experimental support for **TorchScript** (`.pt`, `.pth`), **PyTorch** (`.pt`, `.pth`), **Torch** (`.t7`), **ArmNN** (`.armnn`), **BigDL** (`.bigdl`, `.model`), **Chainer** (`.npz`, `.h5`), **CNTK** (`.model`, `.cntk`), **Deeplearning4j** (`.zip`), **PaddlePaddle** (`__model__`), **ML.NET** (`.zip`), MNN (`.mnn`), **OpenVINO** (`.xml`), **scikit-learn** (`.pkl`), **TensorFlow.js** (`model.json`, `.pb`) and **TensorFlow** (`.pb`, `.meta`, `.pbtxt`, `.ckpt`, `.index`).',
+                     'Netron supports **ONNX** (`.onnx`, `.pb`), **Keras** (`.h5`, `.keras`), **Core ML** (`.mlmodel`), **Caffe** (`.caffemodel`, `.prototxt`), **Caffe2** (`predict_net.pb`), **Darknet** (`.cfg`), **MXNet** (`.model`, `-symbol.json`), ncnn (`.param`) and **TensorFlow Lite** (`.tflite`). Netron has experimental support for **TorchScript** (`.pt`, `.pth`), **PyTorch** (`.pt`, `.pth`), **Torch** (`.t7`), **ArmNN** (`.armnn`), **BigDL** (`.bigdl`, `.model`), **Chainer** (`.npz`, `.h5`), **CNTK** (`.model`, `.cntk`), **Deeplearning4j** (`.zip`), **PaddlePaddle** (`__model__`), **MediaPipe** (`.pbtxt`), **ML.NET** (`.zip`), MNN (`.mnn`), **OpenVINO** (`.xml`), **scikit-learn** (`.pkl`), **Tengine** (`.tmfile`), **TensorFlow.js** (`model.json`, `.pb`) and **TensorFlow** (`.pb`, `.meta`, `.pbtxt`, `.ckpt`, `.index`).',
     keywords=[
         'onnx', 'keras', 'tensorflow', 'tflite', 'coreml', 'mxnet', 'caffe', 'caffe2', 'torchscript', 'pytorch', 'ncnn', 'mnn' 'openvino', 'darknet', 'paddlepaddle', 'chainer',
         'artificial intelligence', 'machine learning', 'deep learning', 'neural network',
@@ -100,6 +99,7 @@ setuptools.setup(
             'dl4j.js', 'dl4j-metadata.json',
             'flux.js', 'flux-metadata.json',
             'keras.js', 'keras-metadata.json',
+            'mediapipe.js',
             'mlnet.js', 'mlnet-metadata.json',
             'mnn.js', 'mnn-metadata.json', 'mnn-schema.js',
             'mxnet.js', 'mxnet-metadata.json',
@@ -109,13 +109,14 @@ setuptools.setup(
             'paddle.js', 'paddle-metadata.json', 'paddle-proto.js',
             'pytorch.js', 'pytorch-metadata.json', 'python.js',
             'sklearn.js', 'sklearn-metadata.json',
+            'tengine.js', 'tengine-metadata.json', 
             'tf.js', 'tf-metadata.json', 'tf-proto.js', 
-            'tflite.js', 'tflite-metadata.json', 'tflite-schema.js', 
+            'tflite.js', 'tflite-metadata.json', 'tflite-schema.js',
             'torch.js', 'torch-metadata.json',
             'index.html', 'index.js',
             'view-grapher.css', 'view-grapher.js',
             'view-sidebar.css', 'view-sidebar.js',
-            'view.js', 'view.css',
+            'view.js',
             'tennis.js', 'tennis-metadata.json',
             'server.py'
         ]

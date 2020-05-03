@@ -3575,6 +3575,7 @@
     
             function ResourceHandleProto(properties) {
                 this.dtypes_and_shapes = [];
+                this.allowed_devices = [];
                 if (properties)
                     for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
                         if (properties[keys[i]] != null)
@@ -3587,6 +3588,7 @@
             ResourceHandleProto.prototype.hash_code = $util.Long ? $util.Long.fromBits(0,0,true) : 0;
             ResourceHandleProto.prototype.maybe_type_name = "";
             ResourceHandleProto.prototype.dtypes_and_shapes = $util.emptyArray;
+            ResourceHandleProto.prototype.allowed_devices = $util.emptyArray;
     
             ResourceHandleProto.decode = function decode(reader, length) {
                 if (!(reader instanceof $Reader))
@@ -3614,6 +3616,11 @@
                         if (!(message.dtypes_and_shapes && message.dtypes_and_shapes.length))
                             message.dtypes_and_shapes = [];
                         message.dtypes_and_shapes.push($root.tensorflow.ResourceHandleProto.DtypeAndShape.decode(reader, reader.uint32()));
+                        break;
+                    case 7:
+                        if (!(message.allowed_devices && message.allowed_devices.length))
+                            message.allowed_devices = [];
+                        message.allowed_devices.push(reader.string());
                         break;
                     default:
                         reader.skipType(tag & 7);
@@ -3648,6 +3655,17 @@
                         if (!(message.dtypes_and_shapes && message.dtypes_and_shapes.length))
                             message.dtypes_and_shapes = [];
                         message.dtypes_and_shapes.push($root.tensorflow.ResourceHandleProto.DtypeAndShape.decodeText(reader, true));
+                        break;
+                    case "allowed_devices":
+                        if (!(message.allowed_devices && message.allowed_devices.length))
+                            message.allowed_devices = [];
+                        if (reader.first())
+                            while (!reader.last()) {
+                                message.allowed_devices.push(reader.string());
+                                reader.next();
+                            }
+                        else
+                            message.allowed_devices.push(reader.string());
                         break;
                     default:
                         reader.field(tag, message);
@@ -4835,6 +4853,7 @@
             StructuredValue.prototype.tensor_dtype_value = 0;
             StructuredValue.prototype.tensor_spec_value = null;
             StructuredValue.prototype.type_spec_value = null;
+            StructuredValue.prototype.bounded_tensor_spec_value = null;
             StructuredValue.prototype.list_value = null;
             StructuredValue.prototype.tuple_value = null;
             StructuredValue.prototype.dict_value = null;
@@ -4843,7 +4862,7 @@
             var $oneOfFields;
     
             Object.defineProperty(StructuredValue.prototype, "kind", {
-                get: $util.oneOfGetter($oneOfFields = ["none_value", "float64_value", "int64_value", "string_value", "bool_value", "tensor_shape_value", "tensor_dtype_value", "tensor_spec_value", "type_spec_value", "list_value", "tuple_value", "dict_value", "named_tuple_value"]),
+                get: $util.oneOfGetter($oneOfFields = ["none_value", "float64_value", "int64_value", "string_value", "bool_value", "tensor_shape_value", "tensor_dtype_value", "tensor_spec_value", "type_spec_value", "bounded_tensor_spec_value", "list_value", "tuple_value", "dict_value", "named_tuple_value"]),
                 set: $util.oneOfSetter($oneOfFields)
             });
     
@@ -4880,6 +4899,9 @@
                         break;
                     case 34:
                         message.type_spec_value = $root.tensorflow.TypeSpecProto.decode(reader, reader.uint32());
+                        break;
+                    case 35:
+                        message.bounded_tensor_spec_value = $root.tensorflow.BoundedTensorSpecProto.decode(reader, reader.uint32());
                         break;
                     case 51:
                         message.list_value = $root.tensorflow.ListValue.decode(reader, reader.uint32());
@@ -4933,6 +4955,9 @@
                         break;
                     case "type_spec_value":
                         message.type_spec_value = $root.tensorflow.TypeSpecProto.decodeText(reader, true);
+                        break;
+                    case "bounded_tensor_spec_value":
+                        message.bounded_tensor_spec_value = $root.tensorflow.BoundedTensorSpecProto.decodeText(reader, true);
                         break;
                     case "list_value":
                         message.list_value = $root.tensorflow.ListValue.decodeText(reader, true);
@@ -5355,6 +5380,83 @@
             return TensorSpecProto;
         })();
     
+        tensorflow.BoundedTensorSpecProto = (function() {
+    
+            function BoundedTensorSpecProto(properties) {
+                if (properties)
+                    for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                        if (properties[keys[i]] != null)
+                            this[keys[i]] = properties[keys[i]];
+            }
+    
+            BoundedTensorSpecProto.prototype.name = "";
+            BoundedTensorSpecProto.prototype.shape = null;
+            BoundedTensorSpecProto.prototype.dtype = 0;
+            BoundedTensorSpecProto.prototype.minimum = null;
+            BoundedTensorSpecProto.prototype.maximum = null;
+    
+            BoundedTensorSpecProto.decode = function decode(reader, length) {
+                if (!(reader instanceof $Reader))
+                    reader = $Reader.create(reader);
+                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.tensorflow.BoundedTensorSpecProto();
+                while (reader.pos < end) {
+                    var tag = reader.uint32();
+                    switch (tag >>> 3) {
+                    case 1:
+                        message.name = reader.string();
+                        break;
+                    case 2:
+                        message.shape = $root.tensorflow.TensorShapeProto.decode(reader, reader.uint32());
+                        break;
+                    case 3:
+                        message.dtype = reader.int32();
+                        break;
+                    case 4:
+                        message.minimum = $root.tensorflow.TensorProto.decode(reader, reader.uint32());
+                        break;
+                    case 5:
+                        message.maximum = $root.tensorflow.TensorProto.decode(reader, reader.uint32());
+                        break;
+                    default:
+                        reader.skipType(tag & 7);
+                        break;
+                    }
+                }
+                return message;
+            };
+    
+            BoundedTensorSpecProto.decodeText = function decodeText(reader) {
+                var message = new $root.tensorflow.BoundedTensorSpecProto();
+                reader.start();
+                while (!reader.end()) {
+                    var tag = reader.tag();
+                    switch (tag) {
+                    case "name":
+                        message.name = reader.string();
+                        break;
+                    case "shape":
+                        message.shape = $root.tensorflow.TensorShapeProto.decodeText(reader, true);
+                        break;
+                    case "dtype":
+                        message.dtype = reader.enum($root.tensorflow.DataType);
+                        break;
+                    case "minimum":
+                        message.minimum = $root.tensorflow.TensorProto.decodeText(reader, true);
+                        break;
+                    case "maximum":
+                        message.maximum = $root.tensorflow.TensorProto.decodeText(reader, true);
+                        break;
+                    default:
+                        reader.field(tag, message);
+                        break;
+                    }
+                }
+                return message;
+            };
+    
+            return BoundedTensorSpecProto;
+        })();
+    
         tensorflow.TypeSpecProto = (function() {
     
             function TypeSpecProto(properties) {
@@ -5427,6 +5529,7 @@
                 values[valuesById[7] = "OPTIONAL_SPEC"] = 7;
                 values[valuesById[8] = "PER_REPLICA_SPEC"] = 8;
                 values[valuesById[9] = "VARIABLE_SPEC"] = 9;
+                values[valuesById[10] = "ROW_PARTITION_SPEC"] = 10;
                 return values;
             })();
     

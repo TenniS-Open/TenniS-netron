@@ -68,6 +68,10 @@ class TestHost {
     }
 
     initialize(/* view */) {
+        return Promise.resolve();
+    }
+
+    start() {
     }
 
     environment(name) {
@@ -151,21 +155,21 @@ class HTMLDocument {
     }
 
     createElement(/* name */) {
-        return new HTMLHtmlElement();
+        return new HTMLElement();
     }
 
     createElementNS(/* namespace, name */) {
-        return new HTMLHtmlElement();
+        return new HTMLElement();
     }
 
     createTextNode(/* text */) {
-        return new HTMLHtmlElement();
+        return new HTMLElement();
     }
 
     getElementById(id) {
         let element = this._elements[id];
         if (!element) {
-            element = new HTMLHtmlElement();
+            element = new HTMLElement();
             this._elements[id] = element;
         }
         return element;
@@ -178,18 +182,23 @@ class HTMLDocument {
     }
 }
 
-class HTMLHtmlElement {
+class HTMLElement {
 
     constructor() {
-        this._attributes = {};
-        this.style = new CSSStyleDeclaration();
+        this._attributes = new Map();
+        this._style = new CSSStyleDeclaration();
+    }
+
+    get style() {
+        return this._style;
+
     }
 
     appendChild(/* node */) {
     }
 
     setAttribute(name, value) {
-        this._attributes[name] = value;
+        this._attributes.set(name, value);
     }
 
     getBBox() {
@@ -211,24 +220,20 @@ class HTMLHtmlElement {
     }
 }
 
-class HTMLBodyElement {
+class HTMLHtmlElement extends HTMLElement {
+}
 
-    constructor() {
-        this.style = new CSSStyleDeclaration();
-    }
-
-    addEventListener(/* event, callback */) {
-    }
+class HTMLBodyElement extends HTMLElement{
 }
 
 class CSSStyleDeclaration {
 
     constructor() {
-        this._properties = {};
+        this._properties = new Map();
     }
 
     setProperty(name, value) {
-        this._properties[name] = value;
+        this._properties.set(name, value);
     }
 }
 
@@ -240,8 +245,7 @@ class DOMTokenList {
 
 function makeDir(dir) {
     if (!fs.existsSync(dir)){
-        makeDir(path.dirname(dir));
-        fs.mkdirSync(dir);
+        fs.mkdirSync(dir, { recursive: true });
     }
 }
 
@@ -477,8 +481,8 @@ function loadModel(target, item) {
                 input.name.toString();
                 input.name.length;
                 for (const argument of input.arguments) {
-                    argument.id.toString();
-                    argument.id.length;
+                    argument.name.toString();
+                    argument.name.length;
                     if (argument.type) {
                         argument.type.toString();
                     }
@@ -488,8 +492,8 @@ function loadModel(target, item) {
                 output.name.toString();
                 output.name.length;
                 for (const argument of output.arguments) {
-                    argument.id.toString();
-                    argument.id.length;
+                    argument.name.toString();
+                    argument.name.length;
                     if (argument.type) {
                         argument.type.toString();
                     }
@@ -499,8 +503,12 @@ function loadModel(target, item) {
                 node.name.toString();
                 node.name.length;
                 node.description;
-                node.documentation.toString();
-                node.category.toString();
+                const metadata = node.metadata;
+                if (metadata !== null && metadata !== undefined && (typeof metadata !== 'object' || !metadata.name)) {
+                    throw new Error("Invalid documentation object '" + node.operator + "'.");
+                }
+                sidebar.DocumentationSidebar.formatDocumentation(node.metadata);
+                node.attributes.slice();
                 for (const attribute of node.attributes) {
                     attribute.name.toString();
                     attribute.name.length;
@@ -514,8 +522,8 @@ function loadModel(target, item) {
                     input.name.toString();
                     input.name.length;
                     for (const argument of input.arguments) {
-                        argument.id.toString();
-                        argument.id.length;
+                        argument.name.toString();
+                        argument.name.length;
                         argument.description;
                         if (argument.type) {
                             argument.type.toString();
@@ -530,8 +538,8 @@ function loadModel(target, item) {
                     output.name.toString();
                     output.name.length;
                     for (const argument of output.arguments) {
-                        argument.id.toString();
-                        argument.id.length;
+                        argument.name.toString();
+                        argument.name.length;
                         if (argument.type) {
                             argument.type.toString();
                         }

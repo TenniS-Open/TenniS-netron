@@ -41,10 +41,7 @@ numpy.Array = class {
                         throw new numpy.Error("Unsupported data type '" + header.descr + "'.");
                     }
                     this._dataType = header.descr.substring(1);
-                    let size = parseInt(header.descr[2]);
-                    for (const dimension of this._shape) {
-                        size *= dimension;
-                    }
+                    const size = parseInt(header.descr[2]) * this._shape.reduce((a, b) => a * b);
                     this._data = reader.bytes(size);
                     break;
                 }
@@ -94,7 +91,7 @@ numpy.Array = class {
         writer.byte(1); // major
         writer.byte(0); // minor
 
-        let context = {
+        const context = {
             itemSize: 1,
             position: 0,
             dataType: this._dataType,
@@ -124,7 +121,7 @@ numpy.Array = class {
                 break;
         }
 
-        let properties = [
+        const properties = [
             "'descr': '" + context.byteOrder + context.dataType + "'",
             "'fortran_order': False",
             "'shape': " + shape
@@ -133,11 +130,7 @@ numpy.Array = class {
         header += ' '.repeat(16 - ((header.length + 2 + 8 + 1) & 0x0f)) + '\n';
         writer.string(header);
 
-        let size = context.itemSize;
-        for (const dimension of this._shape) {
-            size *= dimension;
-        }
-
+        const size = context.itemSize * this._shape.reduce((a, b) => a * b)
         context.data = new Uint8Array(size);
         context.dataView = new DataView(context.data.buffer, context.data.byteOffset, size);
         numpy.Array._encodeDimension(context, this._data, 0);
@@ -253,7 +246,7 @@ numpy.Writer = class {
     }
 
     bytes(values) {
-        let array = new Uint8Array(values.length);
+        const array = new Uint8Array(values.length);
         for (let i = 0; i < values.length; i++) {
             array[i] = values[i];
         }
@@ -262,7 +255,7 @@ numpy.Writer = class {
 
     string(value) {
         this.uint16(value.length);
-        let array = new Uint8Array(value.length);
+        const array = new Uint8Array(value.length);
         for (let i = 0; i < value.length; i++) {
             array[i] = value.charCodeAt(i);
         }
@@ -270,7 +263,7 @@ numpy.Writer = class {
     }
 
     _write(array) {
-        let node = { buffer: array, next: null };
+        const node = { buffer: array, next: null };
         if (this._tail) {
             this._tail.next = node;
         }
@@ -282,7 +275,7 @@ numpy.Writer = class {
     }
 
     toBuffer() {
-        let array = new Uint8Array(this._length);
+        const array = new Uint8Array(this._length);
         let position = 0;
         let head = this._head;
         while (head != null) {
@@ -295,6 +288,7 @@ numpy.Writer = class {
 };
 
 numpy.Error = class extends Error {
+
     constructor(message) {
         super(message);
         this.name = 'NumPy Error';

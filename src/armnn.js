@@ -17,20 +17,19 @@ armnn.ModelFactory = class {
     }
 
     open(context, host) {
-        return host.require('./armnn-schema').then((armnn_schema) => {
+        return host.require('./armnn-schema').then((schema) => {
             const identifier = context.identifier;
             let model = null;
             try {
                 const buffer = context.buffer;
                 const byteBuffer = new flatbuffers.ByteBuffer(buffer);
-                armnn.schema = armnn_schema;
+                armnn.schema = schema.armnn_schema;
                 model = armnn.schema.SerializedGraph.getRootAsSerializedGraph(byteBuffer);
             }
             catch (error) {
                 host.exception(error, false);
-                let message = error && error.message ? error.message : error.toString();
-                message = message.endsWith('.') ? message.substring(0, message.length - 1) : message;
-                throw new armnn.Error(message + " in '" + identifier + "'.");
+                const message = error && error.message ? error.message : error.toString();
+                throw new armnn.Error(message.replace(/\.$/, '') + " in '" + identifier + "'.");
             }
 
             return armnn.Metadata.open(host).then((metadata) => {
@@ -38,9 +37,8 @@ armnn.ModelFactory = class {
                     return new armnn.Model(model, metadata);
                 }
                 catch (error) {
-                    let message = error && error.message ? error.message : error.toString();
-                    message = message.endsWith('.') ? message.substring(0, message.length - 1) : message;
-                    throw new new armnn.Error(message + " in '" + identifier + "'.");
+                    const message = error && error.message ? error.message : error.toString();
+                    throw new new armnn.Error(message.replace(/\.$/, '') + " in '" + identifier + "'.");
                 }
             });
         });
@@ -129,7 +127,6 @@ armnn.Node = class {
         this._name = '';
         this._outputs = [];
         this._inputs = [];
-        this._category = '';
         this._attributes = [];
 
         const base = armnn.Node.getBase(layer)
@@ -150,8 +147,6 @@ armnn.Node = class {
 
         const schema = this._metadata.type(this._operator);
         if (schema) {
-            this._category = schema.category || '';
-
             const _layer = armnn.Node.castLayer(layer);
 
             if (schema.bindings) {
@@ -192,16 +187,12 @@ armnn.Node = class {
         return null;
     }
 
-    get documentation() {
-        return '';
+    get metadata() {
+        return this._metadata.type(this._operator);
     }
 
     get group() {
         return null;
-    }
-
-    get category() {
-        return this._category;
     }
 
     get inputs() {
@@ -327,9 +318,12 @@ armnn.Parameter = class {
 
 armnn.Argument = class {
 
-    constructor(id, tensorInfo, initializer) {
+    constructor(name, tensorInfo, initializer) {
+        if (typeof name !== 'string') {
+            throw new armnn.Error("Invalid argument identifier '" + JSON.stringify(name) + "'.");
+        }
         const info = initializer ? initializer.info() : tensorInfo;
-        this._id = id;
+        this._name = name;
         this._type = new armnn.TensorType(info);
         this._initializer = initializer ? new armnn.Tensor(info, initializer) : null;
 
@@ -339,8 +333,8 @@ armnn.Argument = class {
         }
     }
 
-    get id() {
-        return this._id;
+    get name() {
+        return this._name;
     }
 
     get type() {
@@ -577,6 +571,7 @@ armnn.Metadata = class {
             if (items) {
                 for (const item of items) {
                     if (item.name && item.schema) {
+                        item.schema.name = item.name;
                         this._map[item.name] = item.schema;
                     }
                 }

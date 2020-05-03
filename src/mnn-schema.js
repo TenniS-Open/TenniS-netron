@@ -20,10 +20,10 @@ MNN.NetSource = {
  * @enum {string}
  */
 MNN.NetSourceName = {
-  0: 'CAFFE',
-  1: 'TENSORFLOW',
-  2: 'TFLITE',
-  3: 'ONNX'
+  '0': 'CAFFE',
+  '1': 'TENSORFLOW',
+  '2': 'TFLITE',
+  '3': 'ONNX'
 };
 
 /**
@@ -58,28 +58,28 @@ MNN.DataType = {
  * @enum {string}
  */
 MNN.DataTypeName = {
-  0: 'DT_INVALID',
-  1: 'DT_FLOAT',
-  2: 'DT_DOUBLE',
-  3: 'DT_INT32',
-  4: 'DT_UINT8',
-  5: 'DT_INT16',
-  6: 'DT_INT8',
-  7: 'DT_STRING',
-  8: 'DT_COMPLEX64',
-  9: 'DT_INT64',
-  10: 'DT_BOOL',
-  11: 'DT_QINT8',
-  12: 'DT_QUINT8',
-  13: 'DT_QINT32',
-  14: 'DT_BFLOAT16',
-  15: 'DT_QINT16',
-  16: 'DT_QUINT16',
-  17: 'DT_UINT16',
-  18: 'DT_COMPLEX128',
-  19: 'DT_HALF',
-  20: 'DT_RESOURCE',
-  21: 'DT_VARIANT'
+  '0': 'DT_INVALID',
+  '1': 'DT_FLOAT',
+  '2': 'DT_DOUBLE',
+  '3': 'DT_INT32',
+  '4': 'DT_UINT8',
+  '5': 'DT_INT16',
+  '6': 'DT_INT8',
+  '7': 'DT_STRING',
+  '8': 'DT_COMPLEX64',
+  '9': 'DT_INT64',
+  '10': 'DT_BOOL',
+  '11': 'DT_QINT8',
+  '12': 'DT_QUINT8',
+  '13': 'DT_QINT32',
+  '14': 'DT_BFLOAT16',
+  '15': 'DT_QINT16',
+  '16': 'DT_QUINT16',
+  '17': 'DT_UINT16',
+  '18': 'DT_COMPLEX128',
+  '19': 'DT_HALF',
+  '20': 'DT_RESOURCE',
+  '21': 'DT_VARIANT'
 };
 
 /**
@@ -97,11 +97,11 @@ MNN.MNN_DATA_FORMAT = {
  * @enum {string}
  */
 MNN.MNN_DATA_FORMATName = {
-  0: 'NCHW',
-  1: 'NHWC',
-  2: 'NC4HW4',
-  3: 'NHWC4',
-  4: 'UNKNOWN'
+  '0': 'NCHW',
+  '1': 'NHWC',
+  '2': 'NC4HW4',
+  '3': 'NHWC4',
+  '4': 'UNKNOWN'
 };
 
 /**
@@ -117,9 +117,25 @@ MNN.PadMode = {
  * @enum {string}
  */
 MNN.PadModeName = {
-  0: 'CAFFE',
-  1: 'VALID',
-  2: 'SAME'
+  '0': 'CAFFE',
+  '1': 'VALID',
+  '2': 'SAME'
+};
+
+/**
+ * @enum {number}
+ */
+MNN.QuantizeAlgo = {
+  DEFAULT: 0,
+  OVERFLOW_AWARE: 1
+};
+
+/**
+ * @enum {string}
+ */
+MNN.QuantizeAlgoName = {
+  '0': 'DEFAULT',
+  '1': 'OVERFLOW_AWARE'
 };
 
 /**
@@ -134,8 +150,8 @@ MNN.PoolType = {
  * @enum {string}
  */
 MNN.PoolTypeName = {
-  0: 'MAXPOOL',
-  1: 'AVEPOOL'
+  '0': 'MAXPOOL',
+  '1': 'AVEPOOL'
 };
 
 /**
@@ -151,9 +167,9 @@ MNN.PoolPadType = {
  * @enum {string}
  */
 MNN.PoolPadTypeName = {
-  0: 'CAFFE',
-  1: 'VALID',
-  2: 'SAME'
+  '0': 'CAFFE',
+  '1': 'VALID',
+  '2': 'SAME'
 };
 
 /**
@@ -170,10 +186,10 @@ MNN.EltwiseType = {
  * @enum {string}
  */
 MNN.EltwiseTypeName = {
-  0: 'PROD',
-  1: 'SUM',
-  2: 'MAXIMUM',
-  3: 'SUB'
+  '0': 'PROD',
+  '1': 'SUM',
+  '2': 'MAXIMUM',
+  '3': 'SUB'
 };
 
 /**
@@ -208,28 +224,28 @@ MNN.BinaryOpOperation = {
  * @enum {string}
  */
 MNN.BinaryOpOperationName = {
-  0: 'ADD',
-  1: 'SUB',
-  2: 'MUL',
-  3: 'DIV',
-  4: 'MAX_TEMP',
-  5: 'MIN_TEMP',
-  6: 'POW',
-  7: 'REALDIV',
-  8: 'MINIMUM',
-  9: 'MAXIMUM',
-  10: 'GREATER',
-  11: 'GREATER_EQUAL',
-  12: 'LESS',
-  13: 'FLOORDIV',
-  14: 'SquaredDifference',
-  15: 'EQUAL',
-  16: 'LESS_EQUAL',
-  17: 'FLOORMOD',
-  19: 'MOD',
-  20: 'ATAN2',
-  21: 'LOGICALOR',
-  22: 'NOTEQUAL'
+  '0': 'ADD',
+  '1': 'SUB',
+  '2': 'MUL',
+  '3': 'DIV',
+  '4': 'MAX_TEMP',
+  '5': 'MIN_TEMP',
+  '6': 'POW',
+  '7': 'REALDIV',
+  '8': 'MINIMUM',
+  '9': 'MAXIMUM',
+  '10': 'GREATER',
+  '11': 'GREATER_EQUAL',
+  '12': 'LESS',
+  '13': 'FLOORDIV',
+  '14': 'SquaredDifference',
+  '15': 'EQUAL',
+  '16': 'LESS_EQUAL',
+  '17': 'FLOORMOD',
+  '19': 'MOD',
+  '20': 'ATAN2',
+  '21': 'LOGICALOR',
+  '22': 'NOTEQUAL'
 };
 
 /**
@@ -251,15 +267,15 @@ MNN.ReductionType = {
  * @enum {string}
  */
 MNN.ReductionTypeName = {
-  0: 'SUM',
-  1: 'ASUM',
-  2: 'SUMSQ',
-  3: 'MEAN',
-  4: 'MAXIMUM',
-  5: 'MINIMUM',
-  6: 'PROD',
-  7: 'ANY',
-  8: 'ALL'
+  '0': 'SUM',
+  '1': 'ASUM',
+  '2': 'SUMSQ',
+  '3': 'MEAN',
+  '4': 'MAXIMUM',
+  '5': 'MINIMUM',
+  '6': 'PROD',
+  '7': 'ANY',
+  '8': 'ALL'
 };
 
 /**
@@ -301,35 +317,35 @@ MNN.UnaryOpOperation = {
  * @enum {string}
  */
 MNN.UnaryOpOperationName = {
-  0: 'ABS',
-  1: 'NEG',
-  2: 'FLOOR',
-  3: 'CEIL',
-  4: 'SQUARE',
-  5: 'SQRT',
-  6: 'RSQRT',
-  7: 'EXP',
-  8: 'LOG',
-  9: 'SIN',
-  10: 'COS',
-  11: 'TAN',
-  12: 'ASIN',
-  13: 'ACOS',
-  14: 'ATAN',
-  15: 'RECIPROCAL',
-  16: 'LOG1P',
-  17: 'BNLL',
-  18: 'ACOSH',
-  19: 'SINH',
-  20: 'ASINH',
-  21: 'ATANH',
-  22: 'SIGN',
-  23: 'ROUND',
-  24: 'COSH',
-  25: 'ERF',
-  26: 'ERFC',
-  27: 'ERFINV',
-  28: 'EXPM1'
+  '0': 'ABS',
+  '1': 'NEG',
+  '2': 'FLOOR',
+  '3': 'CEIL',
+  '4': 'SQUARE',
+  '5': 'SQRT',
+  '6': 'RSQRT',
+  '7': 'EXP',
+  '8': 'LOG',
+  '9': 'SIN',
+  '10': 'COS',
+  '11': 'TAN',
+  '12': 'ASIN',
+  '13': 'ACOS',
+  '14': 'ATAN',
+  '15': 'RECIPROCAL',
+  '16': 'LOG1P',
+  '17': 'BNLL',
+  '18': 'ACOSH',
+  '19': 'SINH',
+  '20': 'ASINH',
+  '21': 'ATANH',
+  '22': 'SIGN',
+  '23': 'ROUND',
+  '24': 'COSH',
+  '25': 'ERF',
+  '26': 'ERFC',
+  '27': 'ERFINV',
+  '28': 'EXPM1'
 };
 
 /**
@@ -344,8 +360,8 @@ MNN.CropAndResizeMethod = {
  * @enum {string}
  */
 MNN.CropAndResizeMethodName = {
-  0: 'BILINEAR',
-  1: 'NEAREST'
+  '0': 'BILINEAR',
+  '1': 'NEAREST'
 };
 
 /**
@@ -361,9 +377,9 @@ MNN.PadValueMode = {
  * @enum {string}
  */
 MNN.PadValueModeName = {
-  0: 'CONSTANT',
-  1: 'REFLECT',
-  2: 'SYMMETRIC'
+  '0': 'CONSTANT',
+  '1': 'REFLECT',
+  '2': 'SYMMETRIC'
 };
 
 /**
@@ -383,13 +399,13 @@ MNN.FusedActivation = {
  * @enum {string}
  */
 MNN.FusedActivationName = {
-  0: 'kTfLiteActNone',
-  1: 'kTfLiteActRelu',
-  2: 'kTfLiteActRelu1',
-  3: 'kTfLiteActRelu6',
-  4: 'kTfLiteActTanh',
-  5: 'kTfLiteActSignBit',
-  6: 'kTfLiteActSigmoid'
+  '0': 'kTfLiteActNone',
+  '1': 'kTfLiteActRelu',
+  '2': 'kTfLiteActRelu1',
+  '3': 'kTfLiteActRelu6',
+  '4': 'kTfLiteActTanh',
+  '5': 'kTfLiteActSignBit',
+  '6': 'kTfLiteActSigmoid'
 };
 
 /**
@@ -404,8 +420,8 @@ MNN.ModeFormat = {
  * @enum {string}
  */
 MNN.ModeFormatName = {
-  0: 'TENSORFLOW',
-  1: 'TFLITE'
+  '0': 'TENSORFLOW',
+  '1': 'TFLITE'
 };
 
 /**
@@ -421,9 +437,9 @@ MNN.QuantizeMode = {
  * @enum {string}
  */
 MNN.QuantizeModeName = {
-  0: 'MIN_COMBINED',
-  1: 'MIN_FIRST',
-  2: 'SCALED'
+  '0': 'MIN_COMBINED',
+  '1': 'MIN_FIRST',
+  '2': 'SCALED'
 };
 
 /**
@@ -438,8 +454,8 @@ MNN.QuantizeRoundMode = {
  * @enum {string}
  */
 MNN.QuantizeRoundModeName = {
-  0: 'HALF_AWAY_FROM_ZERO',
-  1: 'HALF_TO_EVEN'
+  '0': 'HALF_AWAY_FROM_ZERO',
+  '1': 'HALF_TO_EVEN'
 };
 
 /**
@@ -455,9 +471,9 @@ MNN.STORAGE_TYPE = {
  * @enum {string}
  */
 MNN.STORAGE_TYPEName = {
-  0: 'BUFFER',
-  1: 'UNIFORM',
-  2: 'IMAGE'
+  '0': 'BUFFER',
+  '1': 'UNIFORM',
+  '2': 'IMAGE'
 };
 
 /**
@@ -473,9 +489,9 @@ MNN.ACCESS_TYPE = {
  * @enum {string}
  */
 MNN.ACCESS_TYPEName = {
-  0: 'READ_ONLY',
-  1: 'WRITE_ONLY',
-  2: 'READ_WRITE'
+  '0': 'READ_ONLY',
+  '1': 'WRITE_ONLY',
+  '2': 'READ_WRITE'
 };
 
 /**
@@ -608,7 +624,7 @@ MNN.OpType = {
   ConvertTensor: 129,
   ArgMin: 130,
   LinSpace: 131,
-  PLUGIN: 256,
+  Plugin: 256,
   Select: 257,
   ZerosLike: 258,
   Broastcast: 259,
@@ -634,152 +650,152 @@ MNN.OpType = {
  * @enum {string}
  */
 MNN.OpTypeName = {
-  0: 'AbsVal',
-  1: 'QuantizedAdd',
-  2: 'ArgMax',
-  3: 'AsString',
-  4: 'InstanceNorm',
-  5: 'BatchToSpaceND',
-  6: 'Bias',
-  7: 'BinaryOp',
-  8: 'Bnll',
-  9: 'Cast',
-  10: 'Concat',
-  11: 'Const',
-  12: 'Convolution',
-  13: 'ConvolutionDepthwise',
-  14: 'Crop',
-  15: 'CropAndResize',
-  16: 'Cubic',
-  17: 'Deconvolution',
-  18: 'DeconvolutionDepthwise',
-  19: 'Dequantize',
-  20: 'DetectionOutput',
-  21: 'Dropout',
-  22: 'Eltwise',
-  23: 'ELU',
-  24: 'Embed',
-  25: 'Exp',
-  26: 'ExpandDims',
-  27: 'Fill',
-  28: 'Flatten',
-  29: 'FloorMod',
-  30: 'Gather',
-  31: 'GatherV2',
-  32: 'Im2Seq',
-  33: 'InnerProduct',
-  34: 'Input',
-  35: 'Interp',
-  36: 'Log',
-  37: 'LRN',
-  38: 'LSTM',
-  39: 'MatMul',
-  40: 'MVN',
-  41: 'NonMaxSuppression',
-  42: 'NonMaxSuppressionV2',
-  43: 'Normalize',
-  44: 'Pack',
-  45: 'Padding',
-  46: 'Permute',
-  47: 'Pooling',
-  48: 'Power',
-  49: 'PReLU',
-  50: 'PriorBox',
-  51: 'Proposal',
-  52: 'QuantizedAvgPool',
-  53: 'QuantizedBiasAdd',
-  54: 'QuantizedConcat',
-  55: 'QuantizedDepthwiseConv2D',
-  56: 'QuantizedLogistic',
-  57: 'QuantizedMatMul',
-  58: 'QuantizedMaxPool',
-  59: 'QuantizedRelu',
-  60: 'QuantizedRelu6',
-  61: 'QuantizedReshape',
-  62: 'QuantizedSoftmax',
-  63: 'QuantizeMaxMin',
-  64: 'QuantizeV2',
-  65: 'Range',
-  66: 'Rank',
-  67: 'ReduceJoin',
-  68: 'Reduction',
-  69: 'ReLU',
-  70: 'ReLU6',
-  71: 'RequantizationRange',
-  72: 'Requantize',
-  73: 'Reshape',
-  74: 'Resize',
-  75: 'RNN',
-  76: 'ROIPooling',
-  77: 'Scale',
-  78: 'Selu',
-  79: 'Seq2Out',
-  80: 'Shape',
-  81: 'Sigmoid',
-  82: 'Size',
-  83: 'Slice',
-  84: 'SliceTf',
-  85: 'Softmax',
-  86: 'SpaceToBatchND',
-  87: 'SpatialProduct',
-  88: 'Split',
-  89: 'SPP',
-  90: 'Squeeze',
-  91: 'StridedSlice',
-  92: 'StringJoin',
-  93: 'StringSplit',
-  94: 'StringToNumber',
-  95: 'TanH',
-  96: 'TfQuantizedConv2D',
-  97: 'Threshold',
-  98: 'Tile',
-  99: 'TopKV2',
-  100: 'Transpose',
-  101: 'UnaryOp',
-  102: 'Unpack',
-  103: 'Where',
-  104: 'Moments',
-  105: 'RNNSequenceGRU',
-  106: 'BatchMatMul',
-  107: 'Unsqueeze',
-  108: 'CosineSimilarity',
-  109: 'DepthToSpace',
-  110: 'SpaceToDepth',
-  111: 'ReverseSequence',
-  112: 'Pooling3D',
-  113: 'Convolution3D',
-  114: 'MatrixBandPart',
-  115: 'GatherND',
-  116: 'DetectionPostProcess',
-  117: 'UnravelIndex',
-  118: 'ScatterNd',
-  119: 'OneHot',
-  120: 'BroadcastTo',
-  121: 'Dilation2D',
-  128: 'MaxLayerCount',
-  129: 'ConvertTensor',
-  130: 'ArgMin',
-  131: 'LinSpace',
-  256: 'PLUGIN',
-  257: 'Select',
-  258: 'ZerosLike',
-  259: 'Broastcast',
-  260: 'SetDiff1D',
-  261: 'ReluGrad',
-  262: 'Relu6Grad',
-  263: 'PoolGrad',
-  264: 'SoftmaxGrad',
-  265: 'Conv2DBackPropFilter',
-  266: 'TrainableParam',
-  267: 'BatchNorm',
-  268: 'ZeroGrad',
-  512: 'Extra',
-  513: 'ConvInt8',
-  514: 'Int8ToFloat',
-  515: 'DepthwiseConvInt8',
-  516: 'PoolInt8',
-  517: 'FloatToInt8',
-  518: 'EltwiseInt8'
+  '0': 'AbsVal',
+  '1': 'QuantizedAdd',
+  '2': 'ArgMax',
+  '3': 'AsString',
+  '4': 'InstanceNorm',
+  '5': 'BatchToSpaceND',
+  '6': 'Bias',
+  '7': 'BinaryOp',
+  '8': 'Bnll',
+  '9': 'Cast',
+  '10': 'Concat',
+  '11': 'Const',
+  '12': 'Convolution',
+  '13': 'ConvolutionDepthwise',
+  '14': 'Crop',
+  '15': 'CropAndResize',
+  '16': 'Cubic',
+  '17': 'Deconvolution',
+  '18': 'DeconvolutionDepthwise',
+  '19': 'Dequantize',
+  '20': 'DetectionOutput',
+  '21': 'Dropout',
+  '22': 'Eltwise',
+  '23': 'ELU',
+  '24': 'Embed',
+  '25': 'Exp',
+  '26': 'ExpandDims',
+  '27': 'Fill',
+  '28': 'Flatten',
+  '29': 'FloorMod',
+  '30': 'Gather',
+  '31': 'GatherV2',
+  '32': 'Im2Seq',
+  '33': 'InnerProduct',
+  '34': 'Input',
+  '35': 'Interp',
+  '36': 'Log',
+  '37': 'LRN',
+  '38': 'LSTM',
+  '39': 'MatMul',
+  '40': 'MVN',
+  '41': 'NonMaxSuppression',
+  '42': 'NonMaxSuppressionV2',
+  '43': 'Normalize',
+  '44': 'Pack',
+  '45': 'Padding',
+  '46': 'Permute',
+  '47': 'Pooling',
+  '48': 'Power',
+  '49': 'PReLU',
+  '50': 'PriorBox',
+  '51': 'Proposal',
+  '52': 'QuantizedAvgPool',
+  '53': 'QuantizedBiasAdd',
+  '54': 'QuantizedConcat',
+  '55': 'QuantizedDepthwiseConv2D',
+  '56': 'QuantizedLogistic',
+  '57': 'QuantizedMatMul',
+  '58': 'QuantizedMaxPool',
+  '59': 'QuantizedRelu',
+  '60': 'QuantizedRelu6',
+  '61': 'QuantizedReshape',
+  '62': 'QuantizedSoftmax',
+  '63': 'QuantizeMaxMin',
+  '64': 'QuantizeV2',
+  '65': 'Range',
+  '66': 'Rank',
+  '67': 'ReduceJoin',
+  '68': 'Reduction',
+  '69': 'ReLU',
+  '70': 'ReLU6',
+  '71': 'RequantizationRange',
+  '72': 'Requantize',
+  '73': 'Reshape',
+  '74': 'Resize',
+  '75': 'RNN',
+  '76': 'ROIPooling',
+  '77': 'Scale',
+  '78': 'Selu',
+  '79': 'Seq2Out',
+  '80': 'Shape',
+  '81': 'Sigmoid',
+  '82': 'Size',
+  '83': 'Slice',
+  '84': 'SliceTf',
+  '85': 'Softmax',
+  '86': 'SpaceToBatchND',
+  '87': 'SpatialProduct',
+  '88': 'Split',
+  '89': 'SPP',
+  '90': 'Squeeze',
+  '91': 'StridedSlice',
+  '92': 'StringJoin',
+  '93': 'StringSplit',
+  '94': 'StringToNumber',
+  '95': 'TanH',
+  '96': 'TfQuantizedConv2D',
+  '97': 'Threshold',
+  '98': 'Tile',
+  '99': 'TopKV2',
+  '100': 'Transpose',
+  '101': 'UnaryOp',
+  '102': 'Unpack',
+  '103': 'Where',
+  '104': 'Moments',
+  '105': 'RNNSequenceGRU',
+  '106': 'BatchMatMul',
+  '107': 'Unsqueeze',
+  '108': 'CosineSimilarity',
+  '109': 'DepthToSpace',
+  '110': 'SpaceToDepth',
+  '111': 'ReverseSequence',
+  '112': 'Pooling3D',
+  '113': 'Convolution3D',
+  '114': 'MatrixBandPart',
+  '115': 'GatherND',
+  '116': 'DetectionPostProcess',
+  '117': 'UnravelIndex',
+  '118': 'ScatterNd',
+  '119': 'OneHot',
+  '120': 'BroadcastTo',
+  '121': 'Dilation2D',
+  '128': 'MaxLayerCount',
+  '129': 'ConvertTensor',
+  '130': 'ArgMin',
+  '131': 'LinSpace',
+  '256': 'Plugin',
+  '257': 'Select',
+  '258': 'ZerosLike',
+  '259': 'Broastcast',
+  '260': 'SetDiff1D',
+  '261': 'ReluGrad',
+  '262': 'Relu6Grad',
+  '263': 'PoolGrad',
+  '264': 'SoftmaxGrad',
+  '265': 'Conv2DBackPropFilter',
+  '266': 'TrainableParam',
+  '267': 'BatchNorm',
+  '268': 'ZeroGrad',
+  '512': 'Extra',
+  '513': 'ConvInt8',
+  '514': 'Int8ToFloat',
+  '515': 'DepthwiseConvInt8',
+  '516': 'PoolInt8',
+  '517': 'FloatToInt8',
+  '518': 'EltwiseInt8'
 };
 
 /**
@@ -877,91 +893,91 @@ MNN.OpParameter = {
  * @enum {string}
  */
 MNN.OpParameterName = {
-  0: 'NONE',
-  1: 'QuantizedAdd',
-  2: 'ArgMax',
-  3: 'AsString',
-  4: 'Axis',
-  5: 'BatchNorm',
-  6: 'BinaryOp',
-  7: 'Blob',
-  8: 'CastParam',
-  9: 'Convolution2D',
-  10: 'Crop',
-  11: 'CropAndResize',
-  12: 'Dequantize',
-  13: 'DetectionOutput',
-  14: 'Eltwise',
-  15: 'ExpandDims',
-  16: 'Fill',
-  17: 'Flatten',
-  18: 'Gather',
-  19: 'GatherV2',
-  20: 'InnerProduct',
-  21: 'Input',
-  22: 'Interp',
-  23: 'LRN',
-  24: 'LSTM',
-  25: 'MatMul',
-  26: 'NonMaxSuppressionV2',
-  27: 'Normalize',
-  28: 'PackParam',
-  29: 'Permute',
-  30: 'Plugin',
-  31: 'Pool',
-  32: 'PRelu',
-  33: 'PriorBox',
-  34: 'Proposal',
-  35: 'QuantizedAvgPool',
-  36: 'QuantizedBiasAdd',
-  37: 'QuantizedConcat',
-  38: 'QuantizedLogistic',
-  39: 'QuantizedMatMul',
-  40: 'QuantizedMaxPool',
-  41: 'QuantizedRelu',
-  42: 'QuantizedRelu6',
-  43: 'QuantizedReshape',
-  44: 'QuantizedSoftmax',
-  45: 'QuantizeMaxMin',
-  46: 'QuantizeV2',
-  47: 'Range',
-  48: 'Rank',
-  49: 'ReduceJoin',
-  50: 'ReductionParam',
-  51: 'Relu',
-  52: 'Relu6',
-  53: 'RequantizationRange',
-  54: 'Requantize',
-  55: 'Reshape',
-  56: 'Resize',
-  57: 'RoiPooling',
-  58: 'Scale',
-  59: 'Selu',
-  60: 'Size',
-  61: 'Slice',
-  62: 'SliceTf',
-  63: 'SpaceBatch',
-  64: 'SqueezeParam',
-  65: 'StridedSliceParam',
-  66: 'TensorConvertInfo',
-  67: 'TfQuantizedConv2D',
-  68: 'TopKV2',
-  69: 'Transpose',
-  70: 'UnaryOp',
-  71: 'MomentsParam',
-  72: 'RNNParam',
-  73: 'BatchMatMulParam',
-  74: 'QuantizedFloatParam',
-  75: 'DepthSpaceParam',
-  76: 'EltwiseInt8',
-  77: 'ReverseSequenceParam',
-  78: 'Extra',
-  79: 'Pool3D',
-  80: 'Convolution3D',
-  81: 'ELU',
-  82: 'DetectionPostProcessParam',
-  83: 'OneHotParam',
-  84: 'PadParam'
+  '0': 'NONE',
+  '1': 'QuantizedAdd',
+  '2': 'ArgMax',
+  '3': 'AsString',
+  '4': 'Axis',
+  '5': 'BatchNorm',
+  '6': 'BinaryOp',
+  '7': 'Blob',
+  '8': 'CastParam',
+  '9': 'Convolution2D',
+  '10': 'Crop',
+  '11': 'CropAndResize',
+  '12': 'Dequantize',
+  '13': 'DetectionOutput',
+  '14': 'Eltwise',
+  '15': 'ExpandDims',
+  '16': 'Fill',
+  '17': 'Flatten',
+  '18': 'Gather',
+  '19': 'GatherV2',
+  '20': 'InnerProduct',
+  '21': 'Input',
+  '22': 'Interp',
+  '23': 'LRN',
+  '24': 'LSTM',
+  '25': 'MatMul',
+  '26': 'NonMaxSuppressionV2',
+  '27': 'Normalize',
+  '28': 'PackParam',
+  '29': 'Permute',
+  '30': 'Plugin',
+  '31': 'Pool',
+  '32': 'PRelu',
+  '33': 'PriorBox',
+  '34': 'Proposal',
+  '35': 'QuantizedAvgPool',
+  '36': 'QuantizedBiasAdd',
+  '37': 'QuantizedConcat',
+  '38': 'QuantizedLogistic',
+  '39': 'QuantizedMatMul',
+  '40': 'QuantizedMaxPool',
+  '41': 'QuantizedRelu',
+  '42': 'QuantizedRelu6',
+  '43': 'QuantizedReshape',
+  '44': 'QuantizedSoftmax',
+  '45': 'QuantizeMaxMin',
+  '46': 'QuantizeV2',
+  '47': 'Range',
+  '48': 'Rank',
+  '49': 'ReduceJoin',
+  '50': 'ReductionParam',
+  '51': 'Relu',
+  '52': 'Relu6',
+  '53': 'RequantizationRange',
+  '54': 'Requantize',
+  '55': 'Reshape',
+  '56': 'Resize',
+  '57': 'RoiPooling',
+  '58': 'Scale',
+  '59': 'Selu',
+  '60': 'Size',
+  '61': 'Slice',
+  '62': 'SliceTf',
+  '63': 'SpaceBatch',
+  '64': 'SqueezeParam',
+  '65': 'StridedSliceParam',
+  '66': 'TensorConvertInfo',
+  '67': 'TfQuantizedConv2D',
+  '68': 'TopKV2',
+  '69': 'Transpose',
+  '70': 'UnaryOp',
+  '71': 'MomentsParam',
+  '72': 'RNNParam',
+  '73': 'BatchMatMulParam',
+  '74': 'QuantizedFloatParam',
+  '75': 'DepthSpaceParam',
+  '76': 'EltwiseInt8',
+  '77': 'ReverseSequenceParam',
+  '78': 'Extra',
+  '79': 'Pool3D',
+  '80': 'Convolution3D',
+  '81': 'ELU',
+  '82': 'DetectionPostProcessParam',
+  '83': 'OneHotParam',
+  '84': 'PadParam'
 };
 
 /**
@@ -979,11 +995,11 @@ MNN.ForwardType = {
  * @enum {string}
  */
 MNN.ForwardTypeName = {
-  0: 'CPU',
-  1: 'METAL',
-  2: 'OPENCL',
-  3: 'OPENGLES',
-  4: 'VULKAN'
+  '0': 'CPU',
+  '1': 'METAL',
+  '2': 'OPENCL',
+  '3': 'OPENGLES',
+  '4': 'VULKAN'
 };
 
 /**
@@ -998,8 +1014,8 @@ MNN.Usage = {
  * @enum {string}
  */
 MNN.UsageName = {
-  0: 'INFERENCE',
-  1: 'TRAIN'
+  '0': 'INFERENCE',
+  '1': 'TRAIN'
 };
 
 /**
@@ -1034,6 +1050,16 @@ MNN.Blob.prototype.__init = function(i, bb) {
  * @returns {MNN.Blob}
  */
 MNN.Blob.getRootAsBlob = function(bb, obj) {
+  return (obj || new MNN.Blob).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
+ * @param {flatbuffers.ByteBuffer} bb
+ * @param {MNN.Blob=} obj
+ * @returns {MNN.Blob}
+ */
+MNN.Blob.getSizePrefixedRootAsBlob = function(bb, obj) {
+  bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
   return (obj || new MNN.Blob).__init(bb.readInt32(bb.position()) + bb.position(), bb);
 };
 
@@ -1511,6 +1537,16 @@ MNN.ListValue.getRootAsListValue = function(bb, obj) {
 };
 
 /**
+ * @param {flatbuffers.ByteBuffer} bb
+ * @param {MNN.ListValue=} obj
+ * @returns {MNN.ListValue}
+ */
+MNN.ListValue.getSizePrefixedRootAsListValue = function(bb, obj) {
+  bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
+  return (obj || new MNN.ListValue).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
  * @param {number} index
  * @param {flatbuffers.Encoding=} optionalEncoding
  * @returns {string|Uint8Array}
@@ -1844,6 +1880,16 @@ MNN.Attribute.getRootAsAttribute = function(bb, obj) {
 };
 
 /**
+ * @param {flatbuffers.ByteBuffer} bb
+ * @param {MNN.Attribute=} obj
+ * @returns {MNN.Attribute}
+ */
+MNN.Attribute.getSizePrefixedRootAsAttribute = function(bb, obj) {
+  bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
+  return (obj || new MNN.Attribute).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
  * @param {flatbuffers.Encoding=} optionalEncoding
  * @returns {string|Uint8Array|null}
  */
@@ -2052,6 +2098,16 @@ MNN.Convolution2DCommon.getRootAsConvolution2DCommon = function(bb, obj) {
 };
 
 /**
+ * @param {flatbuffers.ByteBuffer} bb
+ * @param {MNN.Convolution2DCommon=} obj
+ * @returns {MNN.Convolution2DCommon}
+ */
+MNN.Convolution2DCommon.getSizePrefixedRootAsConvolution2DCommon = function(bb, obj) {
+  bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
+  return (obj || new MNN.Convolution2DCommon).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
  * @returns {number}
  */
 MNN.Convolution2DCommon.prototype.padX = function() {
@@ -2164,10 +2220,35 @@ MNN.Convolution2DCommon.prototype.relu6 = function() {
 };
 
 /**
+ * @param {number} index
+ * @returns {number}
+ */
+MNN.Convolution2DCommon.prototype.pads = function(index) {
+  var offset = this.bb.__offset(this.bb_pos, 32);
+  return offset ? this.bb.readInt32(this.bb.__vector(this.bb_pos + offset) + index * 4) : 0;
+};
+
+/**
+ * @returns {number}
+ */
+MNN.Convolution2DCommon.prototype.padsLength = function() {
+  var offset = this.bb.__offset(this.bb_pos, 32);
+  return offset ? this.bb.__vector_len(this.bb_pos + offset) : 0;
+};
+
+/**
+ * @returns {Int32Array}
+ */
+MNN.Convolution2DCommon.prototype.padsArray = function() {
+  var offset = this.bb.__offset(this.bb_pos, 32);
+  return offset ? new Int32Array(this.bb.bytes().buffer, this.bb.bytes().byteOffset + this.bb.__vector(this.bb_pos + offset), this.bb.__vector_len(this.bb_pos + offset)) : null;
+};
+
+/**
  * @param {flatbuffers.Builder} builder
  */
 MNN.Convolution2DCommon.startConvolution2DCommon = function(builder) {
-  builder.startObject(14);
+  builder.startObject(15);
 };
 
 /**
@@ -2284,6 +2365,35 @@ MNN.Convolution2DCommon.addRelu6 = function(builder, relu6) {
 
 /**
  * @param {flatbuffers.Builder} builder
+ * @param {flatbuffers.Offset} padsOffset
+ */
+MNN.Convolution2DCommon.addPads = function(builder, padsOffset) {
+  builder.addFieldOffset(14, padsOffset, 0);
+};
+
+/**
+ * @param {flatbuffers.Builder} builder
+ * @param {Array.<number>} data
+ * @returns {flatbuffers.Offset}
+ */
+MNN.Convolution2DCommon.createPadsVector = function(builder, data) {
+  builder.startVector(4, data.length, 4);
+  for (var i = data.length - 1; i >= 0; i--) {
+    builder.addInt32(data[i]);
+  }
+  return builder.endVector();
+};
+
+/**
+ * @param {flatbuffers.Builder} builder
+ * @param {number} numElems
+ */
+MNN.Convolution2DCommon.startPadsVector = function(builder, numElems) {
+  builder.startVector(4, numElems, 4);
+};
+
+/**
+ * @param {flatbuffers.Builder} builder
  * @returns {flatbuffers.Offset}
  */
 MNN.Convolution2DCommon.endConvolution2DCommon = function(builder) {
@@ -2307,9 +2417,10 @@ MNN.Convolution2DCommon.endConvolution2DCommon = function(builder) {
  * @param {number} inputCount
  * @param {boolean} relu
  * @param {boolean} relu6
+ * @param {flatbuffers.Offset} padsOffset
  * @returns {flatbuffers.Offset}
  */
-MNN.Convolution2DCommon.createConvolution2DCommon = function(builder, padX, padY, kernelX, kernelY, strideX, strideY, dilateX, dilateY, padMode, group, outputCount, inputCount, relu, relu6) {
+MNN.Convolution2DCommon.createConvolution2DCommon = function(builder, padX, padY, kernelX, kernelY, strideX, strideY, dilateX, dilateY, padMode, group, outputCount, inputCount, relu, relu6, padsOffset) {
   MNN.Convolution2DCommon.startConvolution2DCommon(builder);
   MNN.Convolution2DCommon.addPadX(builder, padX);
   MNN.Convolution2DCommon.addPadY(builder, padY);
@@ -2325,6 +2436,7 @@ MNN.Convolution2DCommon.createConvolution2DCommon = function(builder, padX, padY
   MNN.Convolution2DCommon.addInputCount(builder, inputCount);
   MNN.Convolution2DCommon.addRelu(builder, relu);
   MNN.Convolution2DCommon.addRelu6(builder, relu6);
+  MNN.Convolution2DCommon.addPads(builder, padsOffset);
   return MNN.Convolution2DCommon.endConvolution2DCommon(builder);
 }
 
@@ -2360,6 +2472,16 @@ MNN.Convolution3DCommon.prototype.__init = function(i, bb) {
  * @returns {MNN.Convolution3DCommon}
  */
 MNN.Convolution3DCommon.getRootAsConvolution3DCommon = function(bb, obj) {
+  return (obj || new MNN.Convolution3DCommon).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
+ * @param {flatbuffers.ByteBuffer} bb
+ * @param {MNN.Convolution3DCommon=} obj
+ * @returns {MNN.Convolution3DCommon}
+ */
+MNN.Convolution3DCommon.getSizePrefixedRootAsConvolution3DCommon = function(bb, obj) {
+  bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
   return (obj || new MNN.Convolution3DCommon).__init(bb.readInt32(bb.position()) + bb.position(), bb);
 };
 
@@ -2738,6 +2860,16 @@ MNN.IDSTQuan.getRootAsIDSTQuan = function(bb, obj) {
 };
 
 /**
+ * @param {flatbuffers.ByteBuffer} bb
+ * @param {MNN.IDSTQuan=} obj
+ * @returns {MNN.IDSTQuan}
+ */
+MNN.IDSTQuan.getSizePrefixedRootAsIDSTQuan = function(bb, obj) {
+  bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
+  return (obj || new MNN.IDSTQuan).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
  * @param {number} index
  * @returns {number}
  */
@@ -3072,6 +3204,16 @@ MNN.QuantizedFloatParam.getRootAsQuantizedFloatParam = function(bb, obj) {
 };
 
 /**
+ * @param {flatbuffers.ByteBuffer} bb
+ * @param {MNN.QuantizedFloatParam=} obj
+ * @returns {MNN.QuantizedFloatParam}
+ */
+MNN.QuantizedFloatParam.getSizePrefixedRootAsQuantizedFloatParam = function(bb, obj) {
+  bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
+  return (obj || new MNN.QuantizedFloatParam).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
  * @param {number} index
  * @returns {number}
  */
@@ -3172,10 +3314,18 @@ MNN.QuantizedFloatParam.prototype.tensorScaleArray = function() {
 };
 
 /**
+ * @returns {MNN.QuantizeAlgo}
+ */
+MNN.QuantizedFloatParam.prototype.method = function() {
+  var offset = this.bb.__offset(this.bb_pos, 12);
+  return offset ? /** @type {MNN.QuantizeAlgo} */ (this.bb.readInt8(this.bb_pos + offset)) : MNN.QuantizeAlgo.DEFAULT;
+};
+
+/**
  * @param {flatbuffers.Builder} builder
  */
 MNN.QuantizedFloatParam.startQuantizedFloatParam = function(builder) {
-  builder.startObject(4);
+  builder.startObject(5);
 };
 
 /**
@@ -3296,6 +3446,14 @@ MNN.QuantizedFloatParam.startTensorScaleVector = function(builder, numElems) {
 
 /**
  * @param {flatbuffers.Builder} builder
+ * @param {MNN.QuantizeAlgo} method
+ */
+MNN.QuantizedFloatParam.addMethod = function(builder, method) {
+  builder.addFieldInt8(4, method, MNN.QuantizeAlgo.DEFAULT);
+};
+
+/**
+ * @param {flatbuffers.Builder} builder
  * @returns {flatbuffers.Offset}
  */
 MNN.QuantizedFloatParam.endQuantizedFloatParam = function(builder) {
@@ -3309,14 +3467,16 @@ MNN.QuantizedFloatParam.endQuantizedFloatParam = function(builder) {
  * @param {flatbuffers.Offset} biasOffset
  * @param {flatbuffers.Offset} scaleOffset
  * @param {flatbuffers.Offset} tensorScaleOffset
+ * @param {MNN.QuantizeAlgo} method
  * @returns {flatbuffers.Offset}
  */
-MNN.QuantizedFloatParam.createQuantizedFloatParam = function(builder, weightOffset, biasOffset, scaleOffset, tensorScaleOffset) {
+MNN.QuantizedFloatParam.createQuantizedFloatParam = function(builder, weightOffset, biasOffset, scaleOffset, tensorScaleOffset, method) {
   MNN.QuantizedFloatParam.startQuantizedFloatParam(builder);
   MNN.QuantizedFloatParam.addWeight(builder, weightOffset);
   MNN.QuantizedFloatParam.addBias(builder, biasOffset);
   MNN.QuantizedFloatParam.addScale(builder, scaleOffset);
   MNN.QuantizedFloatParam.addTensorScale(builder, tensorScaleOffset);
+  MNN.QuantizedFloatParam.addMethod(builder, method);
   return MNN.QuantizedFloatParam.endQuantizedFloatParam(builder);
 }
 
@@ -3352,6 +3512,16 @@ MNN.Convolution2D.prototype.__init = function(i, bb) {
  * @returns {MNN.Convolution2D}
  */
 MNN.Convolution2D.getRootAsConvolution2D = function(bb, obj) {
+  return (obj || new MNN.Convolution2D).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
+ * @param {flatbuffers.ByteBuffer} bb
+ * @param {MNN.Convolution2D=} obj
+ * @returns {MNN.Convolution2D}
+ */
+MNN.Convolution2D.getSizePrefixedRootAsConvolution2D = function(bb, obj) {
+  bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
   return (obj || new MNN.Convolution2D).__init(bb.readInt32(bb.position()) + bb.position(), bb);
 };
 
@@ -3585,6 +3755,16 @@ MNN.Convolution3D.getRootAsConvolution3D = function(bb, obj) {
 };
 
 /**
+ * @param {flatbuffers.ByteBuffer} bb
+ * @param {MNN.Convolution3D=} obj
+ * @returns {MNN.Convolution3D}
+ */
+MNN.Convolution3D.getSizePrefixedRootAsConvolution3D = function(bb, obj) {
+  bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
+  return (obj || new MNN.Convolution3D).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
  * @param {MNN.Convolution3DCommon=} obj
  * @returns {MNN.Convolution3DCommon|null}
  */
@@ -3772,6 +3952,16 @@ MNN.InnerProduct.prototype.__init = function(i, bb) {
  * @returns {MNN.InnerProduct}
  */
 MNN.InnerProduct.getRootAsInnerProduct = function(bb, obj) {
+  return (obj || new MNN.InnerProduct).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
+ * @param {flatbuffers.ByteBuffer} bb
+ * @param {MNN.InnerProduct=} obj
+ * @returns {MNN.InnerProduct}
+ */
+MNN.InnerProduct.getSizePrefixedRootAsInnerProduct = function(bb, obj) {
+  bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
   return (obj || new MNN.InnerProduct).__init(bb.readInt32(bb.position()) + bb.position(), bb);
 };
 
@@ -4057,6 +4247,16 @@ MNN.Pool.getRootAsPool = function(bb, obj) {
 };
 
 /**
+ * @param {flatbuffers.ByteBuffer} bb
+ * @param {MNN.Pool=} obj
+ * @returns {MNN.Pool}
+ */
+MNN.Pool.getSizePrefixedRootAsPool = function(bb, obj) {
+  bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
+  return (obj || new MNN.Pool).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
  * @returns {number}
  */
 MNN.Pool.prototype.padX = function() {
@@ -4145,10 +4345,35 @@ MNN.Pool.prototype.ceilModel = function() {
 };
 
 /**
+ * @param {number} index
+ * @returns {number}
+ */
+MNN.Pool.prototype.pads = function(index) {
+  var offset = this.bb.__offset(this.bb_pos, 26);
+  return offset ? this.bb.readInt32(this.bb.__vector(this.bb_pos + offset) + index * 4) : 0;
+};
+
+/**
+ * @returns {number}
+ */
+MNN.Pool.prototype.padsLength = function() {
+  var offset = this.bb.__offset(this.bb_pos, 26);
+  return offset ? this.bb.__vector_len(this.bb_pos + offset) : 0;
+};
+
+/**
+ * @returns {Int32Array}
+ */
+MNN.Pool.prototype.padsArray = function() {
+  var offset = this.bb.__offset(this.bb_pos, 26);
+  return offset ? new Int32Array(this.bb.bytes().buffer, this.bb.bytes().byteOffset + this.bb.__vector(this.bb_pos + offset), this.bb.__vector_len(this.bb_pos + offset)) : null;
+};
+
+/**
  * @param {flatbuffers.Builder} builder
  */
 MNN.Pool.startPool = function(builder) {
-  builder.startObject(11);
+  builder.startObject(12);
 };
 
 /**
@@ -4241,6 +4466,35 @@ MNN.Pool.addCeilModel = function(builder, ceilModel) {
 
 /**
  * @param {flatbuffers.Builder} builder
+ * @param {flatbuffers.Offset} padsOffset
+ */
+MNN.Pool.addPads = function(builder, padsOffset) {
+  builder.addFieldOffset(11, padsOffset, 0);
+};
+
+/**
+ * @param {flatbuffers.Builder} builder
+ * @param {Array.<number>} data
+ * @returns {flatbuffers.Offset}
+ */
+MNN.Pool.createPadsVector = function(builder, data) {
+  builder.startVector(4, data.length, 4);
+  for (var i = data.length - 1; i >= 0; i--) {
+    builder.addInt32(data[i]);
+  }
+  return builder.endVector();
+};
+
+/**
+ * @param {flatbuffers.Builder} builder
+ * @param {number} numElems
+ */
+MNN.Pool.startPadsVector = function(builder, numElems) {
+  builder.startVector(4, numElems, 4);
+};
+
+/**
+ * @param {flatbuffers.Builder} builder
  * @returns {flatbuffers.Offset}
  */
 MNN.Pool.endPool = function(builder) {
@@ -4261,9 +4515,10 @@ MNN.Pool.endPool = function(builder) {
  * @param {MNN.PoolPadType} padType
  * @param {MNN.DataType} dataType
  * @param {boolean} ceilModel
+ * @param {flatbuffers.Offset} padsOffset
  * @returns {flatbuffers.Offset}
  */
-MNN.Pool.createPool = function(builder, padX, padY, isGlobal, kernelX, kernelY, strideX, strideY, type, padType, dataType, ceilModel) {
+MNN.Pool.createPool = function(builder, padX, padY, isGlobal, kernelX, kernelY, strideX, strideY, type, padType, dataType, ceilModel, padsOffset) {
   MNN.Pool.startPool(builder);
   MNN.Pool.addPadX(builder, padX);
   MNN.Pool.addPadY(builder, padY);
@@ -4276,6 +4531,7 @@ MNN.Pool.createPool = function(builder, padX, padY, isGlobal, kernelX, kernelY, 
   MNN.Pool.addPadType(builder, padType);
   MNN.Pool.addDataType(builder, dataType);
   MNN.Pool.addCeilModel(builder, ceilModel);
+  MNN.Pool.addPads(builder, padsOffset);
   return MNN.Pool.endPool(builder);
 }
 
@@ -4311,6 +4567,16 @@ MNN.Pool3D.prototype.__init = function(i, bb) {
  * @returns {MNN.Pool3D}
  */
 MNN.Pool3D.getRootAsPool3D = function(bb, obj) {
+  return (obj || new MNN.Pool3D).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
+ * @param {flatbuffers.ByteBuffer} bb
+ * @param {MNN.Pool3D=} obj
+ * @returns {MNN.Pool3D}
+ */
+MNN.Pool3D.getSizePrefixedRootAsPool3D = function(bb, obj) {
+  bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
   return (obj || new MNN.Pool3D).__init(bb.readInt32(bb.position()) + bb.position(), bb);
 };
 
@@ -4579,6 +4845,16 @@ MNN.Relu.getRootAsRelu = function(bb, obj) {
 };
 
 /**
+ * @param {flatbuffers.ByteBuffer} bb
+ * @param {MNN.Relu=} obj
+ * @returns {MNN.Relu}
+ */
+MNN.Relu.getSizePrefixedRootAsRelu = function(bb, obj) {
+  bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
+  return (obj || new MNN.Relu).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
  * @returns {number}
  */
 MNN.Relu.prototype.slope = function() {
@@ -4657,6 +4933,16 @@ MNN.Relu6.getRootAsRelu6 = function(bb, obj) {
 };
 
 /**
+ * @param {flatbuffers.ByteBuffer} bb
+ * @param {MNN.Relu6=} obj
+ * @returns {MNN.Relu6}
+ */
+MNN.Relu6.getSizePrefixedRootAsRelu6 = function(bb, obj) {
+  bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
+  return (obj || new MNN.Relu6).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
  * @returns {number}
  */
 MNN.Relu6.prototype.slope = function() {
@@ -4731,6 +5017,16 @@ MNN.PRelu.prototype.__init = function(i, bb) {
  * @returns {MNN.PRelu}
  */
 MNN.PRelu.getRootAsPRelu = function(bb, obj) {
+  return (obj || new MNN.PRelu).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
+ * @param {flatbuffers.ByteBuffer} bb
+ * @param {MNN.PRelu=} obj
+ * @returns {MNN.PRelu}
+ */
+MNN.PRelu.getSizePrefixedRootAsPRelu = function(bb, obj) {
+  bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
   return (obj || new MNN.PRelu).__init(bb.readInt32(bb.position()) + bb.position(), bb);
 };
 
@@ -4869,6 +5165,16 @@ MNN.ELU.getRootAsELU = function(bb, obj) {
 };
 
 /**
+ * @param {flatbuffers.ByteBuffer} bb
+ * @param {MNN.ELU=} obj
+ * @returns {MNN.ELU}
+ */
+MNN.ELU.getSizePrefixedRootAsELU = function(bb, obj) {
+  bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
+  return (obj || new MNN.ELU).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
  * @returns {number}
  */
 MNN.ELU.prototype.alpha = function() {
@@ -4943,6 +5249,16 @@ MNN.LRN.prototype.__init = function(i, bb) {
  * @returns {MNN.LRN}
  */
 MNN.LRN.getRootAsLRN = function(bb, obj) {
+  return (obj || new MNN.LRN).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
+ * @param {flatbuffers.ByteBuffer} bb
+ * @param {MNN.LRN=} obj
+ * @returns {MNN.LRN}
+ */
+MNN.LRN.getSizePrefixedRootAsLRN = function(bb, obj) {
+  bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
   return (obj || new MNN.LRN).__init(bb.readInt32(bb.position()) + bb.position(), bb);
 };
 
@@ -5079,6 +5395,16 @@ MNN.ArgMax.getRootAsArgMax = function(bb, obj) {
 };
 
 /**
+ * @param {flatbuffers.ByteBuffer} bb
+ * @param {MNN.ArgMax=} obj
+ * @returns {MNN.ArgMax}
+ */
+MNN.ArgMax.getSizePrefixedRootAsArgMax = function(bb, obj) {
+  bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
+  return (obj || new MNN.ArgMax).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
  * @returns {number}
  */
 MNN.ArgMax.prototype.outMaxVal = function() {
@@ -5211,6 +5537,16 @@ MNN.Axis.getRootAsAxis = function(bb, obj) {
 };
 
 /**
+ * @param {flatbuffers.ByteBuffer} bb
+ * @param {MNN.Axis=} obj
+ * @returns {MNN.Axis}
+ */
+MNN.Axis.getSizePrefixedRootAsAxis = function(bb, obj) {
+  bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
+  return (obj || new MNN.Axis).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
  * @returns {number}
  */
 MNN.Axis.prototype.axis = function() {
@@ -5285,6 +5621,16 @@ MNN.Input.prototype.__init = function(i, bb) {
  * @returns {MNN.Input}
  */
 MNN.Input.getRootAsInput = function(bb, obj) {
+  return (obj || new MNN.Input).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
+ * @param {flatbuffers.ByteBuffer} bb
+ * @param {MNN.Input=} obj
+ * @returns {MNN.Input}
+ */
+MNN.Input.getSizePrefixedRootAsInput = function(bb, obj) {
+  bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
   return (obj || new MNN.Input).__init(bb.readInt32(bb.position()) + bb.position(), bb);
 };
 
@@ -5437,6 +5783,16 @@ MNN.LSTM.prototype.__init = function(i, bb) {
  * @returns {MNN.LSTM}
  */
 MNN.LSTM.getRootAsLSTM = function(bb, obj) {
+  return (obj || new MNN.LSTM).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
+ * @param {flatbuffers.ByteBuffer} bb
+ * @param {MNN.LSTM=} obj
+ * @returns {MNN.LSTM}
+ */
+MNN.LSTM.getSizePrefixedRootAsLSTM = function(bb, obj) {
+  bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
   return (obj || new MNN.LSTM).__init(bb.readInt32(bb.position()) + bb.position(), bb);
 };
 
@@ -5668,6 +6024,16 @@ MNN.Slice.getRootAsSlice = function(bb, obj) {
 };
 
 /**
+ * @param {flatbuffers.ByteBuffer} bb
+ * @param {MNN.Slice=} obj
+ * @returns {MNN.Slice}
+ */
+MNN.Slice.getSizePrefixedRootAsSlice = function(bb, obj) {
+  bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
+  return (obj || new MNN.Slice).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
  * @returns {number}
  */
 MNN.Slice.prototype.axis = function() {
@@ -5816,6 +6182,16 @@ MNN.BatchNorm.prototype.__init = function(i, bb) {
  * @returns {MNN.BatchNorm}
  */
 MNN.BatchNorm.getRootAsBatchNorm = function(bb, obj) {
+  return (obj || new MNN.BatchNorm).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
+ * @param {flatbuffers.ByteBuffer} bb
+ * @param {MNN.BatchNorm=} obj
+ * @returns {MNN.BatchNorm}
+ */
+MNN.BatchNorm.getSizePrefixedRootAsBatchNorm = function(bb, obj) {
+  bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
   return (obj || new MNN.BatchNorm).__init(bb.readInt32(bb.position()) + bb.position(), bb);
 };
 
@@ -6252,6 +6628,16 @@ MNN.Scale.getRootAsScale = function(bb, obj) {
 };
 
 /**
+ * @param {flatbuffers.ByteBuffer} bb
+ * @param {MNN.Scale=} obj
+ * @returns {MNN.Scale}
+ */
+MNN.Scale.getSizePrefixedRootAsScale = function(bb, obj) {
+  bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
+  return (obj || new MNN.Scale).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
  * @returns {number}
  */
 MNN.Scale.prototype.channels = function() {
@@ -6442,6 +6828,16 @@ MNN.Eltwise.getRootAsEltwise = function(bb, obj) {
 };
 
 /**
+ * @param {flatbuffers.ByteBuffer} bb
+ * @param {MNN.Eltwise=} obj
+ * @returns {MNN.Eltwise}
+ */
+MNN.Eltwise.getSizePrefixedRootAsEltwise = function(bb, obj) {
+  bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
+  return (obj || new MNN.Eltwise).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
  * @returns {MNN.EltwiseType}
  */
 MNN.Eltwise.prototype.type = function() {
@@ -6576,6 +6972,16 @@ MNN.Flatten.getRootAsFlatten = function(bb, obj) {
 };
 
 /**
+ * @param {flatbuffers.ByteBuffer} bb
+ * @param {MNN.Flatten=} obj
+ * @returns {MNN.Flatten}
+ */
+MNN.Flatten.getSizePrefixedRootAsFlatten = function(bb, obj) {
+  bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
+  return (obj || new MNN.Flatten).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
  * @returns {number}
  */
 MNN.Flatten.prototype.axis = function() {
@@ -6668,6 +7074,16 @@ MNN.Permute.prototype.__init = function(i, bb) {
  * @returns {MNN.Permute}
  */
 MNN.Permute.getRootAsPermute = function(bb, obj) {
+  return (obj || new MNN.Permute).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
+ * @param {flatbuffers.ByteBuffer} bb
+ * @param {MNN.Permute=} obj
+ * @returns {MNN.Permute}
+ */
+MNN.Permute.getSizePrefixedRootAsPermute = function(bb, obj) {
+  bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
   return (obj || new MNN.Permute).__init(bb.readInt32(bb.position()) + bb.position(), bb);
 };
 
@@ -6784,6 +7200,16 @@ MNN.Reshape.prototype.__init = function(i, bb) {
  * @returns {MNN.Reshape}
  */
 MNN.Reshape.getRootAsReshape = function(bb, obj) {
+  return (obj || new MNN.Reshape).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
+ * @param {flatbuffers.ByteBuffer} bb
+ * @param {MNN.Reshape=} obj
+ * @returns {MNN.Reshape}
+ */
+MNN.Reshape.getSizePrefixedRootAsReshape = function(bb, obj) {
+  bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
   return (obj || new MNN.Reshape).__init(bb.readInt32(bb.position()) + bb.position(), bb);
 };
 
@@ -6918,6 +7344,16 @@ MNN.DetectionOutput.prototype.__init = function(i, bb) {
  * @returns {MNN.DetectionOutput}
  */
 MNN.DetectionOutput.getRootAsDetectionOutput = function(bb, obj) {
+  return (obj || new MNN.DetectionOutput).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
+ * @param {flatbuffers.ByteBuffer} bb
+ * @param {MNN.DetectionOutput=} obj
+ * @returns {MNN.DetectionOutput}
+ */
+MNN.DetectionOutput.getSizePrefixedRootAsDetectionOutput = function(bb, obj) {
+  bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
   return (obj || new MNN.DetectionOutput).__init(bb.readInt32(bb.position()) + bb.position(), bb);
 };
 
@@ -7162,6 +7598,16 @@ MNN.RoiPooling.getRootAsRoiPooling = function(bb, obj) {
 };
 
 /**
+ * @param {flatbuffers.ByteBuffer} bb
+ * @param {MNN.RoiPooling=} obj
+ * @returns {MNN.RoiPooling}
+ */
+MNN.RoiPooling.getSizePrefixedRootAsRoiPooling = function(bb, obj) {
+  bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
+  return (obj || new MNN.RoiPooling).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
  * @returns {number}
  */
 MNN.RoiPooling.prototype.pooledWidth = function() {
@@ -7272,6 +7718,16 @@ MNN.Proposal.prototype.__init = function(i, bb) {
  * @returns {MNN.Proposal}
  */
 MNN.Proposal.getRootAsProposal = function(bb, obj) {
+  return (obj || new MNN.Proposal).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
+ * @param {flatbuffers.ByteBuffer} bb
+ * @param {MNN.Proposal=} obj
+ * @returns {MNN.Proposal}
+ */
+MNN.Proposal.getSizePrefixedRootAsProposal = function(bb, obj) {
+  bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
   return (obj || new MNN.Proposal).__init(bb.readInt32(bb.position()) + bb.position(), bb);
 };
 
@@ -7501,6 +7957,16 @@ MNN.Interp.getRootAsInterp = function(bb, obj) {
 };
 
 /**
+ * @param {flatbuffers.ByteBuffer} bb
+ * @param {MNN.Interp=} obj
+ * @returns {MNN.Interp}
+ */
+MNN.Interp.getSizePrefixedRootAsInterp = function(bb, obj) {
+  bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
+  return (obj || new MNN.Interp).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
  * @returns {number}
  */
 MNN.Interp.prototype.widthScale = function() {
@@ -7687,6 +8153,16 @@ MNN.Resize.getRootAsResize = function(bb, obj) {
 };
 
 /**
+ * @param {flatbuffers.ByteBuffer} bb
+ * @param {MNN.Resize=} obj
+ * @returns {MNN.Resize}
+ */
+MNN.Resize.getSizePrefixedRootAsResize = function(bb, obj) {
+  bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
+  return (obj || new MNN.Resize).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
  * @returns {number}
  */
 MNN.Resize.prototype.xScale = function() {
@@ -7779,6 +8255,16 @@ MNN.PriorBox.prototype.__init = function(i, bb) {
  * @returns {MNN.PriorBox}
  */
 MNN.PriorBox.getRootAsPriorBox = function(bb, obj) {
+  return (obj || new MNN.PriorBox).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
+ * @param {flatbuffers.ByteBuffer} bb
+ * @param {MNN.PriorBox=} obj
+ * @returns {MNN.PriorBox}
+ */
+MNN.PriorBox.getSizePrefixedRootAsPriorBox = function(bb, obj) {
+  bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
   return (obj || new MNN.PriorBox).__init(bb.readInt32(bb.position()) + bb.position(), bb);
 };
 
@@ -8193,6 +8679,16 @@ MNN.Normalize.getRootAsNormalize = function(bb, obj) {
 };
 
 /**
+ * @param {flatbuffers.ByteBuffer} bb
+ * @param {MNN.Normalize=} obj
+ * @returns {MNN.Normalize}
+ */
+MNN.Normalize.getSizePrefixedRootAsNormalize = function(bb, obj) {
+  bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
+  return (obj || new MNN.Normalize).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
  * @returns {number}
  */
 MNN.Normalize.prototype.acrossSpatial = function() {
@@ -8363,6 +8859,16 @@ MNN.EltwiseInt8.getRootAsEltwiseInt8 = function(bb, obj) {
 };
 
 /**
+ * @param {flatbuffers.ByteBuffer} bb
+ * @param {MNN.EltwiseInt8=} obj
+ * @returns {MNN.EltwiseInt8}
+ */
+MNN.EltwiseInt8.getSizePrefixedRootAsEltwiseInt8 = function(bb, obj) {
+  bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
+  return (obj || new MNN.EltwiseInt8).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
  * @returns {MNN.EltwiseType}
  */
 MNN.EltwiseInt8.prototype.type = function() {
@@ -8498,6 +9004,16 @@ MNN.BinaryOp.getRootAsBinaryOp = function(bb, obj) {
 };
 
 /**
+ * @param {flatbuffers.ByteBuffer} bb
+ * @param {MNN.BinaryOp=} obj
+ * @returns {MNN.BinaryOp}
+ */
+MNN.BinaryOp.getSizePrefixedRootAsBinaryOp = function(bb, obj) {
+  bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
+  return (obj || new MNN.BinaryOp).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
  * @returns {number}
  */
 MNN.BinaryOp.prototype.opType = function() {
@@ -8594,6 +9110,16 @@ MNN.PackParam.getRootAsPackParam = function(bb, obj) {
 };
 
 /**
+ * @param {flatbuffers.ByteBuffer} bb
+ * @param {MNN.PackParam=} obj
+ * @returns {MNN.PackParam}
+ */
+MNN.PackParam.getSizePrefixedRootAsPackParam = function(bb, obj) {
+  bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
+  return (obj || new MNN.PackParam).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
  * @returns {MNN.DataType}
  */
 MNN.PackParam.prototype.dataType = function() {
@@ -8686,6 +9212,16 @@ MNN.StridedSliceParam.prototype.__init = function(i, bb) {
  * @returns {MNN.StridedSliceParam}
  */
 MNN.StridedSliceParam.getRootAsStridedSliceParam = function(bb, obj) {
+  return (obj || new MNN.StridedSliceParam).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
+ * @param {flatbuffers.ByteBuffer} bb
+ * @param {MNN.StridedSliceParam=} obj
+ * @returns {MNN.StridedSliceParam}
+ */
+MNN.StridedSliceParam.getSizePrefixedRootAsStridedSliceParam = function(bb, obj) {
+  bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
   return (obj || new MNN.StridedSliceParam).__init(bb.readInt32(bb.position()) + bb.position(), bb);
 };
 
@@ -8876,6 +9412,16 @@ MNN.SqueezeParam.getRootAsSqueezeParam = function(bb, obj) {
 };
 
 /**
+ * @param {flatbuffers.ByteBuffer} bb
+ * @param {MNN.SqueezeParam=} obj
+ * @returns {MNN.SqueezeParam}
+ */
+MNN.SqueezeParam.getSizePrefixedRootAsSqueezeParam = function(bb, obj) {
+  bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
+  return (obj || new MNN.SqueezeParam).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
  * @param {number} index
  * @returns {number}
  */
@@ -8992,6 +9538,16 @@ MNN.CastParam.getRootAsCastParam = function(bb, obj) {
 };
 
 /**
+ * @param {flatbuffers.ByteBuffer} bb
+ * @param {MNN.CastParam=} obj
+ * @returns {MNN.CastParam}
+ */
+MNN.CastParam.getSizePrefixedRootAsCastParam = function(bb, obj) {
+  bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
+  return (obj || new MNN.CastParam).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
  * @returns {MNN.DataType}
  */
 MNN.CastParam.prototype.srcT = function() {
@@ -9084,6 +9640,16 @@ MNN.ReductionParam.prototype.__init = function(i, bb) {
  * @returns {MNN.ReductionParam}
  */
 MNN.ReductionParam.getRootAsReductionParam = function(bb, obj) {
+  return (obj || new MNN.ReductionParam).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
+ * @param {flatbuffers.ByteBuffer} bb
+ * @param {MNN.ReductionParam=} obj
+ * @returns {MNN.ReductionParam}
+ */
+MNN.ReductionParam.getSizePrefixedRootAsReductionParam = function(bb, obj) {
+  bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
   return (obj || new MNN.ReductionParam).__init(bb.readInt32(bb.position()) + bb.position(), bb);
 };
 
@@ -9276,6 +9842,16 @@ MNN.Gather.getRootAsGather = function(bb, obj) {
 };
 
 /**
+ * @param {flatbuffers.ByteBuffer} bb
+ * @param {MNN.Gather=} obj
+ * @returns {MNN.Gather}
+ */
+MNN.Gather.getSizePrefixedRootAsGather = function(bb, obj) {
+  bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
+  return (obj || new MNN.Gather).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
  * @returns {MNN.DataType}
  */
 MNN.Gather.prototype.Tindices = function() {
@@ -9408,6 +9984,16 @@ MNN.ExpandDims.getRootAsExpandDims = function(bb, obj) {
 };
 
 /**
+ * @param {flatbuffers.ByteBuffer} bb
+ * @param {MNN.ExpandDims=} obj
+ * @returns {MNN.ExpandDims}
+ */
+MNN.ExpandDims.getSizePrefixedRootAsExpandDims = function(bb, obj) {
+  bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
+  return (obj || new MNN.ExpandDims).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
  * @returns {MNN.DataType}
  */
 MNN.ExpandDims.prototype.T = function() {
@@ -9522,6 +10108,16 @@ MNN.Selu.getRootAsSelu = function(bb, obj) {
 };
 
 /**
+ * @param {flatbuffers.ByteBuffer} bb
+ * @param {MNN.Selu=} obj
+ * @returns {MNN.Selu}
+ */
+MNN.Selu.getSizePrefixedRootAsSelu = function(bb, obj) {
+  bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
+  return (obj || new MNN.Selu).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
  * @returns {number}
  */
 MNN.Selu.prototype.scale = function() {
@@ -9614,6 +10210,16 @@ MNN.AsString.prototype.__init = function(i, bb) {
  * @returns {MNN.AsString}
  */
 MNN.AsString.getRootAsAsString = function(bb, obj) {
+  return (obj || new MNN.AsString).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
+ * @param {flatbuffers.ByteBuffer} bb
+ * @param {MNN.AsString=} obj
+ * @returns {MNN.AsString}
+ */
+MNN.AsString.getSizePrefixedRootAsAsString = function(bb, obj) {
+  bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
   return (obj || new MNN.AsString).__init(bb.readInt32(bb.position()) + bb.position(), bb);
 };
 
@@ -9787,6 +10393,16 @@ MNN.ReduceJoin.getRootAsReduceJoin = function(bb, obj) {
 };
 
 /**
+ * @param {flatbuffers.ByteBuffer} bb
+ * @param {MNN.ReduceJoin=} obj
+ * @returns {MNN.ReduceJoin}
+ */
+MNN.ReduceJoin.getSizePrefixedRootAsReduceJoin = function(bb, obj) {
+  bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
+  return (obj || new MNN.ReduceJoin).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
  * @returns {boolean}
  */
 MNN.ReduceJoin.prototype.keepDims = function() {
@@ -9880,6 +10496,16 @@ MNN.UnaryOp.prototype.__init = function(i, bb) {
  * @returns {MNN.UnaryOp}
  */
 MNN.UnaryOp.getRootAsUnaryOp = function(bb, obj) {
+  return (obj || new MNN.UnaryOp).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
+ * @param {flatbuffers.ByteBuffer} bb
+ * @param {MNN.UnaryOp=} obj
+ * @returns {MNN.UnaryOp}
+ */
+MNN.UnaryOp.getSizePrefixedRootAsUnaryOp = function(bb, obj) {
+  bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
   return (obj || new MNN.UnaryOp).__init(bb.readInt32(bb.position()) + bb.position(), bb);
 };
 
@@ -9980,6 +10606,16 @@ MNN.TopKV2.getRootAsTopKV2 = function(bb, obj) {
 };
 
 /**
+ * @param {flatbuffers.ByteBuffer} bb
+ * @param {MNN.TopKV2=} obj
+ * @returns {MNN.TopKV2}
+ */
+MNN.TopKV2.getSizePrefixedRootAsTopKV2 = function(bb, obj) {
+  bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
+  return (obj || new MNN.TopKV2).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
  * @returns {MNN.DataType}
  */
 MNN.TopKV2.prototype.T = function() {
@@ -10072,6 +10708,16 @@ MNN.CropAndResize.prototype.__init = function(i, bb) {
  * @returns {MNN.CropAndResize}
  */
 MNN.CropAndResize.getRootAsCropAndResize = function(bb, obj) {
+  return (obj || new MNN.CropAndResize).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
+ * @param {flatbuffers.ByteBuffer} bb
+ * @param {MNN.CropAndResize=} obj
+ * @returns {MNN.CropAndResize}
+ */
+MNN.CropAndResize.getSizePrefixedRootAsCropAndResize = function(bb, obj) {
+  bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
   return (obj || new MNN.CropAndResize).__init(bb.readInt32(bb.position()) + bb.position(), bb);
 };
 
@@ -10172,6 +10818,16 @@ MNN.Fill.getRootAsFill = function(bb, obj) {
 };
 
 /**
+ * @param {flatbuffers.ByteBuffer} bb
+ * @param {MNN.Fill=} obj
+ * @returns {MNN.Fill}
+ */
+MNN.Fill.getSizePrefixedRootAsFill = function(bb, obj) {
+  bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
+  return (obj || new MNN.Fill).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
  * @param {flatbuffers.Builder} builder
  */
 MNN.Fill.startFill = function(builder) {
@@ -10228,6 +10884,16 @@ MNN.GatherV2.prototype.__init = function(i, bb) {
  * @returns {MNN.GatherV2}
  */
 MNN.GatherV2.getRootAsGatherV2 = function(bb, obj) {
+  return (obj || new MNN.GatherV2).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
+ * @param {flatbuffers.ByteBuffer} bb
+ * @param {MNN.GatherV2=} obj
+ * @returns {MNN.GatherV2}
+ */
+MNN.GatherV2.getSizePrefixedRootAsGatherV2 = function(bb, obj) {
+  bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
   return (obj || new MNN.GatherV2).__init(bb.readInt32(bb.position()) + bb.position(), bb);
 };
 
@@ -10346,6 +11012,16 @@ MNN.NonMaxSuppressionV2.getRootAsNonMaxSuppressionV2 = function(bb, obj) {
 };
 
 /**
+ * @param {flatbuffers.ByteBuffer} bb
+ * @param {MNN.NonMaxSuppressionV2=} obj
+ * @returns {MNN.NonMaxSuppressionV2}
+ */
+MNN.NonMaxSuppressionV2.getSizePrefixedRootAsNonMaxSuppressionV2 = function(bb, obj) {
+  bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
+  return (obj || new MNN.NonMaxSuppressionV2).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
  * @param {flatbuffers.Builder} builder
  */
 MNN.NonMaxSuppressionV2.startNonMaxSuppressionV2 = function(builder) {
@@ -10402,6 +11078,16 @@ MNN.Range.prototype.__init = function(i, bb) {
  * @returns {MNN.Range}
  */
 MNN.Range.getRootAsRange = function(bb, obj) {
+  return (obj || new MNN.Range).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
+ * @param {flatbuffers.ByteBuffer} bb
+ * @param {MNN.Range=} obj
+ * @returns {MNN.Range}
+ */
+MNN.Range.getSizePrefixedRootAsRange = function(bb, obj) {
+  bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
   return (obj || new MNN.Range).__init(bb.readInt32(bb.position()) + bb.position(), bb);
 };
 
@@ -10484,6 +11170,16 @@ MNN.Rank.getRootAsRank = function(bb, obj) {
 };
 
 /**
+ * @param {flatbuffers.ByteBuffer} bb
+ * @param {MNN.Rank=} obj
+ * @returns {MNN.Rank}
+ */
+MNN.Rank.getSizePrefixedRootAsRank = function(bb, obj) {
+  bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
+  return (obj || new MNN.Rank).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
  * @param {flatbuffers.Builder} builder
  */
 MNN.Rank.startRank = function(builder) {
@@ -10540,6 +11236,16 @@ MNN.Size.prototype.__init = function(i, bb) {
  * @returns {MNN.Size}
  */
 MNN.Size.getRootAsSize = function(bb, obj) {
+  return (obj || new MNN.Size).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
+ * @param {flatbuffers.ByteBuffer} bb
+ * @param {MNN.Size=} obj
+ * @returns {MNN.Size}
+ */
+MNN.Size.getSizePrefixedRootAsSize = function(bb, obj) {
+  bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
   return (obj || new MNN.Size).__init(bb.readInt32(bb.position()) + bb.position(), bb);
 };
 
@@ -10622,6 +11328,16 @@ MNN.Transpose.getRootAsTranspose = function(bb, obj) {
 };
 
 /**
+ * @param {flatbuffers.ByteBuffer} bb
+ * @param {MNN.Transpose=} obj
+ * @returns {MNN.Transpose}
+ */
+MNN.Transpose.getSizePrefixedRootAsTranspose = function(bb, obj) {
+  bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
+  return (obj || new MNN.Transpose).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
  * @returns {MNN.DataType}
  */
 MNN.Transpose.prototype.Tperm = function() {
@@ -10696,6 +11412,16 @@ MNN.SliceTf.prototype.__init = function(i, bb) {
  * @returns {MNN.SliceTf}
  */
 MNN.SliceTf.getRootAsSliceTf = function(bb, obj) {
+  return (obj || new MNN.SliceTf).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
+ * @param {flatbuffers.ByteBuffer} bb
+ * @param {MNN.SliceTf=} obj
+ * @returns {MNN.SliceTf}
+ */
+MNN.SliceTf.getSizePrefixedRootAsSliceTf = function(bb, obj) {
+  bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
   return (obj || new MNN.SliceTf).__init(bb.readInt32(bb.position()) + bb.position(), bb);
 };
 
@@ -10778,6 +11504,16 @@ MNN.QuantizeMaxMin.getRootAsQuantizeMaxMin = function(bb, obj) {
 };
 
 /**
+ * @param {flatbuffers.ByteBuffer} bb
+ * @param {MNN.QuantizeMaxMin=} obj
+ * @returns {MNN.QuantizeMaxMin}
+ */
+MNN.QuantizeMaxMin.getSizePrefixedRootAsQuantizeMaxMin = function(bb, obj) {
+  bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
+  return (obj || new MNN.QuantizeMaxMin).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
  * @returns {MNN.DataType}
  */
 MNN.QuantizeMaxMin.prototype.T = function() {
@@ -10852,6 +11588,16 @@ MNN.Crop.prototype.__init = function(i, bb) {
  * @returns {MNN.Crop}
  */
 MNN.Crop.getRootAsCrop = function(bb, obj) {
+  return (obj || new MNN.Crop).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
+ * @param {flatbuffers.ByteBuffer} bb
+ * @param {MNN.Crop=} obj
+ * @returns {MNN.Crop}
+ */
+MNN.Crop.getSizePrefixedRootAsCrop = function(bb, obj) {
+  bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
   return (obj || new MNN.Crop).__init(bb.readInt32(bb.position()) + bb.position(), bb);
 };
 
@@ -10990,6 +11736,16 @@ MNN.SpaceBatch.getRootAsSpaceBatch = function(bb, obj) {
 };
 
 /**
+ * @param {flatbuffers.ByteBuffer} bb
+ * @param {MNN.SpaceBatch=} obj
+ * @returns {MNN.SpaceBatch}
+ */
+MNN.SpaceBatch.getSizePrefixedRootAsSpaceBatch = function(bb, obj) {
+  bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
+  return (obj || new MNN.SpaceBatch).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
  * @param {MNN.Blob=} obj
  * @returns {MNN.Blob|null}
  */
@@ -11084,6 +11840,16 @@ MNN.MatMul.prototype.__init = function(i, bb) {
  * @returns {MNN.MatMul}
  */
 MNN.MatMul.getRootAsMatMul = function(bb, obj) {
+  return (obj || new MNN.MatMul).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
+ * @param {flatbuffers.ByteBuffer} bb
+ * @param {MNN.MatMul=} obj
+ * @returns {MNN.MatMul}
+ */
+MNN.MatMul.getSizePrefixedRootAsMatMul = function(bb, obj) {
+  bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
   return (obj || new MNN.MatMul).__init(bb.readInt32(bb.position()) + bb.position(), bb);
 };
 
@@ -11314,6 +12080,16 @@ MNN.MomentsParam.getRootAsMomentsParam = function(bb, obj) {
 };
 
 /**
+ * @param {flatbuffers.ByteBuffer} bb
+ * @param {MNN.MomentsParam=} obj
+ * @returns {MNN.MomentsParam}
+ */
+MNN.MomentsParam.getSizePrefixedRootAsMomentsParam = function(bb, obj) {
+  bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
+  return (obj || new MNN.MomentsParam).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
  * @param {number} index
  * @returns {number}
  */
@@ -11462,6 +12238,16 @@ MNN.RNNParam.prototype.__init = function(i, bb) {
  * @returns {MNN.RNNParam}
  */
 MNN.RNNParam.getRootAsRNNParam = function(bb, obj) {
+  return (obj || new MNN.RNNParam).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
+ * @param {flatbuffers.ByteBuffer} bb
+ * @param {MNN.RNNParam=} obj
+ * @returns {MNN.RNNParam}
+ */
+MNN.RNNParam.getSizePrefixedRootAsRNNParam = function(bb, obj) {
+  bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
   return (obj || new MNN.RNNParam).__init(bb.readInt32(bb.position()) + bb.position(), bb);
 };
 
@@ -11732,6 +12518,16 @@ MNN.BatchMatMulParam.getRootAsBatchMatMulParam = function(bb, obj) {
 };
 
 /**
+ * @param {flatbuffers.ByteBuffer} bb
+ * @param {MNN.BatchMatMulParam=} obj
+ * @returns {MNN.BatchMatMulParam}
+ */
+MNN.BatchMatMulParam.getSizePrefixedRootAsBatchMatMulParam = function(bb, obj) {
+  bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
+  return (obj || new MNN.BatchMatMulParam).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
  * @returns {boolean}
  */
 MNN.BatchMatMulParam.prototype.adjX = function() {
@@ -11828,6 +12624,16 @@ MNN.DepthSpaceParam.getRootAsDepthSpaceParam = function(bb, obj) {
 };
 
 /**
+ * @param {flatbuffers.ByteBuffer} bb
+ * @param {MNN.DepthSpaceParam=} obj
+ * @returns {MNN.DepthSpaceParam}
+ */
+MNN.DepthSpaceParam.getSizePrefixedRootAsDepthSpaceParam = function(bb, obj) {
+  bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
+  return (obj || new MNN.DepthSpaceParam).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
  * @returns {number}
  */
 MNN.DepthSpaceParam.prototype.blockSize = function() {
@@ -11902,6 +12708,16 @@ MNN.ReverseSequenceParam.prototype.__init = function(i, bb) {
  * @returns {MNN.ReverseSequenceParam}
  */
 MNN.ReverseSequenceParam.getRootAsReverseSequenceParam = function(bb, obj) {
+  return (obj || new MNN.ReverseSequenceParam).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
+ * @param {flatbuffers.ByteBuffer} bb
+ * @param {MNN.ReverseSequenceParam=} obj
+ * @returns {MNN.ReverseSequenceParam}
+ */
+MNN.ReverseSequenceParam.getSizePrefixedRootAsReverseSequenceParam = function(bb, obj) {
+  bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
   return (obj || new MNN.ReverseSequenceParam).__init(bb.readInt32(bb.position()) + bb.position(), bb);
 };
 
@@ -11998,6 +12814,16 @@ MNN.DetectionPostProcessParam.prototype.__init = function(i, bb) {
  * @returns {MNN.DetectionPostProcessParam}
  */
 MNN.DetectionPostProcessParam.getRootAsDetectionPostProcessParam = function(bb, obj) {
+  return (obj || new MNN.DetectionPostProcessParam).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
+ * @param {flatbuffers.ByteBuffer} bb
+ * @param {MNN.DetectionPostProcessParam=} obj
+ * @returns {MNN.DetectionPostProcessParam}
+ */
+MNN.DetectionPostProcessParam.getSizePrefixedRootAsDetectionPostProcessParam = function(bb, obj) {
+  bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
   return (obj || new MNN.DetectionPostProcessParam).__init(bb.readInt32(bb.position()) + bb.position(), bb);
 };
 
@@ -12244,6 +13070,16 @@ MNN.OneHotParam.getRootAsOneHotParam = function(bb, obj) {
 };
 
 /**
+ * @param {flatbuffers.ByteBuffer} bb
+ * @param {MNN.OneHotParam=} obj
+ * @returns {MNN.OneHotParam}
+ */
+MNN.OneHotParam.getSizePrefixedRootAsOneHotParam = function(bb, obj) {
+  bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
+  return (obj || new MNN.OneHotParam).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
  * @returns {MNN.DataType}
  */
 MNN.OneHotParam.prototype.dType = function() {
@@ -12340,6 +13176,16 @@ MNN.PadParam.getRootAsPadParam = function(bb, obj) {
 };
 
 /**
+ * @param {flatbuffers.ByteBuffer} bb
+ * @param {MNN.PadParam=} obj
+ * @returns {MNN.PadParam}
+ */
+MNN.PadParam.getSizePrefixedRootAsPadParam = function(bb, obj) {
+  bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
+  return (obj || new MNN.PadParam).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
  * @returns {MNN.PadValueMode}
  */
 MNN.PadParam.prototype.mode = function() {
@@ -12414,6 +13260,16 @@ MNN.QuantizedParam.prototype.__init = function(i, bb) {
  * @returns {MNN.QuantizedParam}
  */
 MNN.QuantizedParam.getRootAsQuantizedParam = function(bb, obj) {
+  return (obj || new MNN.QuantizedParam).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
+ * @param {flatbuffers.ByteBuffer} bb
+ * @param {MNN.QuantizedParam=} obj
+ * @returns {MNN.QuantizedParam}
+ */
+MNN.QuantizedParam.getSizePrefixedRootAsQuantizedParam = function(bb, obj) {
+  bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
   return (obj || new MNN.QuantizedParam).__init(bb.readInt32(bb.position()) + bb.position(), bb);
 };
 
@@ -12510,6 +13366,16 @@ MNN.QuantizedAdd.prototype.__init = function(i, bb) {
  * @returns {MNN.QuantizedAdd}
  */
 MNN.QuantizedAdd.getRootAsQuantizedAdd = function(bb, obj) {
+  return (obj || new MNN.QuantizedAdd).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
+ * @param {flatbuffers.ByteBuffer} bb
+ * @param {MNN.QuantizedAdd=} obj
+ * @returns {MNN.QuantizedAdd}
+ */
+MNN.QuantizedAdd.getSizePrefixedRootAsQuantizedAdd = function(bb, obj) {
+  bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
   return (obj || new MNN.QuantizedAdd).__init(bb.readInt32(bb.position()) + bb.position(), bb);
 };
 
@@ -12649,6 +13515,16 @@ MNN.Dequantize.getRootAsDequantize = function(bb, obj) {
 };
 
 /**
+ * @param {flatbuffers.ByteBuffer} bb
+ * @param {MNN.Dequantize=} obj
+ * @returns {MNN.Dequantize}
+ */
+MNN.Dequantize.getSizePrefixedRootAsDequantize = function(bb, obj) {
+  bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
+  return (obj || new MNN.Dequantize).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
  * @param {MNN.QuantizedParam=} obj
  * @returns {MNN.QuantizedParam|null}
  */
@@ -12778,6 +13654,16 @@ MNN.QuantizedAvgPool.prototype.__init = function(i, bb) {
  * @returns {MNN.QuantizedAvgPool}
  */
 MNN.QuantizedAvgPool.getRootAsQuantizedAvgPool = function(bb, obj) {
+  return (obj || new MNN.QuantizedAvgPool).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
+ * @param {flatbuffers.ByteBuffer} bb
+ * @param {MNN.QuantizedAvgPool=} obj
+ * @returns {MNN.QuantizedAvgPool}
+ */
+MNN.QuantizedAvgPool.getSizePrefixedRootAsQuantizedAvgPool = function(bb, obj) {
+  bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
   return (obj || new MNN.QuantizedAvgPool).__init(bb.readInt32(bb.position()) + bb.position(), bb);
 };
 
@@ -13040,6 +13926,16 @@ MNN.QuantizedBiasAdd.getRootAsQuantizedBiasAdd = function(bb, obj) {
 };
 
 /**
+ * @param {flatbuffers.ByteBuffer} bb
+ * @param {MNN.QuantizedBiasAdd=} obj
+ * @returns {MNN.QuantizedBiasAdd}
+ */
+MNN.QuantizedBiasAdd.getSizePrefixedRootAsQuantizedBiasAdd = function(bb, obj) {
+  bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
+  return (obj || new MNN.QuantizedBiasAdd).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
  * @param {number} index
  * @returns {number}
  */
@@ -13224,6 +14120,16 @@ MNN.QuantizedConcat.prototype.__init = function(i, bb) {
  * @returns {MNN.QuantizedConcat}
  */
 MNN.QuantizedConcat.getRootAsQuantizedConcat = function(bb, obj) {
+  return (obj || new MNN.QuantizedConcat).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
+ * @param {flatbuffers.ByteBuffer} bb
+ * @param {MNN.QuantizedConcat=} obj
+ * @returns {MNN.QuantizedConcat}
+ */
+MNN.QuantizedConcat.getSizePrefixedRootAsQuantizedConcat = function(bb, obj) {
+  bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
   return (obj || new MNN.QuantizedConcat).__init(bb.readInt32(bb.position()) + bb.position(), bb);
 };
 
@@ -13455,6 +14361,16 @@ MNN.QuantizedLogistic.getRootAsQuantizedLogistic = function(bb, obj) {
 };
 
 /**
+ * @param {flatbuffers.ByteBuffer} bb
+ * @param {MNN.QuantizedLogistic=} obj
+ * @returns {MNN.QuantizedLogistic}
+ */
+MNN.QuantizedLogistic.getSizePrefixedRootAsQuantizedLogistic = function(bb, obj) {
+  bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
+  return (obj || new MNN.QuantizedLogistic).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
  * @param {MNN.QuantizedParam=} obj
  * @returns {MNN.QuantizedParam|null}
  */
@@ -13553,6 +14469,16 @@ MNN.QuantizedMatMul.getRootAsQuantizedMatMul = function(bb, obj) {
 };
 
 /**
+ * @param {flatbuffers.ByteBuffer} bb
+ * @param {MNN.QuantizedMatMul=} obj
+ * @returns {MNN.QuantizedMatMul}
+ */
+MNN.QuantizedMatMul.getSizePrefixedRootAsQuantizedMatMul = function(bb, obj) {
+  bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
+  return (obj || new MNN.QuantizedMatMul).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
  * @returns {boolean}
  */
 MNN.QuantizedMatMul.prototype.transposeA = function() {
@@ -13645,6 +14571,16 @@ MNN.QuantizedMaxPool.prototype.__init = function(i, bb) {
  * @returns {MNN.QuantizedMaxPool}
  */
 MNN.QuantizedMaxPool.getRootAsQuantizedMaxPool = function(bb, obj) {
+  return (obj || new MNN.QuantizedMaxPool).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
+ * @param {flatbuffers.ByteBuffer} bb
+ * @param {MNN.QuantizedMaxPool=} obj
+ * @returns {MNN.QuantizedMaxPool}
+ */
+MNN.QuantizedMaxPool.getSizePrefixedRootAsQuantizedMaxPool = function(bb, obj) {
+  bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
   return (obj || new MNN.QuantizedMaxPool).__init(bb.readInt32(bb.position()) + bb.position(), bb);
 };
 
@@ -13907,6 +14843,16 @@ MNN.QuantizedRelu.getRootAsQuantizedRelu = function(bb, obj) {
 };
 
 /**
+ * @param {flatbuffers.ByteBuffer} bb
+ * @param {MNN.QuantizedRelu=} obj
+ * @returns {MNN.QuantizedRelu}
+ */
+MNN.QuantizedRelu.getSizePrefixedRootAsQuantizedRelu = function(bb, obj) {
+  bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
+  return (obj || new MNN.QuantizedRelu).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
  * @returns {MNN.DataType}
  */
 MNN.QuantizedRelu.prototype.type = function() {
@@ -13985,6 +14931,16 @@ MNN.QuantizedRelu6.getRootAsQuantizedRelu6 = function(bb, obj) {
 };
 
 /**
+ * @param {flatbuffers.ByteBuffer} bb
+ * @param {MNN.QuantizedRelu6=} obj
+ * @returns {MNN.QuantizedRelu6}
+ */
+MNN.QuantizedRelu6.getSizePrefixedRootAsQuantizedRelu6 = function(bb, obj) {
+  bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
+  return (obj || new MNN.QuantizedRelu6).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
  * @returns {MNN.DataType}
  */
 MNN.QuantizedRelu6.prototype.type = function() {
@@ -14059,6 +15015,16 @@ MNN.QuantizedReshape.prototype.__init = function(i, bb) {
  * @returns {MNN.QuantizedReshape}
  */
 MNN.QuantizedReshape.getRootAsQuantizedReshape = function(bb, obj) {
+  return (obj || new MNN.QuantizedReshape).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
+ * @param {flatbuffers.ByteBuffer} bb
+ * @param {MNN.QuantizedReshape=} obj
+ * @returns {MNN.QuantizedReshape}
+ */
+MNN.QuantizedReshape.getSizePrefixedRootAsQuantizedReshape = function(bb, obj) {
+  bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
   return (obj || new MNN.QuantizedReshape).__init(bb.readInt32(bb.position()) + bb.position(), bb);
 };
 
@@ -14197,6 +15163,16 @@ MNN.QuantizedSoftmax.getRootAsQuantizedSoftmax = function(bb, obj) {
 };
 
 /**
+ * @param {flatbuffers.ByteBuffer} bb
+ * @param {MNN.QuantizedSoftmax=} obj
+ * @returns {MNN.QuantizedSoftmax}
+ */
+MNN.QuantizedSoftmax.getSizePrefixedRootAsQuantizedSoftmax = function(bb, obj) {
+  bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
+  return (obj || new MNN.QuantizedSoftmax).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
  * @returns {number}
  */
 MNN.QuantizedSoftmax.prototype.beta = function() {
@@ -14289,6 +15265,16 @@ MNN.QuantizeV2.prototype.__init = function(i, bb) {
  * @returns {MNN.QuantizeV2}
  */
 MNN.QuantizeV2.getRootAsQuantizeV2 = function(bb, obj) {
+  return (obj || new MNN.QuantizeV2).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
+ * @param {flatbuffers.ByteBuffer} bb
+ * @param {MNN.QuantizeV2=} obj
+ * @returns {MNN.QuantizeV2}
+ */
+MNN.QuantizeV2.getSizePrefixedRootAsQuantizeV2 = function(bb, obj) {
+  bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
   return (obj || new MNN.QuantizeV2).__init(bb.readInt32(bb.position()) + bb.position(), bb);
 };
 
@@ -14407,6 +15393,16 @@ MNN.RequantizationRange.getRootAsRequantizationRange = function(bb, obj) {
 };
 
 /**
+ * @param {flatbuffers.ByteBuffer} bb
+ * @param {MNN.RequantizationRange=} obj
+ * @returns {MNN.RequantizationRange}
+ */
+MNN.RequantizationRange.getSizePrefixedRootAsRequantizationRange = function(bb, obj) {
+  bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
+  return (obj || new MNN.RequantizationRange).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
  * @param {flatbuffers.Builder} builder
  */
 MNN.RequantizationRange.startRequantizationRange = function(builder) {
@@ -14467,6 +15463,16 @@ MNN.Requantize.getRootAsRequantize = function(bb, obj) {
 };
 
 /**
+ * @param {flatbuffers.ByteBuffer} bb
+ * @param {MNN.Requantize=} obj
+ * @returns {MNN.Requantize}
+ */
+MNN.Requantize.getSizePrefixedRootAsRequantize = function(bb, obj) {
+  bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
+  return (obj || new MNN.Requantize).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
  * @param {flatbuffers.Builder} builder
  */
 MNN.Requantize.startRequantize = function(builder) {
@@ -14523,6 +15529,16 @@ MNN.TfQuantizedConv2D.prototype.__init = function(i, bb) {
  * @returns {MNN.TfQuantizedConv2D}
  */
 MNN.TfQuantizedConv2D.getRootAsTfQuantizedConv2D = function(bb, obj) {
+  return (obj || new MNN.TfQuantizedConv2D).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
+ * @param {flatbuffers.ByteBuffer} bb
+ * @param {MNN.TfQuantizedConv2D=} obj
+ * @returns {MNN.TfQuantizedConv2D}
+ */
+MNN.TfQuantizedConv2D.getSizePrefixedRootAsTfQuantizedConv2D = function(bb, obj) {
+  bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
   return (obj || new MNN.TfQuantizedConv2D).__init(bb.readInt32(bb.position()) + bb.position(), bb);
 };
 
@@ -14938,6 +15954,16 @@ MNN.GpuBuffer.getRootAsGpuBuffer = function(bb, obj) {
 };
 
 /**
+ * @param {flatbuffers.ByteBuffer} bb
+ * @param {MNN.GpuBuffer=} obj
+ * @returns {MNN.GpuBuffer}
+ */
+MNN.GpuBuffer.getSizePrefixedRootAsGpuBuffer = function(bb, obj) {
+  bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
+  return (obj || new MNN.GpuBuffer).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
  * @returns {MNN.ACCESS_TYPE}
  */
 MNN.GpuBuffer.prototype.access = function() {
@@ -15049,6 +16075,16 @@ MNN.GpuPipeline.prototype.__init = function(i, bb) {
  * @returns {MNN.GpuPipeline}
  */
 MNN.GpuPipeline.getRootAsGpuPipeline = function(bb, obj) {
+  return (obj || new MNN.GpuPipeline).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
+ * @param {flatbuffers.ByteBuffer} bb
+ * @param {MNN.GpuPipeline=} obj
+ * @returns {MNN.GpuPipeline}
+ */
+MNN.GpuPipeline.getSizePrefixedRootAsGpuPipeline = function(bb, obj) {
+  bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
   return (obj || new MNN.GpuPipeline).__init(bb.readInt32(bb.position()) + bb.position(), bb);
 };
 
@@ -15334,6 +16370,16 @@ MNN.GpuStage.prototype.__init = function(i, bb) {
  * @returns {MNN.GpuStage}
  */
 MNN.GpuStage.getRootAsGpuStage = function(bb, obj) {
+  return (obj || new MNN.GpuStage).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
+ * @param {flatbuffers.ByteBuffer} bb
+ * @param {MNN.GpuStage=} obj
+ * @returns {MNN.GpuStage}
+ */
+MNN.GpuStage.getSizePrefixedRootAsGpuStage = function(bb, obj) {
+  bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
   return (obj || new MNN.GpuStage).__init(bb.readInt32(bb.position()) + bb.position(), bb);
 };
 
@@ -15775,6 +16821,16 @@ MNN.GpuFunction.getRootAsGpuFunction = function(bb, obj) {
 };
 
 /**
+ * @param {flatbuffers.ByteBuffer} bb
+ * @param {MNN.GpuFunction=} obj
+ * @returns {MNN.GpuFunction}
+ */
+MNN.GpuFunction.getSizePrefixedRootAsGpuFunction = function(bb, obj) {
+  bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
+  return (obj || new MNN.GpuFunction).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
  * @param {number} index
  * @param {MNN.GpuStage=} obj
  * @returns {MNN.GpuStage}
@@ -15899,6 +16955,16 @@ MNN.GpuLibrary.prototype.__init = function(i, bb) {
  * @returns {MNN.GpuLibrary}
  */
 MNN.GpuLibrary.getRootAsGpuLibrary = function(bb, obj) {
+  return (obj || new MNN.GpuLibrary).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
+ * @param {flatbuffers.ByteBuffer} bb
+ * @param {MNN.GpuLibrary=} obj
+ * @returns {MNN.GpuLibrary}
+ */
+MNN.GpuLibrary.getSizePrefixedRootAsGpuLibrary = function(bb, obj) {
+  bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
   return (obj || new MNN.GpuLibrary).__init(bb.readInt32(bb.position()) + bb.position(), bb);
 };
 
@@ -16080,6 +17146,16 @@ MNN.TensorConvertInfo.getRootAsTensorConvertInfo = function(bb, obj) {
 };
 
 /**
+ * @param {flatbuffers.ByteBuffer} bb
+ * @param {MNN.TensorConvertInfo=} obj
+ * @returns {MNN.TensorConvertInfo}
+ */
+MNN.TensorConvertInfo.getSizePrefixedRootAsTensorConvertInfo = function(bb, obj) {
+  bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
+  return (obj || new MNN.TensorConvertInfo).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
  * @returns {MNN.MNN_DATA_FORMAT}
  */
 MNN.TensorConvertInfo.prototype.source = function() {
@@ -16176,6 +17252,16 @@ MNN.Plugin.getRootAsPlugin = function(bb, obj) {
 };
 
 /**
+ * @param {flatbuffers.ByteBuffer} bb
+ * @param {MNN.Plugin=} obj
+ * @returns {MNN.Plugin}
+ */
+MNN.Plugin.getSizePrefixedRootAsPlugin = function(bb, obj) {
+  bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
+  return (obj || new MNN.Plugin).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
  * @param {flatbuffers.Encoding=} optionalEncoding
  * @returns {string|Uint8Array|null}
  */
@@ -16186,18 +17272,18 @@ MNN.Plugin.prototype.type = function(optionalEncoding) {
 
 /**
  * @param {number} index
- * @param {MNN.Blob=} obj
- * @returns {MNN.Blob}
+ * @param {MNN.Attribute=} obj
+ * @returns {MNN.Attribute}
  */
-MNN.Plugin.prototype.buffer = function(index, obj) {
+MNN.Plugin.prototype.attr = function(index, obj) {
   var offset = this.bb.__offset(this.bb_pos, 6);
-  return offset ? (obj || new MNN.Blob).__init(this.bb.__indirect(this.bb.__vector(this.bb_pos + offset) + index * 4), this.bb) : null;
+  return offset ? (obj || new MNN.Attribute).__init(this.bb.__indirect(this.bb.__vector(this.bb_pos + offset) + index * 4), this.bb) : null;
 };
 
 /**
  * @returns {number}
  */
-MNN.Plugin.prototype.bufferLength = function() {
+MNN.Plugin.prototype.attrLength = function() {
   var offset = this.bb.__offset(this.bb_pos, 6);
   return offset ? this.bb.__vector_len(this.bb_pos + offset) : 0;
 };
@@ -16219,10 +17305,10 @@ MNN.Plugin.addType = function(builder, typeOffset) {
 
 /**
  * @param {flatbuffers.Builder} builder
- * @param {flatbuffers.Offset} bufferOffset
+ * @param {flatbuffers.Offset} attrOffset
  */
-MNN.Plugin.addBuffer = function(builder, bufferOffset) {
-  builder.addFieldOffset(1, bufferOffset, 0);
+MNN.Plugin.addAttr = function(builder, attrOffset) {
+  builder.addFieldOffset(1, attrOffset, 0);
 };
 
 /**
@@ -16230,7 +17316,7 @@ MNN.Plugin.addBuffer = function(builder, bufferOffset) {
  * @param {Array.<flatbuffers.Offset>} data
  * @returns {flatbuffers.Offset}
  */
-MNN.Plugin.createBufferVector = function(builder, data) {
+MNN.Plugin.createAttrVector = function(builder, data) {
   builder.startVector(4, data.length, 4);
   for (var i = data.length - 1; i >= 0; i--) {
     builder.addOffset(data[i]);
@@ -16242,7 +17328,7 @@ MNN.Plugin.createBufferVector = function(builder, data) {
  * @param {flatbuffers.Builder} builder
  * @param {number} numElems
  */
-MNN.Plugin.startBufferVector = function(builder, numElems) {
+MNN.Plugin.startAttrVector = function(builder, numElems) {
   builder.startVector(4, numElems, 4);
 };
 
@@ -16258,13 +17344,13 @@ MNN.Plugin.endPlugin = function(builder) {
 /**
  * @param {flatbuffers.Builder} builder
  * @param {flatbuffers.Offset} typeOffset
- * @param {flatbuffers.Offset} bufferOffset
+ * @param {flatbuffers.Offset} attrOffset
  * @returns {flatbuffers.Offset}
  */
-MNN.Plugin.createPlugin = function(builder, typeOffset, bufferOffset) {
+MNN.Plugin.createPlugin = function(builder, typeOffset, attrOffset) {
   MNN.Plugin.startPlugin(builder);
   MNN.Plugin.addType(builder, typeOffset);
-  MNN.Plugin.addBuffer(builder, bufferOffset);
+  MNN.Plugin.addAttr(builder, attrOffset);
   return MNN.Plugin.endPlugin(builder);
 }
 
@@ -16300,6 +17386,16 @@ MNN.Extra.prototype.__init = function(i, bb) {
  * @returns {MNN.Extra}
  */
 MNN.Extra.getRootAsExtra = function(bb, obj) {
+  return (obj || new MNN.Extra).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
+ * @param {flatbuffers.ByteBuffer} bb
+ * @param {MNN.Extra=} obj
+ * @returns {MNN.Extra}
+ */
+MNN.Extra.getSizePrefixedRootAsExtra = function(bb, obj) {
+  bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
   return (obj || new MNN.Extra).__init(bb.readInt32(bb.position()) + bb.position(), bb);
 };
 
@@ -16503,6 +17599,16 @@ MNN.Op.prototype.__init = function(i, bb) {
  * @returns {MNN.Op}
  */
 MNN.Op.getRootAsOp = function(bb, obj) {
+  return (obj || new MNN.Op).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
+ * @param {flatbuffers.ByteBuffer} bb
+ * @param {MNN.Op=} obj
+ * @returns {MNN.Op}
+ */
+MNN.Op.getSizePrefixedRootAsOp = function(bb, obj) {
+  bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
   return (obj || new MNN.Op).__init(bb.readInt32(bb.position()) + bb.position(), bb);
 };
 
@@ -16771,6 +17877,16 @@ MNN.TensorDescribe.getRootAsTensorDescribe = function(bb, obj) {
 };
 
 /**
+ * @param {flatbuffers.ByteBuffer} bb
+ * @param {MNN.TensorDescribe=} obj
+ * @returns {MNN.TensorDescribe}
+ */
+MNN.TensorDescribe.getSizePrefixedRootAsTensorDescribe = function(bb, obj) {
+  bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
+  return (obj || new MNN.TensorDescribe).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
  * @param {MNN.Blob=} obj
  * @returns {MNN.Blob|null}
  */
@@ -16883,6 +17999,16 @@ MNN.Net.prototype.__init = function(i, bb) {
  * @returns {MNN.Net}
  */
 MNN.Net.getRootAsNet = function(bb, obj) {
+  return (obj || new MNN.Net).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
+ * @param {flatbuffers.ByteBuffer} bb
+ * @param {MNN.Net=} obj
+ * @returns {MNN.Net}
+ */
+MNN.Net.getSizePrefixedRootAsNet = function(bb, obj) {
+  bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
   return (obj || new MNN.Net).__init(bb.readInt32(bb.position()) + bb.position(), bb);
 };
 
@@ -17198,6 +18324,14 @@ MNN.Net.finishNetBuffer = function(builder, offset) {
 
 /**
  * @param {flatbuffers.Builder} builder
+ * @param {flatbuffers.Offset} offset
+ */
+MNN.Net.finishSizePrefixedNetBuffer = function(builder, offset) {
+  builder.finish(offset, undefined, true);
+};
+
+/**
+ * @param {flatbuffers.Builder} builder
  * @param {flatbuffers.Offset} bizCodeOffset
  * @param {flatbuffers.Offset} extraTensorDescribeOffset
  * @param {flatbuffers.Offset} gpulibraryOffset
@@ -17226,5 +18360,5 @@ MNN.Net.createNet = function(builder, bizCodeOffset, extraTensorDescribeOffset, 
 }
 
 if (typeof module !== 'undefined' && typeof module.exports === 'object') {
-  module.exports = MNN;
+  module.exports = { mnn_schema: MNN };
 }

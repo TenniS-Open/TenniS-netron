@@ -319,7 +319,7 @@
         },
         {
           "default": null,
-          "description": "Used when ``solver`` == 'sag', 'saga' or 'liblinear' to shuffle the\ndata. See :term:`Glossary <random_state>` for details.\n",
+          "description": "The seed of the pseudo random number generator to use when shuffling\nthe data.  If int, random_state is the seed used by the random number\ngenerator; If RandomState instance, random_state is the random number\ngenerator; If None, the random number generator is the RandomState\ninstance used by `np.random`. Used when ``solver`` == 'sag' or\n'liblinear'.\n",
           "name": "random_state",
           "option": "optional",
           "type": "int32"
@@ -366,7 +366,7 @@
         },
         {
           "default": null,
-          "description": "The Elastic-Net mixing parameter, with ``0 <= l1_ratio <= 1``. Only\nused if ``penalty='elasticnet'``. Setting ``l1_ratio=0`` is equivalent\nto using ``penalty='l2'``, while setting ``l1_ratio=1`` is equivalent\nto using ``penalty='l1'``. For ``0 < l1_ratio <1``, the penalty is a\ncombination of L1 and L2.\n",
+          "description": "The Elastic-Net mixing parameter, with ``0 <= l1_ratio <= 1``. Only\nused if ``penalty='elasticnet'`. Setting ``l1_ratio=0`` is equivalent\nto using ``penalty='l2'``, while setting ``l1_ratio=1`` is equivalent\nto using ``penalty='l1'``. For ``0 < l1_ratio <1``, the penalty is a\ncombination of L1 and L2.\n",
           "name": "l1_ratio",
           "option": "optional",
           "type": "float32"
@@ -507,7 +507,7 @@
           "type": "int32"
         },
         {
-          "default": 2,
+          "default": "2",
           "description": "Power parameter for the Minkowski metric. When p = 1, this is\nequivalent to using manhattan_distance (l1), and euclidean_distance\n(l2) for p = 2. For arbitrary p, minkowski_distance (l_p) is used.\n",
           "name": "p",
           "option": "optional",
@@ -565,7 +565,7 @@
           "type": "int32"
         },
         {
-          "default": 2,
+          "default": "2",
           "description": "Power parameter for the Minkowski metric. When p = 1, this is\nequivalent to using manhattan_distance (l1), and euclidean_distance\n(l2) for p = 2. For arbitrary p, minkowski_distance (l_p) is used.\n",
           "name": "p",
           "option": "optional",
@@ -705,7 +705,7 @@
         },
         {
           "default": null,
-          "description": "Used when ``svd_solver`` == 'arpack' or 'randomized'. Pass an int\nfor reproducible results across multiple function calls.\nSee :term:`Glossary <random_state>`.\n\n.. versionadded:: 0.18.0\n",
+          "description": "If int, random_state is the seed used by the random number generator;\nIf RandomState instance, random_state is the random number generator;\nIf None, the random number generator is the RandomState instance used\nby `np.random`. Used when ``svd_solver`` == 'arpack' or 'randomized'.\n\n.. versionadded:: 0.18.0\n",
           "name": "random_state",
           "option": "optional",
           "type": "int32"
@@ -903,12 +903,12 @@
         },
         {
           "default": "1.0",
-          "description": "When building the vocabulary ignore terms that have a document\nfrequency strictly higher than the given threshold (corpus-specific\nstop words).\nIf float in range [0.0, 1.0], the parameter represents a proportion of\ndocuments, integer absolute counts.\nThis parameter is ignored if vocabulary is not None.\n",
+          "description": "When building the vocabulary ignore terms that have a document\nfrequency strictly higher than the given threshold (corpus-specific\nstop words).\nIf float, the parameter represents a proportion of documents, integer\nabsolute counts.\nThis parameter is ignored if vocabulary is not None.\n",
           "name": "max_df"
         },
         {
           "default": "1",
-          "description": "When building the vocabulary ignore terms that have a document\nfrequency strictly lower than the given threshold. This value is also\ncalled cut-off in the literature.\nIf float in range of [0.0, 1.0], the parameter represents a proportion\nof documents, integer absolute counts.\nThis parameter is ignored if vocabulary is not None.\n",
+          "description": "When building the vocabulary ignore terms that have a document\nfrequency strictly lower than the given threshold. This value is also\ncalled cut-off in the literature.\nIf float, the parameter represents a proportion of documents, integer\nabsolute counts.\nThis parameter is ignored if vocabulary is not None.\n",
           "name": "min_df"
         },
         {

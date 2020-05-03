@@ -1,6 +1,6 @@
 /* jshint esversion: 6 */
 /* eslint "indent": [ "error", 4, { "SwitchCase": 1 } ] */
-/* eslint "no-global-assign": ["error", {"exceptions": [ "TextDecoder", "TextEncoder" ] } ] */
+/* eslint "no-global-assign": ["error", {"exceptions": [ "TextDecoder", "TextEncoder", "URLSearchParams" ] } ] */
 /* global view */
 
 var host = {};
@@ -8,26 +8,24 @@ var host = {};
 host.BrowserHost = class {
 
     constructor() {
-        if (!window.ga) {
-            window.GoogleAnalyticsObject = 'ga';
-            window.ga = window.ga || function() {
-                window.ga.q = window.ga.q || [];
-                window.ga.q.push(arguments);
-            };
-            window.ga.l = 1 * new Date();
-        }
-        window.ga('create', 'UA-54146-13', 'auto');
-
-        window.addEventListener('error', (e) => {
-            this.exception(e.error, true);
-        });
         window.eval = () => {
             throw new Error('window.eval() not supported.');
         };
+        this._document = window.document;
+        this._meta = {};
+        for (const element of Array.from(this._document.getElementsByTagName('meta'))) {
+            if (element.content) {
+                this._meta[element.name] = this._meta[element.name] || [];
+                this._meta[element.name].push(element.content);
+            }
+        }
+        this._type = this._meta.type ? this._meta.type[0] : 'Browser';
+        this._version = this._meta.version ? this._meta.version[0] : null;
+        this._telemetry = this._version && this._version !== '0.0.0';
     }
 
     get document() {
-        return window.document;
+        return this._document;
     }
 
     get version() {
@@ -40,19 +38,73 @@ host.BrowserHost = class {
 
     initialize(view) {
         this._view = view;
-
-        let meta = {};
-        for (const element of Array.from(document.getElementsByTagName('meta'))) {
-            if (element.content) {
-                meta[element.name] = meta[element.name] || [];
-                meta[element.name].push(element.content);
+        return new Promise((resolve /*, reject */) => {
+            const accept = () => {
+                if (this._telemetry) {
+                    const script = this.document.createElement('script');
+                    script.setAttribute('type', 'text/javascript');
+                    script.setAttribute('src', 'https://www.google-analytics.com/analytics.js');
+                    script.onload = () => {
+                        if (window.ga) {
+                            window.ga.l = 1 * new Date();
+                            window.ga('create', 'UA-54146-13', 'auto');
+                            window.ga('set', 'anonymizeIp', true)
+                        }
+                        resolve();
+                    }
+                    script.onerror = () => {
+                        resolve();
+                    }
+                    this.document.body.appendChild(script);
+                }
+                else {
+                    resolve();
+                }
+            };
+            const request = () => {
+                this._view.show('welcome consent');
+                const acceptButton = this.document.getElementById('consent-accept-button');
+                if (acceptButton) {
+                    acceptButton.addEventListener('click', () => {
+                        this._setCookie('consent', 'yes', 30);
+                        accept();
+                    });
+                }
             }
-        }
+            if (this._getCookie('consent')) {
+                accept();
+            }
+            else {
+                this._request('https://ipinfo.io/json', { 'Content-Type': 'application/json' }, 'utf-8', 2000).then((text) => {
+                    try {
+                        const json = JSON.parse(text);
+                        const countries = ['AT', 'BE', 'BG', 'HR', 'CZ', 'CY', 'DK', 'EE', 'FI', 'FR', 'DE', 'EL', 'HU', 'IE', 'IT', 'LV', 'LT', 'LU', 'MT', 'NL', 'NO', 'PL', 'PT', 'SK', 'ES', 'SE', 'GB', 'UK', 'GR', 'EU', 'RO'];
+                        if (json && json.country && !countries.indexOf(json.country) !== -1) {
+                            this._setCookie('consent', Date.now(), 30);
+                            accept();
+                        }
+                        else {
+                            request();
+                        }
+                    }
+                    catch (err) {
+                        request();
+                    }
+                }).catch(() => {
+                    request();
+                });
+            }
+        });
+    }
 
-        this._version = meta.version ? meta.version[0] : null;
-        this._type = meta.type ? meta.type[0] : 'Browser';
+    start() {
+        window.addEventListener('error', (e) => {
+            this.exception(e.error, true);
+        });
 
-        this._zoom = this._getQueryParameter('zoom') || 'd3';
+        const params = new URLSearchParams(window.location.search);
+
+        this._zoom = params.get('zoom') || 'd3';
 
         this._menu = new host.Dropdown(this.document, 'menu-button', 'menu-dropdown');
         this._menu.add({
@@ -113,27 +165,36 @@ host.BrowserHost = class {
             this._menu.toggle();
             e.preventDefault();
         });
+        this._menu.add({});
+        this._menu.add({
+            label: 'About ' + this.document.title,
+            click: () => this._about()
+        });
 
-        if (meta.file) {
-            this._openModel(meta.file[0], null);
+        this.document.getElementById('version').innerText = this.version;
+
+        if (this._meta.file) {
+            this._openModel(this._meta.file[0], null);
             return;
         }
 
-        const urlParam = this._getQueryParameter('url');
-        if (urlParam) {
-            this._openModel(urlParam, this._getQueryParameter('identifier') || null);
+        const url = params.get('url');
+        if (url) {
+            const identifier = params.get('identifier') || null;
+            const location = url.replace(new RegExp('^https://github.com/([\\w]*/[\\w]*)/blob/([\\w/_.]*)(\\?raw=true)?$'), 'https://raw.githubusercontent.com/$1/$2');
+            this._openModel(location, identifier);
             return;
         }
 
-        const gistParam = this._getQueryParameter('gist');
-        if (gistParam) {
-            this._openGist(gistParam);
+        const gist = params.get('gist');
+        if (gist) {
+            this._openGist(gist);
             return;
         }
 
-        this._view.show('Welcome');
-        let openFileButton = this.document.getElementById('open-file-button');
-        let openFileDialog = this.document.getElementById('open-file-dialog');
+        this._view.show('welcome');
+        const openFileButton = this.document.getElementById('open-file-button');
+        const openFileDialog = this.document.getElementById('open-file-dialog');
         if (openFileButton && openFileDialog) {
             openFileButton.addEventListener('click', () => {
                 openFileDialog.value = '';
@@ -147,6 +208,14 @@ host.BrowserHost = class {
                         this._open(file, files);
                     }
                 }
+            });
+        }
+        const downloadButton = this.document.getElementById('download-button');
+        const downloadLink = this.document.getElementById('logo-github');
+        if (downloadButton && downloadLink) {
+            downloadButton.style.opacity = 1;
+            downloadButton.addEventListener('click', () => {
+                this.openURL(downloadLink.href);
             });
         }
         this.document.addEventListener('dragover', (e) => {
@@ -195,7 +264,7 @@ host.BrowserHost = class {
             script.setAttribute('type', 'text/javascript');
             script.setAttribute('src', url);
             script.onload = () => {
-                let exports = window.module.exports;
+                const exports = window.module.exports;
                 delete window.module;
                 window.__modules__[id] = exports;
                 resolve(exports);
@@ -222,31 +291,8 @@ host.BrowserHost = class {
     }
 
     request(base, file, encoding) {
-        return new Promise((resolve, reject) => {
-            const url = base ? (base + '/' + file) : this._url(file);
-            let request = new XMLHttpRequest();
-            if (encoding == null) {
-                request.responseType = 'arraybuffer';
-            }
-            request.onload = () => {
-                if (request.status == 200) {
-                    if (request.responseType == 'arraybuffer') {
-                        resolve(new Uint8Array(request.response));
-                    }
-                    else {
-                        resolve(request.responseText);
-                    }
-                }
-                else {
-                    reject(request.status);
-                }
-            };
-            request.onerror = () => {
-                reject(request.status);
-            };
-            request.open('GET', url, true);
-            request.send();
-        });
+        const url = base ? (base + '/' + file) : this._url(file);
+        return this._request(url, null, encoding);
     }
 
     openURL(url) {
@@ -254,7 +300,7 @@ host.BrowserHost = class {
     }
 
     exception(error, fatal) {
-        if (window.ga && this.version && this.version !== '0.0.0' && error && error.telemetry !== false) {
+        if (this._telemetry && window.ga) {
             let description = [];
             description.push((error && error.name ? (error.name + ': ') : '') + (error && error.message ? error.message : '(null)'));
             if (error.stack) {
@@ -276,7 +322,7 @@ host.BrowserHost = class {
     }
 
     screen(name) {
-        if (window.ga && this.version && this.version !== '0.0.0') {
+        if (this._telemetry && window.ga) {
             window.ga('send', 'screenview', {
                 screenName: name,
                 appName: this.type,
@@ -286,7 +332,7 @@ host.BrowserHost = class {
     }
 
     event(category, action, label, value) {
-        if (window.ga && this.version && this.version !== '0.0.0') {
+        if (this._telemetry && window.ga) {
             window.ga('send', 'event', {
                 eventCategory: category,
                 eventAction: action,
@@ -296,6 +342,56 @@ host.BrowserHost = class {
                 appVersion: this.version
             });
         }
+    }
+
+    _request(url, headers, encoding, timeout) {
+        return new Promise((resolve, reject) => {
+            const request = new XMLHttpRequest();
+            if (!encoding) {
+                request.responseType = 'arraybuffer';
+            }
+            if (timeout) {
+                request.timeout = timeout;
+            }
+            const error = (status) => {
+                const err = new Error("The web request failed with status code " + status + " at '" + url + "'.");
+                err.type = 'error';
+                err.url = url;
+                return err;
+            };
+            request.onload = () => {
+                if (request.status == 200) {
+                    if (request.responseType == 'arraybuffer') {
+                        resolve(new Uint8Array(request.response));
+                    }
+                    else {
+                        resolve(request.responseText);
+                    }
+                }
+                else {
+                    reject(error(request.status));
+                }
+            };
+            request.onerror = (e) => {
+                const err = error(request.status);
+                err.type = e.type;
+                reject(err);
+            };
+            request.ontimeout = () => {
+                request.abort();
+                const err = new Error("The web request timed out in '" + url + "'.");
+                err.type = 'timeout';
+                err.url = url;
+                reject(err);
+            };
+            request.open('GET', url, true);
+            if (headers) {
+                for (const name of Object.keys(headers)) {
+                    request.setRequestHeader(name, headers[name]);
+                }
+            }
+            request.send();
+        });
     }
 
     _url(file) {
@@ -313,50 +409,28 @@ host.BrowserHost = class {
         return url;
     }
 
-    _getQueryParameter(name) {
-        const url = window.location.href;
-        name = name.replace(/[[\]]/g, "\\$&");
-        const regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)");
-        const results = regex.exec(url);
-        if (!results) {
-            return null;
-        }
-        if (!results[2]) {
-            return '';
-        }
-        return decodeURIComponent(results[2].replace(/\+/g, " "));
-    }
-
     _openModel(url, identifier) {
-        this._view.show('Spinner');
-        let request = new XMLHttpRequest();
-        request.responseType = 'arraybuffer';
-        request.onload = () => {
-            if (request.status == 200) {
-                const buffer = new Uint8Array(request.response);
-                const context = new BrowserContext(this, url, identifier, buffer);
-                this._view.open(context).then(() => {
-                    this.document.title = identifier || url.split('/').pop();
-                }).catch((error) => {
-                    if (error) {
-                        this.exception(error, false);
-                        this.error(error.name, error.message);
-                    }
-                });
-            }
-            else {
-                this.error('Model load request failed.', request.status);
-            }
-        };
-        request.onerror = () => {
-            this.error('Error while requesting model.', request.status);
-        };
-        request.open('GET', url + ((/\?/).test(url) ? "&" : "?") + (new Date()).getTime(), true);
-        request.send();
+        url = url + ((/\?/).test(url) ? "&" : "?") + (new Date()).getTime();
+        this._view.show('welcome spinner');
+        this._request(url).then((buffer) => {
+            const context = new BrowserContext(this, url, identifier, buffer);
+            this._view.open(context).then(() => {
+                this.document.title = identifier || context.identifier;
+            }).catch((err) => {
+                if (err) {
+                    this.exception(err, false);
+                    this.error(err.name, err.message);
+                    this._view.show('welcome');
+                }
+            });
+        }).catch((err) => {
+            this.error('Model load request failed.', err.message);
+            this._view.show('welcome');
+        });
     }
 
     _open(file, files) {
-        this._view.show('Spinner');
+        this._view.show('welcome spinner');
         const context = new BrowserFileContext(file, files);
         context.open().then(() => {
             return this._view.open(context).then((model) => {
@@ -372,13 +446,12 @@ host.BrowserHost = class {
     }
 
     _openGist(gist) {
-        this._view.show('Spinner');
+        this._view.show('welcome spinner');
         const url = 'https://api.github.com/gists/' + gist;
-        let request = new XMLHttpRequest();
-        request.onload = () => {
+        this._request(url, 'utf-8').then((text) => {
             let identifier = null;
             let buffer = null;
-            const json = JSON.parse(request.response);
+            const json = JSON.parse(text);
             if (json.message) {
                 this.error('Error while loading Gist.', json.message);
                 return;
@@ -407,12 +480,34 @@ host.BrowserHost = class {
                     this.error(error.name, error.message);
                 }
             });
+        }).catch((err) => {
+            this.error('Model load request failed.', err.message);
+            this._view.show('welcome');
+        });
+    }
+
+    _setCookie(name, value, days) {
+        const date = new Date();
+        date.setTime(date.getTime() + ((typeof days !== "number" ? 365 : days) * 24 * 60 * 60 * 1000));
+        document.cookie = name + "=" + value + ";path=/;expires=" + date.toUTCString();
+    }
+
+    _getCookie(name) {
+        const cookie = '; ' + document.cookie;
+        const parts = cookie.split('; ' + name + '=');
+        return parts.length < 2 ? undefined : parts.pop().split(';').shift();
+    }
+
+    _about() {
+        const self = this;
+        const eventHandler = () => {
+            window.removeEventListener('keydown', eventHandler);
+            self.document.body.removeEventListener('click', eventHandler);
+            self._view.show('default');
         };
-        request.onerror = () => {
-            this.error('Error while requesting Gist.', request.status);
-        };
-        request.open('GET', url, true);
-        request.send();
+        window.addEventListener('keydown', eventHandler);
+        this.document.body.addEventListener('click', eventHandler);
+        this._view.show('about');
     }
 };
 
@@ -457,14 +552,14 @@ if (typeof TextDecoder === "undefined") {
     };
 }
 
-if (typeof TextEncoder === "undefined") {
+if (typeof TextEncoder === 'undefined') {
     TextEncoder = function TextEncoder() {
     };
     TextEncoder.prototype.encode = function encode(str) {
         "use strict";
         const length = str.length
         let resPos = -1;
-        let resArr = typeof Uint8Array === "undefined" ? new Array(length * 2) : new Uint8Array(length * 3);
+        const resArr = typeof Uint8Array === "undefined" ? new Array(length * 2) : new Uint8Array(length * 3);
         for (let point = 0, nextcode = 0, i = 0; i !== length; ) {
             point = str.charCodeAt(i);
             i += 1;
@@ -531,6 +626,31 @@ if (typeof TextEncoder === "undefined") {
     if (typeof Symbol !== "undefined") {
         TextEncoder.prototype[Symbol.toStringTag] = "TextEncoder";
     }
+}
+
+if (typeof URLSearchParams === 'undefined') {
+    URLSearchParams = function URLSearchParams(search) {
+        const decode = (str) => {
+            return str.replace(/[ +]/g, '%20').replace(/(%[a-f0-9]{2})+/ig, (match) => { return decodeURIComponent(match); });
+        };
+        this._dict = {};
+        if (typeof search === 'string') {
+            search = search.indexOf('?') === 0 ? search.substring(1) : search;
+            const properties = search.split('&');
+            for (const property of properties) {
+                const index = property.indexOf('=');
+                const name = (index > -1) ? decode(property.substring(0, index)) : decode(property);
+                const value = (index > -1) ? decode(property.substring(index + 1)) : '';
+                if (!Object.prototype.hasOwnProperty.call(this._dict, name)) {
+                    this._dict[name] = [];
+                }
+                this._dict[name].push(value);
+            }
+        }
+    };
+    URLSearchParams.prototype.get = function(name) {
+        return Object.prototype.hasOwnProperty.call(this._dict, name) ? this._dict[name][0] : null;
+    };
 }
 
 if (!HTMLCanvasElement.prototype.toBlob) {
@@ -650,8 +770,12 @@ host.Dropdown = class {
             if (Object.keys(item).length > 0) {
                 let button = this._document.createElement('button');
                 button.innerText = (typeof item.label == 'function') ? item.label() : item.label;
-                button.addEventListener('click', item.click);
-                button.addEventListener('click', () => this.close());
+                button.addEventListener('click', () => { 
+                    this.close();
+                    setTimeout(() => {
+                        item.click();
+                    }, 10);
+                });
                 this._dropdown.appendChild(button);
                 if (item.accelerator) {
                     let accelerator = this._document.createElement('span');
@@ -752,9 +876,9 @@ class BrowserContext {
             }
         }
         else {
-            url = url.split('/');
-            this._identifier = url.pop();
-            this._base = url.join('/');
+            const parts = url.split('?')[0].split('/');
+            this._identifier = parts.pop();
+            this._base = parts.join('/');
         }
     }
 

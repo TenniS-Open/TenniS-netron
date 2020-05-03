@@ -12,13 +12,14 @@
     "rules": {
         "brace-style": [ "error", "stroustrup", { "allowSingleLine": true } ],
         "indent": [ "error", 4 ],
-        "linebreak-style": [ "error", "unix" ]
+        "linebreak-style": "off"
     },
     "overrides": [
       { "files": ["src/*-proto.js"], "rules": { "brace-style": "off" } },
       { "files": ["src/*-schema.js"], "rules": { "indent": "off" } }
     ],
     "globals": {
+        "flatbuffers": "readonly",
         "protobuf": "readonly"
     }
 }

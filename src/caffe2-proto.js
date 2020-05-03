@@ -1497,6 +1497,230 @@
             return OperatorDef;
         })();
     
+        caffe2.MapFieldEntry = (function() {
+    
+            function MapFieldEntry(properties) {
+                if (properties)
+                    for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                        if (properties[keys[i]] != null)
+                            this[keys[i]] = properties[keys[i]];
+            }
+    
+            MapFieldEntry.prototype.key = "";
+            MapFieldEntry.prototype.val = "";
+    
+            MapFieldEntry.decode = function decode(reader, length) {
+                if (!(reader instanceof $Reader))
+                    reader = $Reader.create(reader);
+                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.caffe2.MapFieldEntry();
+                while (reader.pos < end) {
+                    var tag = reader.uint32();
+                    switch (tag >>> 3) {
+                    case 1:
+                        message.key = reader.string();
+                        break;
+                    case 2:
+                        message.val = reader.string();
+                        break;
+                    default:
+                        reader.skipType(tag & 7);
+                        break;
+                    }
+                }
+                if (!message.hasOwnProperty("key"))
+                    throw $util.ProtocolError("missing required 'key'", { instance: message });
+                if (!message.hasOwnProperty("val"))
+                    throw $util.ProtocolError("missing required 'val'", { instance: message });
+                return message;
+            };
+    
+            MapFieldEntry.decodeText = function decodeText(reader) {
+                var message = new $root.caffe2.MapFieldEntry();
+                reader.start();
+                while (!reader.end()) {
+                    var tag = reader.tag();
+                    switch (tag) {
+                    case "key":
+                        message.key = reader.string();
+                        break;
+                    case "val":
+                        message.val = reader.string();
+                        break;
+                    default:
+                        reader.field(tag, message);
+                        break;
+                    }
+                }
+                if (!message.hasOwnProperty("key"))
+                    throw $util.ProtocolError("missing required 'key'", { instance: message });
+                if (!message.hasOwnProperty("val"))
+                    throw $util.ProtocolError("missing required 'val'", { instance: message });
+                return message;
+            };
+    
+            return MapFieldEntry;
+        })();
+    
+        caffe2.BackendOptions = (function() {
+    
+            function BackendOptions(properties) {
+                this.option = [];
+                if (properties)
+                    for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                        if (properties[keys[i]] != null)
+                            this[keys[i]] = properties[keys[i]];
+            }
+    
+            BackendOptions.prototype.backend_name = "";
+            BackendOptions.prototype.option = $util.emptyArray;
+    
+            BackendOptions.decode = function decode(reader, length) {
+                if (!(reader instanceof $Reader))
+                    reader = $Reader.create(reader);
+                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.caffe2.BackendOptions();
+                while (reader.pos < end) {
+                    var tag = reader.uint32();
+                    switch (tag >>> 3) {
+                    case 1:
+                        message.backend_name = reader.string();
+                        break;
+                    case 2:
+                        if (!(message.option && message.option.length))
+                            message.option = [];
+                        message.option.push($root.caffe2.MapFieldEntry.decode(reader, reader.uint32()));
+                        break;
+                    default:
+                        reader.skipType(tag & 7);
+                        break;
+                    }
+                }
+                if (!message.hasOwnProperty("backend_name"))
+                    throw $util.ProtocolError("missing required 'backend_name'", { instance: message });
+                return message;
+            };
+    
+            BackendOptions.decodeText = function decodeText(reader) {
+                var message = new $root.caffe2.BackendOptions();
+                reader.start();
+                while (!reader.end()) {
+                    var tag = reader.tag();
+                    switch (tag) {
+                    case "backend_name":
+                        message.backend_name = reader.string();
+                        break;
+                    case "option":
+                        if (!(message.option && message.option.length))
+                            message.option = [];
+                        message.option.push($root.caffe2.MapFieldEntry.decodeText(reader, true));
+                        break;
+                    default:
+                        reader.field(tag, message);
+                        break;
+                    }
+                }
+                if (!message.hasOwnProperty("backend_name"))
+                    throw $util.ProtocolError("missing required 'backend_name'", { instance: message });
+                return message;
+            };
+    
+            return BackendOptions;
+        })();
+    
+        caffe2.PartitionInfo = (function() {
+    
+            function PartitionInfo(properties) {
+                this.device_id = [];
+                this.backend_options = [];
+                if (properties)
+                    for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                        if (properties[keys[i]] != null)
+                            this[keys[i]] = properties[keys[i]];
+            }
+    
+            PartitionInfo.prototype.name = "";
+            PartitionInfo.prototype.device_id = $util.emptyArray;
+            PartitionInfo.prototype.extra_info = "";
+            PartitionInfo.prototype.backend_options = $util.emptyArray;
+    
+            PartitionInfo.decode = function decode(reader, length) {
+                if (!(reader instanceof $Reader))
+                    reader = $Reader.create(reader);
+                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.caffe2.PartitionInfo();
+                while (reader.pos < end) {
+                    var tag = reader.uint32();
+                    switch (tag >>> 3) {
+                    case 1:
+                        message.name = reader.string();
+                        break;
+                    case 2:
+                        if (!(message.device_id && message.device_id.length))
+                            message.device_id = [];
+                        if ((tag & 7) === 2) {
+                            var end2 = reader.uint32() + reader.pos;
+                            while (reader.pos < end2)
+                                message.device_id.push(reader.int32());
+                        } else
+                            message.device_id.push(reader.int32());
+                        break;
+                    case 3:
+                        message.extra_info = reader.string();
+                        break;
+                    case 4:
+                        if (!(message.backend_options && message.backend_options.length))
+                            message.backend_options = [];
+                        message.backend_options.push($root.caffe2.BackendOptions.decode(reader, reader.uint32()));
+                        break;
+                    default:
+                        reader.skipType(tag & 7);
+                        break;
+                    }
+                }
+                if (!message.hasOwnProperty("name"))
+                    throw $util.ProtocolError("missing required 'name'", { instance: message });
+                return message;
+            };
+    
+            PartitionInfo.decodeText = function decodeText(reader) {
+                var message = new $root.caffe2.PartitionInfo();
+                reader.start();
+                while (!reader.end()) {
+                    var tag = reader.tag();
+                    switch (tag) {
+                    case "name":
+                        message.name = reader.string();
+                        break;
+                    case "device_id":
+                        if (!(message.device_id && message.device_id.length))
+                            message.device_id = [];
+                        if (reader.first())
+                            while (!reader.last()) {
+                                message.device_id.push(reader.int32());
+                                reader.next();
+                            }
+                        else
+                            message.device_id.push(reader.int32());
+                        break;
+                    case "extra_info":
+                        message.extra_info = reader.string();
+                        break;
+                    case "backend_options":
+                        if (!(message.backend_options && message.backend_options.length))
+                            message.backend_options = [];
+                        message.backend_options.push($root.caffe2.BackendOptions.decodeText(reader, true));
+                        break;
+                    default:
+                        reader.field(tag, message);
+                        break;
+                    }
+                }
+                if (!message.hasOwnProperty("name"))
+                    throw $util.ProtocolError("missing required 'name'", { instance: message });
+                return message;
+            };
+    
+            return PartitionInfo;
+        })();
+    
         caffe2.NetDef = (function() {
     
             function NetDef(properties) {
@@ -1504,6 +1728,7 @@
                 this.arg = [];
                 this.external_input = [];
                 this.external_output = [];
+                this.partition_info = [];
                 if (properties)
                     for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
                         if (properties[keys[i]] != null)
@@ -1518,6 +1743,7 @@
             NetDef.prototype.arg = $util.emptyArray;
             NetDef.prototype.external_input = $util.emptyArray;
             NetDef.prototype.external_output = $util.emptyArray;
+            NetDef.prototype.partition_info = $util.emptyArray;
     
             NetDef.decode = function decode(reader, length) {
                 if (!(reader instanceof $Reader))
@@ -1557,6 +1783,11 @@
                         if (!(message.external_output && message.external_output.length))
                             message.external_output = [];
                         message.external_output.push(reader.string());
+                        break;
+                    case 9:
+                        if (!(message.partition_info && message.partition_info.length))
+                            message.partition_info = [];
+                        message.partition_info.push($root.caffe2.PartitionInfo.decode(reader, reader.uint32()));
                         break;
                     default:
                         reader.skipType(tag & 7);
@@ -1615,6 +1846,11 @@
                             }
                         else
                             message.external_output.push(reader.string());
+                        break;
+                    case "partition_info":
+                        if (!(message.partition_info && message.partition_info.length))
+                            message.partition_info = [];
+                        message.partition_info.push($root.caffe2.PartitionInfo.decodeText(reader, true));
                         break;
                     default:
                         reader.field(tag, message);

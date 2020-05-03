@@ -182,15 +182,18 @@ paddle.Parameter = class {
 
 paddle.Argument = class {
 
-    constructor(id, type, description, initializer) {
-        this._id = id;
+    constructor(name, type, description, initializer) {
+        if (typeof name !== 'string') {
+            throw new paddle.Error("Invalid argument identifier '" + JSON.stringify(name) + "'.");
+        }
+        this._name = name;
         this._type = type || null;
         this._description = description || null;
         this._initializer = initializer || null;
     }
 
-    get id() {
-        return this._id;
+    get name() {
+        return this._name;
     }
 
     get type() {
@@ -226,14 +229,14 @@ paddle.Node = class {
         }
         for (const input of op.inputs) {
             if (input.arguments.length > 0) {
-                let inputConnections = input.arguments.map((argument) => new paddle.Argument(argument, types[argument.split('\n').shift()], null, initializers[argument]));
-                this._inputs.push(new paddle.Parameter(input.parameter, inputConnections));
+                let inputArguments = input.arguments.map((argument) => new paddle.Argument(argument, types[argument.split('\n').shift()], null, initializers[argument]));
+                this._inputs.push(new paddle.Parameter(input.parameter, inputArguments));
             }
         }
         for (const output of op.outputs) {
             if (output.arguments.length > 0) {
-                let outputConnections = output.arguments.map((argument) => new paddle.Argument(argument, types[argument.split('\n').shift()], null, null));
-                this._outputs.push(new paddle.Parameter(output.parameter, outputConnections));
+                let outputArguments = output.arguments.map((argument) => new paddle.Argument(argument, types[argument.split('\n').shift()], null, null));
+                this._outputs.push(new paddle.Parameter(output.parameter, outputArguments));
             }
         }
         this._update(this._inputs, 'X');
@@ -250,13 +253,8 @@ paddle.Node = class {
         return '';
     }
 
-    get category() {
-        const schema = this._metadata.getSchema(this._operator);
-        return (schema && schema.category) ? schema.category : '';
-    }
-
-    get documentation() {
-        return '';
+    get metadata() {
+        return this._metadata.type(this._operator);
     }
 
     get attributes() {
@@ -349,7 +347,7 @@ paddle.Attribute = class {
                 break;
         }
 
-        const schema = metadata.getAttributeSchema(operator, this._name);
+        const schema = metadata.attribute(operator, this._name);
         if (schema) {
             if (Object.prototype.hasOwnProperty.call(schema, 'default')) {
                 let defaultValue = schema.default;
@@ -486,23 +484,22 @@ paddle.Metadata = class {
             let items = JSON.parse(data);
             if (items) {
                 for (const item of items) {
-                    if (item.name && item.schema) {
-                        this._map[item.name] = item.schema;
-                    }
+                    item.schema.name = item.name;
+                    this._map[item.name] = item.schema;
                 }
             }
         }
     }
 
-    getSchema(operator) {
+    type(operator) {
         return this._map[operator] || null;
     }
 
-    getAttributeSchema(operator, name) {
+    attribute(operator, name) {
         let map = this._attributeCache[operator];
         if (!map) {
             map = {};
-            const schema = this.getSchema(operator);
+            const schema = this.type(operator);
             if (schema && schema.attributes && schema.attributes.length > 0) {
                 for (const attribute of schema.attributes) {
                     map[attribute.name] = attribute;

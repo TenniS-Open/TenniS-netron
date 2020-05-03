@@ -30,17 +30,15 @@ dl4j.ModelFactory = class {
                 }
                 catch (error) {
                     host.exception(error, false);
-                    let message = error && error.message ? error.message : error.toString();
-                    message = message.endsWith('.') ? message.substring(0, message.length - 1) : message;
-                    throw new dl4j.Error(message + " in '" + identifier + "'.");
+                    const message = error && error.message ? error.message : error.toString();
+                    throw new dl4j.Error(message.replace(/\.$/, '') + " in '" + identifier + "'.");
                 }
             });
         }
         catch (error) {
             host.exception(error, false);
-            let message = error && error.message ? error.message : error.toString();
-            message = message.endsWith('.') ? message.substring(0, message.length - 1) : message;
-            return Promise.reject(new dl4j.Error(message + " in '" + identifier + "'."));
+            const message = error && error.message ? error.message : error.toString();
+            return Promise.reject(new dl4j.Error(message.replace(/\.$/, '') + " in '" + identifier + "'."));
         }
     }
 
@@ -64,11 +62,11 @@ dl4j.ModelFactory = class {
         if (coefficientsEntries.length > 1) {
             return null;
         }
-        const coefficients = coefficientsEntries.length == 1 ? coefficientsEntries[0].data : 0;
-        let container = {};
-        container.configuration = configuration;
-        container.coefficients = coefficients;
-        return container;
+        const coefficients = coefficientsEntries.length == 1 ? coefficientsEntries[0].data : [];
+        return {
+            configuration: configuration,
+            coefficients: coefficients
+        };
     }
 }
 
@@ -200,14 +198,17 @@ dl4j.Parameter = class {
 
 dl4j.Argument = class {
 
-    constructor(id, type, initializer) {
-        this._id = id;
+    constructor(name, type, initializer) {
+        if (typeof name !== 'string') {
+            throw new dl4j.Error("Invalid argument identifier '" + JSON.stringify(name) + "'.");
+        }
+        this._name = name;
         this._type = type;
         this._initializer = initializer;
     }
 
-    get id() {
-        return this._id;
+    get name() {
+        return this._name;
     }
 
     get type() {
@@ -345,13 +346,8 @@ dl4j.Node = class {
         return this._name;
     }
 
-    get category() {
-        const schema = this._metadata.getSchema(this._operator);
-        return (schema && schema.category) ? schema.category : '';
-    }
-
-    get documentation() {
-        return '';
+    get metadata() {
+        return this._metadata.type(this._operator);
     }
 
     get inputs() {
@@ -399,7 +395,7 @@ dl4j.Attribute = class {
         this._name = name;
         this._value = value;
         this._visible = false;
-        const schema = metadata.getAttributeSchema(operator, name);
+        const schema = metadata.attribute(operator, name);
         if (schema) {
             if (schema.visible) {
                 this._visible = true;
@@ -501,27 +497,26 @@ dl4j.Metadata = class {
         this._attributeCache = {};
         if (data) {
             if (data) {
-                let items = JSON.parse(data);
+                const items = JSON.parse(data);
                 if (items) {
                     for (const item of items) {
-                        if (item.name && item.schema) {
-                            this._map[item.name] = item.schema;
-                        }
+                        item.schema.name = item.name;
+                        this._map[item.name] = item.schema;
                     }
                 }
             }
         }
     }
 
-    getSchema(operator) {
+    type(operator) {
         return this._map[operator];
     }
 
-    getAttributeSchema(operator, name) {
+    attribute(operator, name) {
         let map = this._attributeCache[operator];
         if (!map) {
             map = {};
-            const schema = this.getSchema(operator);
+            const schema = this.type(operator);
             if (schema && schema.attributes && schema.attributes.length > 0) {
                 for (const attribute of schema.attributes) {
                     map[attribute.name] = attribute;

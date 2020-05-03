@@ -19,101 +19,65 @@ view.View = class {
 
     constructor(host) {
         this._host = host;
-        this._model = null;
-        this._selection = [];
-        this._sidebar = new sidebar.Sidebar(this._host);
-        this._host.initialize(this);
-        this._showAttributes = false;
-        this._showInitializers = true;
-        this._showNames = false;
-        this._searchText = '';
-        this._modelFactoryService = new view.ModelFactoryService(this._host);
-        this._host.document.documentElement.style.overflow = 'hidden';
-        this._host.document.body.scroll = 'no';
-        this._host.document.getElementById('zoom-in-button').addEventListener('click', () => {
-            this.zoomIn();
-        });
-        this._host.document.getElementById('zoom-out-button').addEventListener('click', () => {
-            this.zoomOut();
-        });
-        this._host.document.getElementById('toolbar').addEventListener('mousewheel', (e) => {
-            this._preventZoom(e);
-        });
-        this._host.document.getElementById('sidebar').addEventListener('mousewheel', (e) => {
-            this._preventZoom(e);
-        });
-        this._host.document.addEventListener('keydown', () => {
-            this.clearSelection();
-        });
-        if (this._host.environment('zoom') == 'scroll') {
-            this._host.document.getElementById('graph-container').addEventListener('mousewheel', (e) => {
-                this._mouseWheelHandler(e);
+        this._host.initialize(this).then(() => {
+            this._model = null;
+            this._selection = [];
+            this._sidebar = new sidebar.Sidebar(this._host);
+            this._host.start();
+            this._showAttributes = false;
+            this._showInitializers = true;
+            this._showNames = false;
+            this._searchText = '';
+            this._modelFactoryService = new view.ModelFactoryService(this._host);
+            this._host.document.getElementById('zoom-in-button').addEventListener('click', () => {
+                this.zoomIn();
             });
-            this._host.document.getElementById('graph-container').addEventListener('scroll', (e) => {
-                this._scrollHandler(e);
+            this._host.document.getElementById('zoom-out-button').addEventListener('click', () => {
+                this.zoomOut();
             });
-            this._host.document.getElementById('graph-container').addEventListener('gesturestart', (e) => {
-                e.preventDefault();
-                this._gestureStartZoom = this._zoom;
-            }, false);
-            this._host.document.getElementById('graph-container').addEventListener('gesturechange', (e) => {
-                e.preventDefault();
-                this._updateZoom(this._gestureStartZoom * e.scale, e);
-            }, false);
-            this._host.document.getElementById('graph-container').addEventListener('gestureend', (e) => {
-                e.preventDefault();
-                this._updateZoom(this._gestureStartZoom * e.scale, e);
-            }, false);
-        }
+            this._host.document.getElementById('toolbar').addEventListener('mousewheel', (e) => {
+                this._preventZoom(e);
+            });
+            this._host.document.getElementById('sidebar').addEventListener('mousewheel', (e) => {
+                this._preventZoom(e);
+            });
+            this._host.document.addEventListener('keydown', () => {
+                this.clearSelection();
+            });
+            if (this._host.environment('zoom') == 'scroll') {
+                this._host.document.getElementById('graph').addEventListener('mousewheel', (e) => {
+                    this._mouseWheelHandler(e);
+                });
+                this._host.document.getElementById('graph').addEventListener('scroll', (e) => {
+                    this._scrollHandler(e);
+                });
+                this._host.document.getElementById('graph').addEventListener('gesturestart', (e) => {
+                    e.preventDefault();
+                    this._gestureStartZoom = this._zoom;
+                }, false);
+                this._host.document.getElementById('graph').addEventListener('gesturechange', (e) => {
+                    e.preventDefault();
+                    this._updateZoom(this._gestureStartZoom * e.scale, e);
+                }, false);
+                this._host.document.getElementById('graph').addEventListener('gestureend', (e) => {
+                    e.preventDefault();
+                    this._updateZoom(this._gestureStartZoom * e.scale, e);
+                }, false);
+            }
+        }).catch((err) => {
+            this.error(err.message, err);
+        });
     }
     
     show(page) {
-
         if (!page) {
-            page = (!this._model && !this._activeGraph) ? 'Welcome' : 'Graph';
+            page = (!this._model && !this._activeGraph) ? 'welcome' : 'default';
         }
-
         this._host.screen(page);
-
-        this._sidebar.close();
-
-        let welcomeElement = this._host.document.getElementById('welcome');
-        let openFileButton = this._host.document.getElementById('open-file-button');
-        let spinnerElement = this._host.document.getElementById('spinner');
-        let graphElement = this._host.document.getElementById('graph');
-        let toolbarElement = this._host.document.getElementById('toolbar');
-    
-        if (page == 'Welcome') {
-            this._host.document.body.style.cursor = 'default';
-            welcomeElement.style.display = 'block';
-            openFileButton.style.display = 'block';
-            openFileButton.style.opacity = 1;
-            spinnerElement.style.display = 'none';
-            graphElement.style.display = 'none';
-            graphElement.style.opacity = 0;
-            toolbarElement.style.display = 'none';
+        if (this._sidebar) {
+            this._sidebar.close();
         }
-
-        if (page == 'Spinner') {
-            this._host.document.body.style.cursor = 'wait';
-            welcomeElement.style.display = 'block';
-            spinnerElement.style.display = 'block';
-            openFileButton.style.display = 'block';
-            graphElement.style.display = 'block';
-            graphElement.style.opacity = 0;
-            toolbarElement.style.display = 'none';
-        }
-
-        if (page == 'Graph') {
-            welcomeElement.style.display = 'none';
-            openFileButton.style.display = 'none';
-            openFileButton.style.opacity = 0;
-            spinnerElement.style.display = 'none';
-            graphElement.style.display = 'block';
-            graphElement.style.opacity = 1;
-            toolbarElement.style.display = 'block';
-            this._host.document.body.style.cursor = 'default';
-        }
+        this._host.document.body.setAttribute('class', page);
     }
 
     cut() {
@@ -135,8 +99,8 @@ view.View = class {
     find() {
         if (this._activeGraph) {
             this.clearSelection();
-            let graphElement = document.getElementById('graph');
-            let view = new sidebar.FindSidebar(this._host, graphElement, this._activeGraph);
+            const graphElement = document.getElementById('canvas');
+            const view = new sidebar.FindSidebar(this._host, graphElement, this._activeGraph);
             view.on('search-text-changed', (sender, text) => {
                 this._searchText = text;
             });
@@ -177,7 +141,7 @@ view.View = class {
     }
 
     _reload() {
-        this.show('Spinner');
+        this.show('welcome spinner');
         if (this._model && this._activeGraph) {
             this._updateGraph(this._model, this._activeGraph).catch((error) => {
                 if (error) {
@@ -200,7 +164,7 @@ view.View = class {
                 break;
             case 'd3':
                 if (this._zoom) {
-                    this._zoom.scaleBy(d3.select(this._host.document.getElementById('graph')), 1.2);
+                    this._zoom.scaleBy(d3.select(this._host.document.getElementById('canvas')), 1.2);
                 }
                 break;
         }
@@ -213,7 +177,7 @@ view.View = class {
                 break;
             case 'd3':
                 if (this._zoom) {
-                    this._zoom.scaleBy(d3.select(this._host.document.getElementById('graph')), 0.8);
+                    this._zoom.scaleBy(d3.select(this._host.document.getElementById('canvas')), 0.8);
                 }
                 break;
         }
@@ -226,7 +190,7 @@ view.View = class {
                 break;
             case 'd3':
                 if (this._zoom) {
-                    this._zoom.scaleTo(d3.select(this._host.document.getElementById('graph')), 1);
+                    this._zoom.scaleTo(d3.select(this._host.document.getElementById('canvas')), 1);
                 }
                 break;
         }
@@ -240,23 +204,20 @@ view.View = class {
 
     _updateZoom(zoom, e) {
 
-        let container = this._host.document.getElementById('graph-container');
+        const container = this._host.document.getElementById('graph');
 
-        let min = Math.min(Math.max(container.clientHeight / this._height, 0.2), 1);
+        const min = Math.min(Math.max(container.clientHeight / this._height, 0.2), 1);
 
         zoom = Math.min(zoom, 2);
         zoom = Math.max(min, zoom);
 
-        let scrollLeft = this._scrollLeft || container.scrollLeft;
-        let scrollTop = this._scrollTop || container.scrollTop;
+        const scrollLeft = this._scrollLeft || container.scrollLeft;
+        const scrollTop = this._scrollTop || container.scrollTop;
 
-        let x = e ? e.pageX : (container.clientWidth / 2);
-        let y = e ? e.pageY : (container.clientHeight / 2);
+        const x = (e ? e.pageX : (container.clientWidth / 2)) + scrollLeft;
+        const y = (e ? e.pageY : (container.clientHeight / 2)) + scrollTop;
 
-        x += scrollLeft;
-        y += scrollTop;
-
-        let graph = this._host.document.getElementById('graph');
+        const graph = this._host.document.getElementById('canvas');
         graph.style.width = zoom * this._width;
         graph.style.height = zoom * this._height
 
@@ -290,21 +251,17 @@ view.View = class {
     select(selection) {
         this.clearSelection();
         if (selection && selection.length > 0) {
-            let graphElement = this._host.document.getElementById('graph');
-            let graphRect = graphElement.getBoundingClientRect();
+            const graphElement = this._host.document.getElementById('canvas');
+            const graphRect = graphElement.getBoundingClientRect();
             let x = 0;
             let y = 0;
             for (const element of selection) {
                 element.classList.add('select');
                 this._selection.push(element);
-                let box = element.getBBox();
-                let ex = box.x + (box.width / 2);
-                let ey = box.y + (box.height / 2);
-                let transform = element.transform.baseVal.consolidate();
-                if (transform) {
-                    ex = transform.matrix.e;
-                    ey = transform.matrix.f;
-                }
+                const transform = element.transform.baseVal.consolidate();
+                const box = element.getBBox();
+                const ex = transform ? transform.matrix.e : box.x + (box.width / 2);
+                const ey = transform ? transform.matrix.f : box.y + (box.height / 2);
                 x += ex;
                 y += ey;
             }
@@ -316,16 +273,18 @@ view.View = class {
 
     clearSelection() {
         while (this._selection.length > 0) {
-            let element = this._selection.pop();
+            const element = this._selection.pop();
             element.classList.remove('select');
         }
     }
 
     error(message, err) {
-        this._sidebar.close();
+        if (this._sidebar) {
+            this._sidebar.close();
+        }
         this._host.exception(err, false);
         this._host.error(message, err.toString());
-        this.show('Welcome');
+        this.show('welcome');
     }
 
     accept(file) {
@@ -337,13 +296,12 @@ view.View = class {
         this._sidebar.close();
         return this._timeout(2).then(() => {
             return this._modelFactoryService.open(context).then((model) => {
-                let format = model.format;
+                const format = model.format;
                 if (format) {
-                    format = format + (model.producer ? ' (' + model.producer + ')' : '');
-                    this._host.event('Model', 'Format', format);
+                    this._host.event('Model', 'Format', format + (model.producer ? ' (' + model.producer + ')' : ''));
                 }
                 return this._timeout(20).then(() => {
-                    let graph = model.graphs.length > 0 ? model.graphs[0] : null;
+                    const graph = model.graphs.length > 0 ? model.graphs[0] : null;
                     return this._updateGraph(model, graph);
                 });
             });
@@ -353,10 +311,10 @@ view.View = class {
     _updateActiveGraph(name) {
         this._sidebar.close();
         if (this._model) {
-            let model = this._model;
-            let graph = model.graphs.filter(graph => name == graph.name).shift();
+            const model = this._model;
+            const graph = model.graphs.filter(graph => name == graph.name).shift();
             if (graph) {
-                this.show('Spinner');
+                this.show('welcome spinner');
                 this._timeout(200).then(() => {
                     return this._updateGraph(model, graph).catch((error) => {
                         if (error) {
@@ -371,7 +329,7 @@ view.View = class {
     _updateGraph(model, graph) {
         return this._timeout(100).then(() => {
             if (graph && graph != this._activeGraph) {
-                let nodes = graph.nodes;
+                const nodes = graph.nodes;
                 if (nodes.length > 1400) {
                     if (!this._host.confirm('Large model detected.', 'This graph contains a large number of nodes and might take a long time to render. Do you want to continue?')) {
                         this._host.event('Graph', 'Render', 'Skip', nodes.length);
@@ -383,11 +341,11 @@ view.View = class {
             return this.renderGraph(model, graph).then(() => {
                 this._model = model;
                 this._activeGraph = graph;
-                this.show('Graph');
+                this.show('default');
                 return this._model;
             }).catch((error) => {
                 return this.renderGraph(this._model, this._activeGraph).then(() => {
-                    this.show('Graph');
+                    this.show('default');
                     throw error;
                 }).catch(() => {
                     throw error;
@@ -402,11 +360,11 @@ view.View = class {
                 return Promise.resolve();
             }
             else {
-                let graphElement = this._host.document.getElementById('graph');
+                const graphElement = this._host.document.getElementById('canvas');
                 while (graphElement.lastChild) {
                     graphElement.removeChild(graphElement.lastChild);
                 }
-    
+
                 switch (this._host.environment('zoom')) {
                     case 'scroll':
                         this._zoom = 0;
@@ -420,24 +378,22 @@ view.View = class {
                         break;
                 }
     
-                let groups = graph.groups;
+                const groups = graph.groups;
     
-                let graphOptions = {};
+                const graphOptions = {};
                 graphOptions.nodesep = 25;
                 graphOptions.ranksep = 20;
 
-                let g = new dagre.graphlib.Graph({ compound: groups });
+                const g = new dagre.graphlib.Graph({ compound: groups });
                 g.setGraph(graphOptions);
                 g.setDefaultEdgeLabel(() => { return {}; });
             
                 let nodeId = 0;
-                let edgeMap = {};
-            
-                let clusterMap = {};
-                let clusterParentMap = {};
-    
+                const edgeMap = {};
+                const clusterMap = {};
+                const clusterParentMap = {};
                 let id = new Date().getTime();
-                let nodes = graph.nodes;
+                const nodes = graph.nodes;
 
                 if (nodes.length > 1500) {
                     graphOptions.ranker = 'longest-path';
@@ -448,7 +404,7 @@ view.View = class {
                 if (groups) {
                     for (const node of nodes) {
                         if (node.group) {
-                            let path = node.group.split('/');
+                            const path = node.group.split('/');
                             while (path.length > 0) {
                                 const name = path.join('/');
                                 path.pop();
@@ -460,14 +416,15 @@ view.View = class {
 
                 const self = this;
                 for (const node of nodes) {
-    
-                    let element = new grapher.NodeElement(this._host.document);
+
+                    const element = new grapher.NodeElement(this._host.document);
 
                     const addNode = function(element, node, edges) {
 
-                        let header =  element.block('header');
-                        let styles = [ 'node-item-operator' ];
-                        const category = node.category;
+                        const header =  element.block('header');
+                        const styles = [ 'node-item-operator' ];
+                        const metadata = node.metadata;
+                        const category = metadata && metadata.category ? metadata.category : '';
                         if (category) {
                             styles.push('node-item-operator-' + category.toLowerCase());
                         }
@@ -487,7 +444,7 @@ view.View = class {
                             });
                         }
 
-                        let initializers = [];
+                        const initializers = [];
                         let hiddenInitializers = false;
                         if (self._showInitializers) {
                             for (const input of node.inputs) {
@@ -500,12 +457,18 @@ view.View = class {
                                 }
                             }
                         }
-                        let attributes = [];
-                        if (self.showAttributes && node.attributes) {
-                            attributes = node.attributes.filter((attribute) => attribute.visible);
+                        let sortedAttributes = [];
+                        const attributes = node.attributes;
+                        if (self.showAttributes && attributes) {
+                            sortedAttributes = attributes.filter((attribute) => attribute.visible).slice();
+                            sortedAttributes.sort((a, b) => { 
+                                const au = a.name.toUpperCase();
+                                const bu = b.name.toUpperCase();
+                                return (au < bu) ? -1 : (au > bu) ? 1 : 0;
+                            });
                         }
-                        if (initializers.length > 0 || hiddenInitializers || attributes.length > 0) {
-                            let block = element.block('list');
+                        if (initializers.length > 0 || hiddenInitializers || sortedAttributes.length > 0) {
+                            const block = element.block('list');
                             block.handler = () => {
                                 self.showNodeProperties(node);
                             };
@@ -527,13 +490,13 @@ view.View = class {
                                         separator = ' = ';
                                     }
                                 }
-                                block.add('initializer-' + argument.id, initializer.name, shape, type ? type.toString() : '', separator);
+                                block.add('initializer-' + argument.name, initializer.name, shape, type ? type.toString() : '', separator);
                             }
                             if (hiddenInitializers) {
                                 block.add(null, '\u3008' + '\u2026' + '\u3009', '', null, '');
                             }
 
-                            for (const attribute of attributes) {
+                            for (const attribute of sortedAttributes) {
                                 if (attribute.visible) {
                                     let attributeValue = sidebar.NodeSidebar.formatAttributeValue(attribute.value, attribute.type);
                                     if (attributeValue && attributeValue.length > 25) {
@@ -548,11 +511,11 @@ view.View = class {
                             const inputs = node.inputs;
                             for (const input of inputs) {
                                 for (const argument of input.arguments) {
-                                    if (argument.id != '' && !argument.initializer) {
-                                        let tuple = edgeMap[argument.id];
+                                    if (argument.name != '' && !argument.initializer) {
+                                        let tuple = edgeMap[argument.name];
                                         if (!tuple) {
                                             tuple = { from: null, to: [] };
-                                            edgeMap[argument.id] = tuple;
+                                            edgeMap[argument.name] = tuple;
                                         }
                                         tuple.to.push({ 
                                             node: nodeId, 
@@ -570,11 +533,11 @@ view.View = class {
                             }
                             for (const output of outputs) {
                                 for (const argument of output.arguments) {
-                                    if (argument.id != '') {
-                                        let tuple = edgeMap[argument.id];
+                                    if (argument.name != '') {
+                                        let tuple = edgeMap[argument.name];
                                         if (!tuple) {
                                             tuple = { from: null, to: [] };
-                                            edgeMap[argument.id] = tuple;
+                                            edgeMap[argument.name] = tuple;
                                         }
                                         tuple.from = { 
                                             node: nodeId,
@@ -585,7 +548,7 @@ view.View = class {
                                 }
                             }
                         }
-    
+
                         if (node.chain && node.chain.length > 0) {
                             for (const innerNode of node.chain) {
                                 addNode(element, innerNode, false);
@@ -596,7 +559,7 @@ view.View = class {
                             addNode(element, node.inner, false);
                         }
                     }
-    
+
                     addNode(element, node, true);
 
                     if (node.controlDependencies && node.controlDependencies.length > 0) {
@@ -622,7 +585,7 @@ view.View = class {
                         g.setNode(nodeId, { label: element.format(graphElement), id: 'node-' + id.toString() });
                         id++;
                     }
-            
+
                     const createCluster = function(name) {
                         if (!clusterMap[name]) {
                             g.setNode(name, { rx: 5, ry: 5});
@@ -656,30 +619,30 @@ view.View = class {
                             }
                         }
                     }
-                
+
                     nodeId++;
                 }
 
                 for (const input of graph.inputs) {
                     for (const argument of input.arguments) {
-                        let tuple = edgeMap[argument.id];
+                        let tuple = edgeMap[argument.name];
                         if (!tuple) {
                             tuple = { from: null, to: [] };
-                            edgeMap[argument.id] = tuple;
+                            edgeMap[argument.name] = tuple;
                         }
                         tuple.from = { 
                             node: nodeId,
                             type: argument.type
                         };
                     }
-                    let types = input.arguments.map((argument) => argument.type || '').join('\n');
+                    const types = input.arguments.map((argument) => argument.type || '').join('\n');
                     let inputName = input.name || '';
                     if (inputName.length > 16) {
                         inputName = inputName.split('/').pop();
                     }
     
-                    let inputElement = new grapher.NodeElement(this._host.document);
-                    let inputHeader = inputElement.block('header');
+                    const inputElement = new grapher.NodeElement(this._host.document);
+                    const inputHeader = inputElement.block('header');
                     inputHeader.add(null, [ 'graph-item-input' ], inputName, types, () => {
                         this.showModelProperties();
                     });
@@ -688,21 +651,21 @@ view.View = class {
             
                 for (const output of graph.outputs) {
                     for (const argument of output.arguments) {
-                        let tuple = edgeMap[argument.id];
+                        let tuple = edgeMap[argument.name];
                         if (!tuple) {
                             tuple = { from: null, to: [] };
-                            edgeMap[argument.id] = tuple;
+                            edgeMap[argument.name] = tuple;
                         }
                         tuple.to.push({ node: nodeId });
                     }
-                    let outputTypes = output.arguments.map((argument) => argument.type || '').join('\n');
+                    const outputTypes = output.arguments.map((argument) => argument.type || '').join('\n');
                     let outputName = output.name || '';
                     if (outputName.length > 16) {
                         outputName = outputName.split('/').pop();
                     }
             
-                    let outputElement = new grapher.NodeElement(this._host.document);
-                    let outputHeader = outputElement.block('header');
+                    const outputElement = new grapher.NodeElement(this._host.document);
+                    const outputHeader = outputElement.block('header');
                     outputHeader.add(null, [ 'graph-item-output' ], outputName, outputTypes, () => {
                         this.showModelProperties();
                     });
@@ -710,7 +673,7 @@ view.View = class {
                 }
 
                 for (const edge of Object.keys(edgeMap)) {
-                    let tuple = edgeMap[edge];
+                    const tuple = edgeMap[edge];
                     if (tuple.from != null) {
                         for (const to of tuple.to) {
                             let text = '';
@@ -735,7 +698,7 @@ view.View = class {
 
                 // Workaround for Safari background drag/zoom issue:
                 // https://stackoverflow.com/questions/40887193/d3-js-zoom-is-not-working-with-mousewheel-in-safari
-                let backgroundElement = this._host.document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                const backgroundElement = this._host.document.createElementNS('http://www.w3.org/2000/svg', 'rect');
                 backgroundElement.setAttribute('id', 'background');
                 if (this._host.environment('zoom') == 'd3') {
                     backgroundElement.setAttribute('width', '100%');
@@ -745,7 +708,7 @@ view.View = class {
                 backgroundElement.setAttribute('pointer-events', 'all');
                 graphElement.appendChild(backgroundElement);
 
-                let originElement = this._host.document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                const originElement = this._host.document.createElementNS('http://www.w3.org/2000/svg', 'g');
                 originElement.setAttribute('id', 'origin');
                 graphElement.appendChild(originElement);
             
@@ -763,15 +726,15 @@ view.View = class {
 
                 return this._timeout(20).then(() => {
 
-                    let graphRenderer = new grapher.Renderer(this._host.document, originElement);
+                    const graphRenderer = new grapher.Renderer(this._host.document, originElement);
                     graphRenderer.render(g);
 
-                    let inputElements = graphElement.getElementsByClassName('graph-input');
+                    const inputElements = graphElement.getElementsByClassName('graph-input');
 
                     switch (this._host.environment('zoom')) {
                         case 'scroll': {
                             const size = graphElement.getBBox();
-                            let margin = 100;
+                            const margin = 100;
                             const width = Math.ceil(margin + size.width + margin);
                             const height = Math.ceil(margin + size.height + margin);
                             originElement.setAttribute('transform', 'translate(' + margin.toString() + ', ' + margin.toString() + ') scale(1)');
@@ -801,8 +764,8 @@ view.View = class {
                             const svgSize = graphElement.getBoundingClientRect();
                             if (inputElements && inputElements.length > 0) {
                                 // Center view based on input elements
-                                let xs = [];
-                                let ys = [];
+                                const xs = [];
+                                const ys = [];
                                 for (let i = 0; i < inputElements.length; i++) {
                                     const inputTransform = inputElements[i].transform.baseVal.consolidate().matrix;
                                     xs.push(inputTransform.e);
@@ -839,7 +802,7 @@ view.View = class {
                 break;
             }
         }
-        let nodes = element.getElementsByTagName('*');
+        const nodes = element.getElementsByTagName('*');
         for (let j = 0; j < nodes.length; j++) {
             const node = nodes[j];
             for (let k = 0; k < rules.length; k++) {
@@ -858,7 +821,7 @@ view.View = class {
         const lastIndex = file.lastIndexOf('.');
         const extension = (lastIndex != -1) ? file.substring(lastIndex + 1) : '';
         if (this._activeGraph && (extension == 'png' || extension == 'svg')) {
-            const graphElement = this._host.document.getElementById('graph');
+            const graphElement = this._host.document.getElementById('canvas');
             const exportElement = graphElement.cloneNode(true);
             this.applyStyleSheet(exportElement, 'view-grapher.css');
             exportElement.setAttribute('id', 'export');
@@ -977,9 +940,9 @@ view.View = class {
     }
 
     showOperatorDocumentation(node) {
-        let documentation = node.documentation;
-        if (documentation) {
-            const documentationSidebar = new sidebar.OperatorDocumentationSidebar(documentation);
+        const metadata = node.metadata;
+        if (metadata) {
+            const documentationSidebar = new sidebar.DocumentationSidebar(this._host, metadata);
             documentationSidebar.on('navigate', (sender, e) => {
                 this._host.openURL(e.link);
             });
@@ -1125,7 +1088,7 @@ class ArchiveContext {
         if (entries) {
             for (const entry of entries) {
                 if (entry.name.startsWith(rootFolder)) {
-                    let name = entry.name.substring(rootFolder.length);
+                    const name = entry.name.substring(rootFolder.length);
                     if (identifier.length > 0 && identifier.indexOf('/') < 0) {
                         this._entries[name] = entry;
                     }
@@ -1169,15 +1132,16 @@ view.ModelFactoryService = class {
         this._extensions = [];
         this.register('./onnx', [ '.onnx', '.pb', '.pbtxt', '.prototxt' ]);
         this.register('./mxnet', [ '.mar', '.model', '.json', '.params' ]);
-        this.register('./keras', [ '.h5', '.hd5', '.hdf5', '.keras', '.json', '.model' ]);
+        this.register('./keras', [ '.h5', '.hd5', '.hdf5', '.keras', '.json', '.model', '.pb', '.pth' ]);
         this.register('./coreml', [ '.mlmodel' ]);
         this.register('./caffe', [ '.caffemodel', '.pbtxt', '.prototxt', '.pt' ]);
         this.register('./caffe2', [ '.pb', '.pbtxt', '.prototxt' ]);
-        this.register('./pytorch', [ '.pt', '.pth', '.pt1', '.pkl', '.h5', '.t7', '.model', '.dms', '.pth.tar', '.ckpt', '.bin' ]);
+        this.register('./pytorch', [ '.pt', '.pth', '.pt1', '.pkl', '.h5', '.t7', '.model', '.dms', '.tar', '.ckpt', '.bin', '.pb', '.zip' ]);
         this.register('./torch', [ '.t7' ]);
-        this.register('./tflite', [ '.tflite', '.lite', '.tfl', '.bin' ]);
+        this.register('./tflite', [ '.tflite', '.lite', '.tfl', '.bin', '.pb', '.model' ]);
         this.register('./tf', [ '.pb', '.meta', '.pbtxt', '.prototxt', '.json', '.index', '.ckpt' ]);
-        this.register('./sklearn', [ '.pkl', '.joblib', '.model' ]);
+        this.register('./mediapipe', [ '.pbtxt' ]);
+        this.register('./sklearn', [ '.pkl', '.joblib', '.model', '.meta' ]);
         this.register('./cntk', [ '.model', '.cntk', '.cmf', '.dnn' ]);
         this.register('./paddle', [ '.paddle', '__model__' ]);
         this.register('./armnn', [ '.armnn' ]);
@@ -1185,7 +1149,8 @@ view.ModelFactoryService = class {
         this.register('./darknet', [ '.cfg' ]);
         this.register('./mnn', ['.mnn']);
         this.register('./ncnn', [ '.param', '.bin', '.cfg.ncnn', '.weights.ncnn' ]);
-        this.register('./openvino', [ '.xml' ]);
+        this.register('./tengine', ['.tmfile']);
+        this.register('./openvino', [ '.xml', '.bin' ]);
         this.register('./flux', [ '.bson' ]);
         this.register('./chainer', [ '.npz', '.h5', '.hd5', '.hdf5' ]);
         this.register('./dl4j', [ '.zip' ]);
@@ -1200,68 +1165,72 @@ view.ModelFactoryService = class {
     }
  
     open(context) {
-        return this._openArchive(context).then((context) => {
-            context = new ModelContext(context);
-            const identifier = context.identifier;
-            const extension = identifier.split('.').pop().toLowerCase();
-            let modules = this._filter(context);
-            if (modules.length == 0) {
-                throw new ModelError("Unsupported file extension '." + extension + "'.");
-            }
-            let errors = [];
-            let match = false;
-            let nextModule = () => {
-                if (modules.length > 0) {
-                    let id = modules.shift();
-                    return this._host.require(id).then((module) => {
-                        if (!module.ModelFactory) {
-                            throw new ModelError("Failed to load module '" + id + "'.");
-                        }
-                        const modelFactory = new module.ModelFactory(); 
-                        if (!modelFactory.match(context)) {
-                            return nextModule();
-                        }
-                        match++;
-                        return modelFactory.open(context, this._host).then((model) => {
-                            return model;
-                        }).catch((error) => {
-                            errors.push(error);
-                            return nextModule();
-                        });
-                    });
+        return this._openSignature(context).then((context) => {
+            return this._openArchive(context).then((context) => {
+                context = new ModelContext(context);
+                const identifier = context.identifier;
+                const extension = identifier.split('.').pop().toLowerCase();
+                const modules = this._filter(context);
+                if (modules.length == 0) {
+                    throw new ModelError("Unsupported file extension '." + extension + "'.");
                 }
-                else {
-                    if (match) {
-                        if (errors.length == 1) {
-                            throw errors[0];
-                        }
-                        throw new ModelError(errors.map((err) => err.message).join('\n'));
+                const errors = [];
+                let match = false;
+                const nextModule = () => {
+                    if (modules.length > 0) {
+                        const id = modules.shift();
+                        return this._host.require(id).then((module) => {
+                            if (!module.ModelFactory) {
+                                throw new ModelError("Failed to load module '" + id + "'.");
+                            }
+                            const modelFactory = new module.ModelFactory(); 
+                            if (!modelFactory.match(context)) {
+                                return nextModule();
+                            }
+                            match++;
+                            return modelFactory.open(context, this._host).then((model) => {
+                                return model;
+                            }).catch((error) => {
+                                errors.push(error);
+                                return nextModule();
+                            });
+                        });
                     }
-                    const knownUnsupportedIdentifiers = new Set([
-                        'natives_blob.bin', 
-                        'v8_context_snapshot.bin',
-                        'snapshot_blob.bin',
-                        'image_net_labels.json',
-                        'package.json',
-                        'models.json',
-                        'LICENSE.meta',
-                        'input_0.pb', 
-                        'output_0.pb',
-                        'object-detection.pbtxt',
-                    ]);
-                    let skip = knownUnsupportedIdentifiers.has(identifier);
-                    if (!skip && extension === 'pbtxt') {
-                        if (identifier.includes('label_map') || identifier.includes('labels_map') || identifier.includes('labelmap')) {
-                            const tags = context.tags('pbtxt');
-                            if (tags.size === 1 && (tags.has('item') || tags.has('entry'))) {
-                                skip = true;
+                    else {
+                        if (match) {
+                            if (errors.length == 1) {
+                                throw errors[0];
+                            }
+                            throw new ModelError(errors.map((err) => err.message).join('\n'));
+                        }
+                        const knownUnsupportedIdentifiers = new Set([
+                            'natives_blob.bin', 
+                            'v8_context_snapshot.bin',
+                            'snapshot_blob.bin',
+                            'image_net_labels.json',
+                            'package.json',
+                            'models.json',
+                            'LICENSE.meta',
+                            'input_0.pb', 
+                            'output_0.pb',
+                            'object-detection.pbtxt',
+                        ]);
+                        let skip = knownUnsupportedIdentifiers.has(identifier);
+                        if (!skip && (extension === 'pbtxt' || extension === 'prototxt')) {
+                            if (identifier.includes('label_map') || identifier.includes('labels_map') || identifier.includes('labelmap')) {
+                                const tags = context.tags('pbtxt');
+                                if (tags.size === 1 && (tags.has('item') || tags.has('entry'))) {
+                                    skip = true;
+                                }
                             }
                         }
+                        const buffer = context.buffer;
+                        const content = Array.from(buffer.subarray(0, Math.min(16, buffer.length))).map((c) => (c < 16 ? '0' : '') + c.toString(16)).join('');
+                        throw new ModelError("Unsupported file content (" + content + ") for extension '." + extension + "' in '" + identifier + "'.", !skip);
                     }
-                    throw new ModelError("Unsupported file content for extension '." + extension + "' in '" + identifier + "'.", !skip);
-                }
-            };
-            return nextModule();
+                };
+                return nextModule();
+            });
         });
     }
 
@@ -1276,7 +1245,7 @@ view.ModelFactoryService = class {
             if (extension == 'gz' || extension == 'tgz') {
                 archive = new gzip.Archive(buffer);
                 if (archive.entries.length == 1) {
-                    let entry = archive.entries[0];
+                    const entry = archive.entries[0];
                     if (entry.name) {
                         identifier = entry.name;
                     }
@@ -1291,9 +1260,8 @@ view.ModelFactoryService = class {
             }
         }
         catch (error) {
-            let message = error && error.message ? error.message : error.toString();
-            message = message.endsWith('.') ? message.substring(0, message.length - 1) : message;
-            return Promise.reject(new ArchiveError(message + " in '" + identifier + "'."));
+            const message = error && error.message ? error.message : error.toString();
+            return Promise.reject(new ArchiveError(message.replace(/\.$/, '') + " in '" + identifier + "'."));
         }
 
         try {
@@ -1309,14 +1277,23 @@ view.ModelFactoryService = class {
                 }
                 case 'zip': {
                     archive = new zip.Archive(buffer);
+                    // PyTorch Zip archive
+                    if (archive.entries.some((e) => e.name.split('/').pop().split('\\').pop() === 'version') &&
+                        archive.entries.some((e) => e.name.split('/').pop().split('\\').pop() === 'data.pkl')) {
+                        return Promise.resolve(context);
+                    }
+                    // dl4j
+                    if (archive.entries.some((e) => e.name.split('/').pop().split('\\').pop() === 'coefficients.bin') &&
+                        archive.entries.some((e) => e.name.split('/').pop().split('\\').pop() === 'configuration.json')) {
+                        return Promise.resolve(context);
+                    }
                     break;
                 }
             }
         }
         catch (error) {
-            let message = error && error.message ? error.message : error.toString();
-            message = message.endsWith('.') ? message.substring(0, message.length - 1) : message;
-            return Promise.reject(new ArchiveError(message + " in '" + identifier + "'."));
+            const message = error && error.message ? error.message : error.toString();
+            return Promise.reject(new ArchiveError(message.replace(/\.$/, '') + " in '" + identifier + "'."));
         }
 
         if (!archive) {
@@ -1340,7 +1317,6 @@ view.ModelFactoryService = class {
             rootFolder = rootFolder == '/' ? '' : rootFolder;
             let matches = [];
             let entries = archive.entries.slice();
-            const sourceContext = context;
             const nextEntry = () => {
                 if (entries.length > 0) {
                     const entry = entries.shift();
@@ -1375,18 +1351,16 @@ view.ModelFactoryService = class {
                 }
                 else {
                     if (matches.length == 0) {
-                        return Promise.resolve(sourceContext);
-                        // return Promise.reject(new ArchiveError('Archive does not contain model file.'));
+                        return Promise.resolve(context);
                     }
-                    else if (matches.length > 1) {
-                        if (matches.length == 2 &&
-                            matches.some((e) => e.name.endsWith('.params')) &&
-                            matches.some((e) => e.name.endsWith('-symbol.json'))) {
-                            matches = matches.filter((e) => e.name.endsWith('.params'));
-                        }
-                        else {
-                            return Promise.reject(new ArchiveError('Archive contains multiple model files.'));
-                        }
+                    // MXNet
+                    if (matches.length == 2 &&
+                        matches.some((e) => e.name.endsWith('.params')) &&
+                        matches.some((e) => e.name.endsWith('-symbol.json'))) {
+                        matches = matches.filter((e) => e.name.endsWith('.params'));
+                    }
+                    if (matches.length > 1) {
+                        return Promise.reject(new ArchiveError('Archive contains multiple model files.'));
                     }
                     const match = matches[0];
                     return Promise.resolve(new ModelContext(new ArchiveContext(archive.entries, rootFolder, match.name, match.data)));
@@ -1416,18 +1390,31 @@ view.ModelFactoryService = class {
     }
 
     _filter(context) {
-        let moduleList = [];
-        let moduleMap = {};
         const identifier = context.identifier.toLowerCase();
-        for (const extension of this._extensions) {
-            if (identifier.endsWith(extension.extension)) {
-                if (!moduleMap[extension.id]) {
-                    moduleList.push(extension.id);
-                    moduleMap[extension.id] = true;
-                }
+        const list = this._extensions.filter((entry) => identifier.endsWith(entry.extension)).map((extry) => extry.id);
+        return Array.from(new Set(list));
+    }
+
+    _openSignature(context) {
+        const buffer = context.buffer;
+        if (context.buffer.length === 0) {
+            return Promise.reject(new ModelError("File has no content.", true));
+        }
+        const list = [
+            { name: 'Git LFS header', value: 'version https://git-lfs.github.com/spec/v1\n' },
+            { name: 'Git LFS header', value: 'oid sha256:' },
+            { name: 'HTML markup', value: '<html>' },
+            { name: 'HTML markup', value: '<!DOCTYPE html>' },
+            { name: 'HTML markup', value: '\n\n\n\n\n\n<!DOCTYPE html>' },
+            { name: 'ELF executable', value: '\x7FELF' }
+        ];
+        for (const item of list) {
+            if (buffer.length >= item.value.length &&
+                buffer.subarray(0, item.value.length).every((v, i) => v === item.value.charCodeAt(i))) {
+                return Promise.reject(new ModelError("Invalid file content. File contains " + item.name + ".", true));
             }
         }
-        return moduleList;
+        return Promise.resolve(context);
     }
 };
 

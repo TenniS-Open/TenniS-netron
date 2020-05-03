@@ -5,13 +5,12 @@
 
 var sklearn = sklearn || {};
 var long = long || { Long: require('long') };
-var marked = marked || require('marked');
 
 sklearn.ModelFactory = class {
 
     match(context) {
         const extension = context.identifier.split('.').pop().toLowerCase();
-        if (extension == 'pkl' || extension == 'joblib' || extension == 'model') {
+        if (extension == 'pkl' || extension == 'joblib' || extension == 'model' || extension == 'meta') {
             const buffer = context.buffer;
             if (buffer) {
                 // Reject PyTorch models with .pkl file extension.
@@ -38,8 +37,8 @@ sklearn.ModelFactory = class {
             try {
                 const unpickler = new pickle.Unpickler(context.buffer);
 
-                let constructorTable = {};
-                let functionTable = {};
+                const constructorTable = {};
+                const functionTable = {};
 
                 constructorTable['numpy.dtype'] = function(obj, align, copy) { 
                     switch (obj) {
@@ -112,15 +111,12 @@ sklearn.ModelFactory = class {
                         this.rawdata = state[4];
                     };
                     this.__read__ = function(unpickler) {
-                        let array = {};
-                        array.__type__ = this.subtype;
+                        const array = {};
+                        sklearn.Utility.applyType(array, this.subtype);
                         array.dtype = this.typecode;
                         array.shape = this.shape;
-                        let dims = 1;
-                        for (let i = 0; i < array.shape.length; i++) {
-                            dims = dims * array.shape[i];
-                        }
-                        let size = array.dtype.itemsize * dims;
+                        const dims = array.shape && array.shape.length > 0 ? array.shape.reduce((a, b) => a * b) : 1;
+                        const size = array.dtype.itemsize * dims;
                         if (typeof this.rawdata == 'string') {
                             array.data = unpickler.unescape(this.rawdata, size);
                             if (array.data.length != size) {
@@ -142,23 +138,20 @@ sklearn.ModelFactory = class {
                         this.allow_mmap = state.allow_mmap;
                     };
                     this.__read__ = function(unpickler) {
-                        let size = 1;
-                        for (const dimension of this.shape) {
-                            size *= dimension;
-                        }
                         if (this.dtype.name == 'object') {
                             return unpickler.load(function_call, null);
                         }
                         else {
-                            this.data = unpickler.read(size * this.dtype.itemsize);
+                            const size = this.dtype.itemsize * this.shape.reduce((a, b) => a * b);
+                            this.data = unpickler.read(size);
                         }
-
-                        let array = {};
-                        array.__type__ = this.subclass;
-                        array.dtype = this.dtype;
-                        array.shape = this.shape;
-                        array.data = this.data;
-                        return array;
+                        const obj = {
+                            dtype: this.dtype,
+                            shape: this.shape,
+                            data: this.data,
+                        };
+                        sklearn.Utility.applyType(obj, this.subclass);
+                        return obj;
                     };
                 };
 
@@ -170,13 +163,20 @@ sklearn.ModelFactory = class {
                 constructorTable['sklearn.calibration.CalibratedClassifierCV​'] = function() {};
                 constructorTable['sklearn.compose._column_transformer.ColumnTransformer'] = function() {};
                 constructorTable['sklearn.compose._target.TransformedTargetRegressor'] = function() {};
+                constructorTable['sklearn.cluster._dbscan.DBSCAN'] = function() {};
                 constructorTable['sklearn.decomposition.PCA'] = function() {};
                 constructorTable['sklearn.decomposition.pca.PCA'] = function() {};
                 constructorTable['sklearn.decomposition.truncated_svd.TruncatedSVD'] = function() {};
                 constructorTable['sklearn.discriminant_analysis.LinearDiscriminantAnalysis'] = function() {};
                 constructorTable['sklearn.externals.joblib.numpy_pickle.NumpyArrayWrapper'] = constructorTable['joblib.numpy_pickle.NumpyArrayWrapper'];
                 constructorTable['sklearn.externals.joblib.numpy_pickle.NDArrayWrapper'] = function() {};
+                constructorTable['sklearn.ensemble._bagging.BaggingClassifier'] = function() {};
+                constructorTable['sklearn.ensemble._forest.RandomForestRegressor'] = function() {};
                 constructorTable['sklearn.ensemble._forest.RandomForestClassifier'] = function() {};
+                constructorTable['sklearn.ensemble._forest.ExtraTreesClassifier'] = function() {};
+                constructorTable['sklearn.ensemble._gb_losses.BinomialDeviance'] = function() {};
+                constructorTable['sklearn.ensemble._gb.GradientBoostingClassifier'] = function() {};
+                constructorTable['sklearn.ensemble._voting.VotingClassifier'] = function() {};
                 constructorTable['sklearn.ensemble.forest.RandomForestClassifier'] = function() {};
                 constructorTable['sklearn.ensemble.forest.RandomForestRegressor'] = function() {};
                 constructorTable['sklearn.ensemble.forest.ExtraTreesClassifier'] = function() {};
@@ -195,10 +195,12 @@ sklearn.ModelFactory = class {
                 constructorTable['sklearn.impute._base.SimpleImputer'] = function() {};
                 constructorTable['sklearn.impute.SimpleImputer'] = function() {};
                 constructorTable['sklearn.linear_model._base.LinearRegression'] = function() {};
+                constructorTable['sklearn.linear_model._coordinate_descent.ElasticNet'] = function() {};
                 constructorTable['sklearn.linear_model.base.LinearRegression'] = function() {};
                 constructorTable['sklearn.linear_model.sgd_fast.Hinge'] = function() {};
                 constructorTable['sklearn.linear_model.LogisticRegression'] = function() {};
                 constructorTable['sklearn.linear_model.logistic.LogisticRegression'] = function() {};
+                constructorTable['sklearn.linear_model._logistic.LogisticRegression'] = function() {};
                 constructorTable['sklearn.linear_model.LassoLars​'] = function() {};
                 constructorTable['sklearn.linear_model.ridge.Ridge'] = function() {};
                 constructorTable['sklearn.linear_model.sgd_fast.Log'] = function() {};
@@ -214,12 +216,13 @@ sklearn.ModelFactory = class {
                 constructorTable['sklearn.neighbors.kd_tree.newObj'] = function() {};
                 constructorTable['sklearn.neighbors.KNeighborsClassifier​'] = function() {};
                 constructorTable['sklearn.neighbors.KNeighborsRegressor'] = function() {};
+                constructorTable['sklearn.neural_network._multilayer_perceptron.MLPClassifier'] = function() {};
+                constructorTable['sklearn.neural_network._stochastic_optimizers.AdamOptimizer'] = function() {};
+                constructorTable['sklearn.neural_network._stochastic_optimizers.SGDOptimizer'] = function() {};
                 constructorTable['sklearn.neural_network.rbm.BernoulliRBM'] = function() {};
                 constructorTable['sklearn.neural_network.multilayer_perceptron.MLPClassifier'] = function() {};
                 constructorTable['sklearn.neural_network.multilayer_perceptron.MLPRegressor'] = function() {};
                 constructorTable['sklearn.neural_network.stochastic_gradient.SGDClassifier'] = function() {};
-                constructorTable['sklearn.neural_network._stochastic_optimizers.AdamOptimizer'] = function() {};
-                constructorTable['sklearn.neural_network._stochastic_optimizers.SGDOptimizer'] = function() {};
                 constructorTable['sklearn.pipeline.Pipeline'] = function() {};
                 constructorTable['sklearn.pipeline.FeatureUnion'] = function() {};
                 constructorTable['sklearn.preprocessing._data.RobustScaler'] = function() {};
@@ -233,17 +236,22 @@ sklearn.ModelFactory = class {
                 constructorTable['sklearn.preprocessing.data.MinMaxScaler'] = function() {};
                 constructorTable['sklearn.preprocessing.data.Normalizer'] = function() {};
                 constructorTable['sklearn.preprocessing.data.OneHotEncoder'] = function() {};
+                constructorTable['sklearn.preprocessing.data.PolynomialFeatures'] = function() {};
                 constructorTable['sklearn.preprocessing.data.PowerTransformer'] = function() {};
                 constructorTable['sklearn.preprocessing.data.RobustScaler'] = function() {};
+                constructorTable['sklearn.preprocessing.data.QuantileTransformer'] = function() {};
                 constructorTable['sklearn.preprocessing.data.StandardScaler'] = function() {};
                 constructorTable['sklearn.preprocessing.imputation.Imputer'] = function() {};
                 constructorTable['sklearn.preprocessing.label.LabelBinarizer'] = function() {};
                 constructorTable['sklearn.preprocessing.label.LabelEncoder'] = function() {};
                 constructorTable['sklearn.preprocessing.label.MultiLabelBinarizer'] = function() {};
+                constructorTable['sklearn.svm._classes.SVC'] = function() {};
                 constructorTable['sklearn.svm.classes.LinearSVC'] = function() {};
                 constructorTable['sklearn.svm.classes.SVC'] = function() {};
                 constructorTable['sklearn.svm.classes.SVR'] = function() {};
                 constructorTable['sklearn.tree._classes.DecisionTreeClassifier'] = function() {};
+                constructorTable['sklearn.tree._classes.DecisionTreeRegressor'] = function() {};
+                constructorTable['sklearn.tree._classes.ExtraTreeClassifier'] = function() {};
                 constructorTable['sklearn.tree._tree.Tree'] = function(n_features, n_classes, n_outputs) {
                     this.n_features = n_features;
                     this.n_classes = n_classes;
@@ -268,8 +276,8 @@ sklearn.ModelFactory = class {
 
                 functionTable['copy_reg._reconstructor'] = function(cls, base, state) {
                     if (base == '__builtin__.object') {
-                        let obj = {};
-                        obj.__type__ = cls;
+                        const obj = {};
+                        sklearn.Utility.applyType(obj, cls);
                         return obj;
                     }
                     if (base == '__builtin__.tuple') {
@@ -285,7 +293,7 @@ sklearn.ModelFactory = class {
                             data[i] = rawData.charCodeAt(i);
                         }
                     }
-                    let dataView = new DataView(data.buffer, data.byteOffset, data.byteLength);
+                    const dataView = new DataView(data.buffer, data.byteOffset, data.byteLength);
                     switch (dtype.name) {
                         case 'uint8':
                             return dataView.getUint8(0);
@@ -308,8 +316,8 @@ sklearn.ModelFactory = class {
                     // _data = ndarray.__new__(baseclass, baseshape, basetype)
                     // _mask = ndarray.__new__(ndarray, baseshape, make_mask_descr(basetype))
                     // return subtype.__new__(subtype, _data, mask=_mask, dtype=basetype,)
-                    let obj = {};
-                    obj.__type__ = subtype;
+                    const obj = {};
+                    sklearn.Utility.applyType(obj, subtype);
                     return obj;
                 };
                 functionTable['numpy.random.__RandomState_ctor'] = function() {
@@ -322,9 +330,9 @@ sklearn.ModelFactory = class {
                     return {};
                 };
                 functionTable['collections.OrderedDict'] = function(args) {
-                    let obj = [];
+                    const obj = new Map();
                     obj.__setitem__ = function(key, value) {
-                        obj.push({ key: key, value: value });
+                        obj.set(key, value);
                     };
                     if (args) {
                         for (const arg of args) {
@@ -333,8 +341,15 @@ sklearn.ModelFactory = class {
                     }
                     return obj;
                 };
-                functionTable['__builtin__.bytearray'] = function(data, encoding) {
-                    return { data: data, encoding: encoding };
+                functionTable['__builtin__.bytearray'] = function(source, encoding /*, errors */) {
+                    if (encoding === 'latin-1') {
+                        const array = new Uint8Array(source.length);
+                        for (let i = 0; i < source.length; i++) {
+                            array[i] = source.charCodeAt(i);
+                        }
+                        return array;
+                    }
+                    throw new sklearn.Error("Unsupported bytearray encoding '" + JSON.stringify(encoding) + "'.");
                 };
                 functionTable['builtins.bytearray'] = function(data) {
                     return { data: data };
@@ -346,19 +361,20 @@ sklearn.ModelFactory = class {
                     return name;
                 }
 
-                let unknownNameMap = new Set();
-                let knownPackageMap = new Set([ 
+                const unknownNameMap = new Set();
+                const knownPackageMap = new Set([ 
                     'sklearn', 'collections', '__builtin__', 'builtins',
                     'copy_reg', 'joblib','xgboost', 'lightgbm', 'gensim', 'numpy'
                 ]);
 
-                let function_call = (name, args) => {
-                    let func = functionTable[name];
+                const function_call = (name, args) => {
+                    const func = functionTable[name];
                     if (func) {
                         return func.apply(null, args);
                     }
-                    let obj = { __type__: name };
-                    let constructor = constructorTable[name];
+                    const obj = {};
+                    sklearn.Utility.applyType(obj, name);
+                    const constructor = constructorTable[name];
                     if (constructor) {
                         constructor.apply(obj, args);
                     }
@@ -372,46 +388,57 @@ sklearn.ModelFactory = class {
                 };
 
                 obj = unpickler.load(function_call, null);
-                if (obj && Array.isArray(obj)) {
-                    throw new sklearn.Error('Array is not a valid root object.');
-                }
 
-                let find_weight_dict = function(dicts) {
+                const find_weights = function(objs) {
 
-                    for (const dict of dicts) {
+                    for (const dict of objs) {
                         if (dict && !Array.isArray(dict)) {
-                            let list = [];
+                            const weights = new Map();
                             for (const key in dict) {
                                 const value = dict[key]
                                 if (key != 'weight_order' && key != 'lr') {
-                                    if (!key ||
-                                        !value.__type__ || !value.__type__ == 'numpy.ndarray') {
-                                        list = null;
-                                        break;
+                                    if (!key || !sklearn.Utility.isTensor(value)) {
+                                        return null;
                                     }
-                                    list.push({ key: key, value: value });
+                                    weights.set(key, value);
                                 }
                             }
-                            if (list) {
-                                return list;
+                            return weights;
+                        }
+                    }
+
+                    for (const list of objs) {
+                        if (list && Array.isArray(list)) {
+                            const weights = new Map();
+                            for (let i = 0; i < list.length; i++) {
+                                const value = list[i];
+                                if (!sklearn.Utility.isTensor(value, 'numpy.ndarray')) {
+                                    return null;
+                                }
+                                weights.set(i.toString(), value);
                             }
+                            return weights;
                         }
                     }
                     return null;
                 }
 
-                weights = find_weight_dict([ obj, obj.blobs ]);
+                weights = find_weights([ obj, obj.blobs ]);
                 if (weights) {
                     obj = null;
                 }
-                if (!weights && (!obj || !obj.__type__)) {
-                    throw new sklearn.Error('Root object has no type.');
+                if (!weights) {
+                    if (!obj) {
+                        throw new sklearn.Error('No root object.');
+                    }
+                    if (Array.isArray(obj)) {
+                        throw new sklearn.Error('Array is not a valid root object.');
+                    }
                 }
             }
             catch (error) {
-                let message = error && error.message ? error.message : error.toString();
-                message = message.endsWith('.') ? message.substring(0, message.length - 1) : message;
-                throw new sklearn.Error(message + " in '" + identifier + "'.");
+                const message = error && error.message ? error.message : error.toString();
+                throw new sklearn.Error(message.replace(/\.$/, '') + " in '" + identifier + "'.");
             }
     
             return sklearn.Metadata.open(host).then((metadata) => {
@@ -420,9 +447,8 @@ sklearn.ModelFactory = class {
                 }
                 catch (error) {
                     host.exception(error, false);
-                    let message = error && error.message ? error.message : error.toString();
-                    message = message.endsWith('.') ? message.substring(0, message.length - 1) : message;
-                    throw new sklearn.Error(message + " in '" + identifier + "'.");
+                    const message = error && error.message ? error.message : error.toString();
+                    throw new sklearn.Error(message.replace(/\.$/, '') + " in '" + identifier + "'.");
                 }
             });
         });
@@ -432,11 +458,18 @@ sklearn.ModelFactory = class {
 sklearn.Model = class {
 
     constructor(metadata, obj, weights) {
-        this._format = 'scikit-learn';
-        if (obj && obj._sklearn_version) {
-            this._format += ' ' + obj._sklearn_version.toString();
+        if (obj && obj.__module__ && obj.__module__.startsWith('sklearn.')) {
+            this._format = 'scikit-learn' + (obj._sklearn_version ? ' v' + obj._sklearn_version.toString() : '');
         }
-
+        else if (obj && obj.__module__ && obj.__module__.startsWith('xgboost.')) {
+            this._format = 'XGBoost' + (obj._sklearn_version ? ' v' + obj._sklearn_version.toString() : '');
+        }
+        else if (obj && obj.__module__ && obj.__module__.startsWith('nolearn.lasagne.')) {
+            this._format = 'Lasagne';
+        }
+        else {
+            this._format = 'Pickle'
+        }
         this._graphs = [];
         this._graphs.push(new sklearn.Graph(metadata, obj, weights));
     }
@@ -452,14 +485,14 @@ sklearn.Model = class {
 
 sklearn.Graph = class {
 
-    constructor(metadata, obj, array_dict) {
+    constructor(metadata, obj, weights) {
         this._metadata = metadata;
         this._nodes = [];
         this._groups = false;
 
         if (obj) {
             let input = 'data';
-            switch (obj.__type__) {
+            switch ([ obj.__module__, obj.__name__].join('.')) {
                 case 'sklearn.pipeline.Pipeline':
                     this._groups = true;
                     for (const step of obj.steps) {
@@ -472,44 +505,43 @@ sklearn.Graph = class {
                     break;
             }
         }
-        else if (array_dict) {
-            let group_map = {};
-            let groups = [];
-            for (const array of array_dict) {
-                const key = array.key.split('_');
-                let id = null;
-                if (key.length > 1) {
-                    array.name = key.pop();
-                    id = key.join('_');
-                }
-                else {
-                    array.name = '?';
-                    id = key.join('_');
-                }
+        else if (weights instanceof Map) {
+            const group_map = {};
+            const groups = [];
+            for (const pair of weights) {
+                const key = pair[0];
+                const parts = key.split('_');
+                const value = pair[1];
+                const name = parts.length > 1 ? parts.pop() : '?';
+                const id = parts.join('_');
                 let group = group_map[id];
                 if (!group) {
                     group = { id: id, arrays: [] };
                     groups.push(group);
                     group_map[id] = group;
                 }
-                group.arrays.push(array);
+                group.arrays.push({
+                    key: key,
+                    name: name,
+                    value: value
+                });
             }
             this._nodes = this._nodes.concat(groups.map((group) => {
-                let inputs = group.arrays.map((array) => {
+                const inputs = group.arrays.map((array) => {
                     return new sklearn.Parameter(array.name, [ 
                         new sklearn.Argument(array.key, null, new sklearn.Tensor(array.key, array.value))
                     ]);
                 });
-                return new sklearn.Node(this._metadata, '', group.id, { __type__: 'sklearn._.Weights' }, inputs, []);
+                return new sklearn.Node(this._metadata, '', group.id, { __module__: 'sklearn._', __name__: 'Weights' }, inputs, []);
             }));
         }
     }
     _add(group, name, obj, inputs, outputs) {
-        let initializers = [];
+        const initializers = [];
         for (const key of Object.keys(obj)) {
             if (!key.startsWith('_')) {
-                let value = obj[key];
-                if (value && value.__type__ && value.__type__ == 'numpy.ndarray') {
+                const value = obj[key];
+                if (sklearn.Utility.isTensor(value)) {
                     initializers.push(new sklearn.Tensor(key, value));
                 }
             }
@@ -523,8 +555,7 @@ sklearn.Graph = class {
         outputs = outputs.map((output) => {
             return new sklearn.Parameter(output, [ new sklearn.Argument(output, null, null) ]);
         });
-        let node = new sklearn.Node(this._metadata, group, name, obj, inputs, outputs);
-        this._nodes.push(node);
+        this._nodes.push(new sklearn.Node(this._metadata, group, name, obj, inputs, outputs));
     }
 
     get groups() { 
@@ -564,14 +595,18 @@ sklearn.Parameter = class {
 };
 
 sklearn.Argument = class {
-    constructor(id, type, initializer) {
-        this._id = id;
+
+    constructor(name, type, initializer) {
+        if (typeof name !== 'string') {
+            throw new sklearn.Error("Invalid argument identifier '" + JSON.stringify(name) + "'.");
+        }
+        this._name = name;
         this._type = type || null;
         this._initializer = initializer || null;
     }
 
-    get id() {
-        return this._id;
+    get name() {
+        return this._name;
     }
 
     get type() {
@@ -590,40 +625,29 @@ sklearn.Node = class {
 
     constructor(metadata, group, name, obj, inputs, outputs) {
         this._metadata = metadata;
-        if (group) {
-            this._group = group;
-        }
-        let operator = obj.__type__.split('.');
-        this._type = operator.pop();
-        this._package = operator.join('.');
+        this._group = group || '';
+        this._type = (obj.__module__ && obj.__name__) ? (obj.__module__ + '.' + obj.__name__) : (obj.__name__ ? obj.__name__ : 'Object');
         this._name = name || '';
         this._inputs = inputs;
         this._outputs = outputs;
         this._attributes = [];
         this._initializers = [];
-
-        for (const key of Object.keys(obj)) {
-            if (!key.startsWith('_')) {
-                let value = obj[key];
-
-                if (Array.isArray(value) || Number.isInteger(value) || value == null) {
-                    this._attributes.push(new sklearn.Attribute(this._metadata, this, key, value));
+        for (const name of Object.keys(obj)) {
+            if (!name.startsWith('_')) {
+                const value = obj[name];
+                if (value && !Array.isArray(value) && value === Object(value) && sklearn.Utility.isTensor(value)) {
+                    this._initializers.push(new sklearn.Tensor(name, value));
                 }
                 else {
-                    switch (value.__type__) {
-                        case 'numpy.ndarray':
-                            this._initializers.push(new sklearn.Tensor(key, value));
-                            break;
-                        default: 
-                            this._attributes.push(new sklearn.Attribute(this._metadata, this, key, value));
-                    }
+                    const schema = metadata.attribute(this.operator, name);
+                    this._attributes.push(new sklearn.Attribute(schema, name, value));
                 }
             }
         }
     }
 
     get operator() {
-        return this._type;
+        return this._type.split('.').pop();
     }
 
     get name() {
@@ -634,50 +658,8 @@ sklearn.Node = class {
         return this._group ? this._group : null;
     }
 
-    get documentation() {
-        let schema = this._metadata.getSchema(this.operator);
-        if (schema) {
-            schema = JSON.parse(JSON.stringify(schema));
-            schema.name = this.operator;
-            if (schema.description) {
-                schema.description = marked(schema.description);
-            }
-            if (schema.attributes) {
-                for (const attribute of schema.attributes) {
-                    if (attribute.description) {
-                        attribute.description = marked(attribute.description);
-                    }
-                }
-            }
-            if (schema.inputs) {
-                for (const input of schema.inputs) {
-                    if (input.description) {
-                        input.description = marked(input.description);
-                    }
-                }
-            }
-            if (schema.outputs) {
-                for (const output of schema.outputs) {
-                    if (output.description) {
-                        output.description = marked(output.description);
-                    }
-                }
-            }
-            if (schema.references) {
-                for (const reference of schema.references) {
-                    if (reference) {
-                        reference.description = marked(reference.description);
-                    }
-                }
-            }
-            return schema;
-        }
-        return '';
-    }
-
-    get category() {
-        const schema = this._metadata.getSchema(this.operator);
-        return (schema && schema.category) ? schema.category : '';
+    get metadata() {
+        return this._metadata.type(this.operator);
     }
 
     get inputs() {
@@ -695,11 +677,9 @@ sklearn.Node = class {
 
 sklearn.Attribute = class {
 
-    constructor(metadata, node, name, value) {
+    constructor(schema, name, value) {
         this._name = name;
         this._value = value;
-
-        const schema = metadata.getAttributeSchema(node.operator, this._name);
         if (schema) {
             if (Object.prototype.hasOwnProperty.call(schema, 'option') && schema.option == 'optional' && this._value == null) {
                 this._visible = false;
@@ -737,11 +717,11 @@ sklearn.Attribute = class {
         if (a !== a) {
             return b !== b;
         }
-        let type = typeof a;
+        const type = typeof a;
         if (type !== 'function' && type !== 'object' && typeof b != 'object') {
             return false;
         }
-        let className = toString.call(a);
+        const className = toString.call(a);
         if (className !== toString.call(b)) {
             return false;
         }
@@ -773,7 +753,7 @@ sklearn.Attribute = class {
             }
         }
 
-        let keys = Object.keys(a);
+        const keys = Object.keys(a);
         let size = keys.length;
         if (Object.keys(b).length != size) {
             return false;
@@ -792,14 +772,14 @@ sklearn.Tensor = class {
 
     constructor(name, value) {
         this._name = name;
-        switch (value.__type__) {
-            case 'numpy.ndarray':
-                this._kind = 'Array';
-                this._type = new sklearn.TensorType(value.dtype.name, new sklearn.TensorShape(value.shape));
-                this._data = value.data;
-                break;
-            default:
-                throw new sklearn.Error("Unknown tensor type '" + value.__type__ + "'.");
+        if (sklearn.Utility.isTensor(value)) {
+            this._kind = 'Array';
+            this._type = new sklearn.TensorType(value.dtype.name, new sklearn.TensorShape(value.shape));
+            this._data = value.data;
+        }
+        else {
+            const type = [ value.__module__, value.__name__ ].join('.');
+            throw new sklearn.Error("Unknown tensor type '" + type + "'.");
         }
     }
 
@@ -820,7 +800,7 @@ sklearn.Tensor = class {
     }
 
     get value() {
-        let context = this._context();
+        const context = this._context();
         if (context.state) {
             return null;
         }
@@ -829,12 +809,12 @@ sklearn.Tensor = class {
     }
 
     toString() {
-        let context = this._context();
+        const context = this._context();
         if (context.state) {
             return '';
         }
         context.limit = 10000;
-        let value = this._decode(context, 0);
+        const value = this._decode(context, 0);
         switch (this._type.dataType) {
             case 'int64':
             case 'uint64':
@@ -844,7 +824,7 @@ sklearn.Tensor = class {
     }
 
     _context() {
-        let context = {};
+        const context = {};
         context.index = 0;
         context.count = 0;
         context.state = null;
@@ -879,8 +859,8 @@ sklearn.Tensor = class {
     }
 
     _decode(context, dimension) {
-        let results = [];
-        let size = context.dimensions[dimension];
+        const results = [];
+        const size = context.dimensions[dimension];
         if (dimension == context.dimensions.length - 1) {
             for (let i = 0; i < size; i++) {
                 if (context.count > context.limit) {
@@ -935,7 +915,7 @@ sklearn.Tensor = class {
 
     static _stringify(value, indentation, indent) {
         if (Array.isArray(value)) {
-            let result = [];
+            const result = [];
             result.push('[');
             const items = value.map((item) => sklearn.Tensor._stringify(item, indentation + indent, indent));
             if (items.length > 0) {
@@ -999,39 +979,54 @@ sklearn.Metadata = class {
     }
 
     constructor(data) {
-        this._map = {};
-        this._attributeCache = {};
+        this._map = new Map();
+        this._attributeCache = new Map();
         if (data) {
-            let items = JSON.parse(data);
+            const items = JSON.parse(data);
             if (items) {
                 for (const item of items) {
                     if (item.name && item.schema) {
-                        this._map[item.name] = item.schema;
+                        item.schema.name = item.name;
+                        this._map.set(item.name, item.schema);
                     }
                 }
             }
         }
     }
 
-    getSchema(operator) {
-        return this._map[operator] || null;
+    type(operator) {
+        return this._map.get(operator);
     }
 
-    getAttributeSchema(operator, name) {
-        let map = this._attributeCache[operator];
-        if (!map) {
-            map = {};
-            const schema = this.getSchema(operator);
+    attribute(operator, name) {
+        const key = operator + ':' + name;
+        if (!this._attributeCache.has(key)) {
+            const schema = this.type(operator);
             if (schema && schema.attributes && schema.attributes.length > 0) {
                 for (const attribute of schema.attributes) {
-                    map[attribute.name] = attribute;
+                    this._attributeCache.set(operator + ':' + attribute.name, attribute);
                 }
             }
-            this._attributeCache[operator] = map;
+            if (!this._attributeCache.has(key)) {
+                this._attributeCache.set(key, null);
+            }
         }
-        return map[name] || null;
+        return this._attributeCache.get(key);
     }
 };
+
+sklearn.Utility = class {
+
+    static isTensor(obj) {
+        return obj && obj.__module__ === 'numpy' && obj.__name__ === 'ndarray';
+    }
+
+    static applyType(obj, name){
+        const parts = name.split('.');
+        obj.__name__ = parts.pop();
+        obj.__module__ = parts.join('.');
+    }
+}
 
 sklearn.Error = class extends Error {
 

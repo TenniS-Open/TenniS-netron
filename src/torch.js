@@ -36,9 +36,8 @@ torch.ModelFactory = class {
                 return new torch.Model(metadata, root);
             }
             catch (error) {
-                let message = error && error.message ? error.message : error.toString();
-                message = message.endsWith('.') ? message.substring(0, message.length - 1) : message;
-                throw new torch.Error(message + " in '" + identifier + "'.");
+                const message = error && error.message ? error.message : error.toString();
+                throw new torch.Error(message.replace(/\.$/, '') + " in '" + identifier + "'.");
             }
         });
     }
@@ -212,14 +211,17 @@ torch.Parameter = class {
 
 torch.Argument = class {
 
-    constructor(id, type, initializer) {
-        this._id = id;
+    constructor(name, type, initializer) {
+        if (typeof name !== 'string') {
+            throw new torch.Error("Invalid argument identifier '" + JSON.stringify(name) + "'.");
+        }
+        this._name = name;
         this._type = type;
         this._initializer = initializer;
     }
 
-    get id() {
-        return this._id;
+    get name() {
+        return this._name;
     }
 
     get type() {
@@ -405,13 +407,8 @@ torch.Node = class {
         return this._group;
     }
 
-    get category() {
-        const schema = this._metadata.type(this._type);
-        return (schema && schema.category) ? schema.category : '';
-    }
-
-    get documentation() {
-        return '';
+    get metadata() {
+        return this._metadata.type(this._type);
     }
 
     get attributes() {
@@ -640,9 +637,8 @@ torch.Metadata = class {
             let items = JSON.parse(data);
             if (items) {
                 for (const item of items) {
-                    if (item.name && item.schema) {
-                        this._map[item.name] = item.schema;
-                    }
+                    item.schema.name = item.name;
+                    this._map[item.name] = item.schema;
                 }
             }
         }
@@ -851,7 +847,7 @@ torch.T7Reader = class {
     }
 
     read() {
-        let type = this.int32();
+        const type = this.int32();
         switch (type) {
             case 0: return null;
             case 1: return this.float64();
@@ -929,13 +925,13 @@ torch.T7Reader = class {
     }
 
     table() {
-        let index = this.int32();
+        const index = this.int32();
         if (this._memo.has(index)) {
             return this._memo.get(index);
         }
         let table = {};
         this._memo.set(index, table);
-        let size = this.int32();
+        const size = this.int32();
         let convert = true;
         let sum = 0;
         for (let i = 0; i < size; i++) {
@@ -966,20 +962,20 @@ torch.T7Reader = class {
     }
 
     function() {
-        let index = this.int32();
+        const index = this.int32();
         if (this._memo.has(index)) {
             return this._memo.get(index);
         }
-        let size = this.int32();
-        let dumped = this.bytes(size);
-        let upvalues = this.read();
-        let func = { __type__: 'Function', size: size, dumped: dumped, upvalues: upvalues };
+        const size = this.int32();
+        const dumped = this.bytes(size);
+        const upvalues = this.read();
+        const func = { __type__: 'Function', size: size, dumped: dumped, upvalues: upvalues };
         this._memo.set(index, func);
         return func;
     }
 
     nn(obj) {
-        let attributes = this.read();
+        const attributes = this.read();
         if (attributes != null) {
             for (const key of Object.keys(attributes)) {
                 obj[key] = attributes[key];
@@ -988,7 +984,7 @@ torch.T7Reader = class {
     }
 
     tensor(obj, dataType) {
-        let dim = this.int32();
+        const dim = this.int32();
         obj.dataType = dataType;
         obj.size = this.int64s(dim);
         obj.stride = this.int64s(dim);
@@ -1030,8 +1026,8 @@ torch.BinaryReader = class {
 
     constructor(buffer) {
         this._buffer = buffer;
-        this._position = 0;
         this._dataView = new DataView(this._buffer.buffer, this._buffer.byteOffset, this._buffer.byteLength);
+        this._position = 0;
         this._textDecoder = new TextDecoder('ascii');
     }
 
@@ -1039,38 +1035,46 @@ torch.BinaryReader = class {
         this._position = 0;
     }
 
+    skip(offset) {
+        this._position += offset;
+        if (this._position > this._buffer.length) {
+            throw new torch.Error('Expected ' + (this._position - this._buffer.length) + ' more bytes. The file might be corrupted. Unexpected end of file.');
+        }
+    }
+
     boolean() {
         return this.int32() == 1;
     }
 
-    bytes(size) {
-        let data = this._buffer.subarray(this._position, this._position + size);
-        this._position += size;
-        return data;
+    bytes(length) {
+        const position = this._position;
+        this.skip(length);
+        return this._buffer.subarray(position, this._position);
     }
 
     int8() {
-        let value = this._dataView.getInt8(this._position, true);
-        this._position += 1;
-        return value;
+        const position = this._position;
+        this.skip(1);
+        return this._dataView.getInt8(position, true);
     }
 
     int16() {
-        let value = this._dataView.getInt16(this._position, true);
-        this._position += 2;
-        return value;
+        const position = this._position;
+        this.skip(2);
+        return this._dataView.getInt16(position, true);
     }
 
     int32() {
-        let value = this._dataView.getInt32(this._position, true);
-        this._position += 4;
-        return value;
+        const position = this._position;
+        this.skip(4);
+        return this._dataView.getInt32(position, true);
     }
 
     int64() {
-        let lo = this._dataView.getUint32(this._position, true);
-        let hi = this._dataView.getUint32(this._position + 4, true);
-        this._position += 8;
+        const position = this._position;
+        this.skip(8);
+        const lo = this._dataView.getUint32(position, true);
+        const hi = this._dataView.getUint32(position + 4, true);
         return new long.Long(lo, hi, false).toNumber();
     }
 
@@ -1083,21 +1087,19 @@ torch.BinaryReader = class {
     }
     
     float32() {
-        let value = this._dataView.getFloat32(this._position, true);
-        this._position += 4;
-        return value;
+        const position = this._position;
+        this.skip(4);
+        return this._dataView.getFloat32(position, true);
     }
 
     float64() {
-        let value = this._dataView.getFloat64(this._position, true);
-        this._position += 8;
-        return value;
+        const position = this._position;
+        this.skip(8);
+        return this._dataView.getFloat64(position, true);
     }
 
     string() {
-        let size = this.int32();
-        let buffer = this.bytes(size);
-        return this._textDecoder.decode(buffer);
+        return this._textDecoder.decode(this.bytes(this.int32()));
     }
 
     storage(size, itemSize) {
@@ -1120,9 +1122,9 @@ torch.TextReader = class {
     }
 
     line(size) {
-        let start = this._position;
+        const start = this._position;
         while (this._position < this._buffer.length && size > -1) {
-            let c = this._buffer[this._position++];
+            const c = this._buffer[this._position++];
             if (c == this._separator) {
                 return this._buffer.slice(start, this._position - 1);
             }
@@ -1198,7 +1200,7 @@ torch.TextReader = class {
         }
         const number = Number.parseFloat(token);
         if (Number.isNaN(token - number)) {
-            throw new Error("Couldn't parse float '" + token + "'.");
+            throw new torch.Error("Couldn't parse float '" + token + "'.");
         }
         return number;
     }

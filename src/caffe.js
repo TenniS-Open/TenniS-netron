@@ -5,7 +5,6 @@ var caffe = caffe || {};
 var long = long || { Long: require('long') };
 var protobuf = protobuf || require('protobufjs');
 var prototxt = prototxt || require('protobufjs/ext/prototxt');
-var marked = marked || require('marked');
 
 caffe.ModelFactory = class {
 
@@ -73,9 +72,8 @@ caffe.ModelFactory = class {
                                     return this._openNetParameterText(metadata, context.identifier, text, host);
                                 }).catch((error) => {
                                     if (error) {
-                                        let message = error && error.message ? error.message : error.toString();
-                                        message = message.endsWith('.') ? message.substring(0, message.length - 1) : message;
-                                        throw new caffe.Error("Failed to load '" + file + "' (" + message + ").");
+                                        const message = error && error.message ? error.message : error.toString();
+                                        throw new caffe.Error("Failed to load '" + file + "' (" + message.replace(/\.$/, '') + ").");
                                     }
                                 });
                             }
@@ -112,7 +110,7 @@ caffe.ModelFactory = class {
                     message[tag] = caffe.ModelFactory._decodeText(reader);
                     return;
                 }  
-                else if (message.constructor.name.endsWith('Parameter')) {
+                else if (message.constructor.name.endsWith('Parameter') || message.constructor.name === 'ParamSpec') {
                     if (message[tag]) {
                         if (!Array.isArray(message[tag])) {
                             message[tag] = [ message[tag] ];
@@ -390,20 +388,20 @@ caffe.Parameter = class {
 
 caffe.Argument = class {
 
-    constructor(id, type, initializer) {
-        this._id = id;
+    constructor(name, type, initializer) {
+        if (typeof name !== 'string') {
+            throw new caffe.Error("Invalid argument identifier '" + JSON.stringify(name) + "'.");
+        }
+        this._name = name;
         this._type = type || null;
         this._initializer = initializer || null;
     }
 
-    get id() {
-        return this._id;
+    get name() {
+        return this._name;
     }
 
     get type() {
-        if (this._initializer) {
-            return this._initializer.type;
-        }
         return this._type;
     }
 
@@ -495,41 +493,30 @@ caffe.Node = class {
                 break;
         }
 
-        const schema = this._metadata.getSchema(this.operator);
+        const schema = this._metadata.type(this.operator);
 
         this._inputs = [];
-        let inputs = layer.input.concat(initializers);
+        const inputs = layer.input.concat(initializers);
         let inputIndex = 0;
         if (schema && schema.inputs) {
             for (const inputDef of schema.inputs) {
                 if (inputIndex < inputs.length || inputDef.option != 'optional') {
-                    let inputCount = (inputDef.option == 'variadic') ? (inputs.length - inputIndex) : 1;
-                    let inputArguments = [];
-                    for (const input of inputs.slice(inputIndex, inputIndex + inputCount)) {
-                        if (input != '' || inputDef.option != 'optional') {
-                            if (input instanceof caffe.Tensor) {
-                                inputArguments.push(new caffe.Argument('', null, input));
-                            }
-                            else {
-                                inputArguments.push(new caffe.Argument(input, null, null));
-                            }
-                        }
-                    }
-                    this._inputs.push(new caffe.Parameter(inputDef.name, inputArguments));
+                    const inputCount = inputDef.option == 'variadic' ? inputs.length - inputIndex : 1;
+                    this._inputs.push(new caffe.Parameter(inputDef.name, inputs.slice(inputIndex, inputIndex + inputCount).filter((input) => input !== '' || inputDef.option != 'optional').map((input) => {
+                        return input instanceof caffe.Tensor ? new caffe.Argument('', input.type, input) : new caffe.Argument(input, null, null);
+                    })));
                     inputIndex += inputCount;
                 }
             }
         }
         this._inputs = this._inputs.concat(inputs.slice(inputIndex).map((input) => {
             return new caffe.Parameter(inputIndex.toString(), [ 
-                (input instanceof caffe.Tensor) ?
-                    new caffe.Argument('', null, input) :
-                    new caffe.Argument(input, null, null)
+                input instanceof caffe.Tensor ? new caffe.Argument('', input.type, input) : new caffe.Argument(input, null, null)
             ]);
         }));
 
         this._outputs = [];
-        let outputs = layer.output;
+        const outputs = layer.output;
         let outputIndex = 0;
         if (schema && schema.outputs) {
             for (const outputDef of schema.outputs) {
@@ -542,8 +529,8 @@ caffe.Node = class {
                 }
             }
         }
-        this._outputs = this._outputs.concat(outputs.slice(outputIndex).map((output) => {
-            return new caffe.Parameter(outputIndex.toString(), [
+        this._outputs = this._outputs.concat(outputs.slice(outputIndex).map((output, index) => {
+            return new caffe.Parameter((outputIndex + index).toString(), [
                 new caffe.Argument(output, null, null)
             ]);
         }));
@@ -553,13 +540,8 @@ caffe.Node = class {
         return this._type;
     }
 
-    get category() {
-        const schema = this._metadata.getSchema(this._type);
-        return (schema && schema.category) ? schema.category : '';
-    }
-
-    get documentation() {
-        return '';
+    get metadata() {
+        return this._metadata.type(this._type);
     }
 
     get name() { 
@@ -593,7 +575,7 @@ caffe.Attribute = class {
             this._value = new caffe.TensorShape(value.dim);
         }
 
-        const schema = metadata.getAttributeSchema(operator, this._name);
+        const schema = metadata.attribute(operator, this._name);
         if (schema) {
             if (Object.prototype.hasOwnProperty.call(schema, 'visible') && !schema.visible) {
                 this._visible = false;
@@ -800,6 +782,7 @@ caffe.Metadata = class {
             if (items) {
                 for (const item of items) {
                     if (item.name && item.schema) {
+                        item.schema.name = item.name;
                         this._map[item.name] = item.schema;
                     }
                 }
@@ -807,15 +790,15 @@ caffe.Metadata = class {
         }
     }
 
-    getSchema(operator) {
+    type(operator) {
         return this._map[operator] || null;
     }
 
-    getAttributeSchema(operator, name) {
+    attribute(operator, name) {
         let map = this._attributeCache[operator];
         if (!map) {
             map = {};
-            const schema = this.getSchema(operator);
+            const schema = this.type(operator);
             if (schema && schema.attributes && schema.attributes.length > 0) {
                 for (const attribute of schema.attributes) {
                     map[attribute.name] = attribute;

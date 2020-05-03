@@ -4,7 +4,6 @@
 // Experimental
 
 var flux = flux || {};
-var marked = marked || require('marked');
 
 flux.ModelFactory = class {
 
@@ -31,18 +30,16 @@ flux.ModelFactory = class {
                 }
             }
             catch (error) {
-                let message = error && error.message ? error.message : error.toString();
-                message = message.endsWith('.') ? message.substring(0, message.length - 1) : message;
-                throw new flux.Error(message + " in '" + identifier + "'.");
+                const message = error && error.message ? error.message : error.toString();
+                throw new flux.Error(message.replace(/\.$/, '') + " in '" + identifier + "'.");
             }
             return flux.Metadata.open(host).then((metadata) => {
                 try {
                     return new flux.Model(metadata, model);
                 }
                 catch (error) {
-                    let message = error && error.message ? error.message : error.toString();
-                    message = message.endsWith('.') ? message.substring(0, message.length - 1) : message;
-                    throw new flux.Error(message + " in '" + identifier + "'.");
+                    const message = error && error.message ? error.message : error.toString();
+                    throw new flux.Error(message.replace(/\.$/, '') + " in '" + identifier + "'.");
                 }
             });
         });
@@ -74,7 +71,6 @@ flux.ModelFactory = class {
 flux.Model = class {
 
     constructor(/* root */) {
-        // debugger;
         this._format = 'Flux';
         this._graphs = [];
     }
@@ -107,7 +103,7 @@ flux.Metadata = class {
         this._map = {};
         this._attributeCache = {};
         if (data) {
-            let items = JSON.parse(data);
+            const items = JSON.parse(data);
             if (items) {
                 for (const item of items) {
                     if (item.name && item.schema) {
@@ -118,15 +114,15 @@ flux.Metadata = class {
         }
     }
 
-    getSchema(operator) {
+    type(operator) {
         return this._map[operator] || null;
     }
 
-    getAttributeSchema(operator, name) {
+    attribute(operator, name) {
         let map = this._attributeCache[operator];
         if (!map) {
             map = {};
-            let schema = this.getSchema(operator);
+            let schema = this.type(operator);
             if (schema && schema.attributes && schema.attributes.length > 0) {
                 for (const attribute of schema.attributes) {
                     map[attribute.name] = attribute;

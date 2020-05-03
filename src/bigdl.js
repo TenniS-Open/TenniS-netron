@@ -6,7 +6,6 @@
 var bigdl = bigdl || {};
 var long = long || { Long: require('long') };
 var protobuf = protobuf || require('protobufjs');
-var marked = marked || require('marked');
 
 bigdl.ModelFactory = class {
 
@@ -33,9 +32,8 @@ bigdl.ModelFactory = class {
                 }
                 catch (error) {
                     host.exception(error, false);
-                    let message = error && error.message ? error.message : error.toString();
-                    message = message.endsWith('.') ? message.substring(0, message.length - 1) : message;
-                    throw new bigdl.Error(message + " in '" + identifier + "'.");
+                    const message = error && error.message ? error.message : error.toString();
+                    throw new bigdl.Error(message.replace(/\.$/, '') + " in '" + identifier + "'.");
                 }
             });
         });
@@ -147,15 +145,17 @@ bigdl.Parameter = class {
 
 bigdl.Argument = class {
 
-    constructor(id, type, initializer) {
-        id.toString();
-        this._id = id;
+    constructor(name, type, initializer) {
+        if (typeof name !== 'string') {
+            throw new bigdl.Error("Invalid argument identifier '" + JSON.stringify(name) + "'.");
+        }
+        this._name = name;
         this._type = type || null;
         this._initializer = initializer || null;
     }
 
-    get id() {
-        return this._id;
+    get name() {
+        return this._name;
     }
 
     get type() {
@@ -181,7 +181,7 @@ bigdl.Node = class {
         this._inputs = [];
         this._outputs = [];
         this._inputs.push(new bigdl.Parameter('input', module.preModules.map((id) => new bigdl.Argument(id, null, null))));
-        const schema =  metadata.getSchema(this.operator);
+        const schema =  metadata.type(this.operator);
         let inputs = (schema && schema.inputs) ? schema.inputs.slice() : [];
         inputs.shift();
         if (module.weight) {
@@ -239,13 +239,8 @@ bigdl.Node = class {
         return this._type;
     }
 
-    get category() {
-        const schema = this._metadata.getSchema(this._type);
-        return (schema && schema.category) ? schema.category : '';
-    }
-
-    get documentation() {
-        return '';
+    get metadata() {
+        return this._metadata.type(this._type);
     }
 
     get name() {
@@ -455,6 +450,7 @@ bigdl.Metadata = class {
             if (items) {
                 for (const item of items) {
                     if (item.name && item.schema) {
+                        item.schema.name = item.name;
                         this._map[item.name] = item.schema;
                     }
                 }
@@ -462,15 +458,15 @@ bigdl.Metadata = class {
         }
     }
 
-    getSchema(operator) {
+    type(operator) {
         return this._map[operator] || null;
     }
 
-    getAttributeSchema(operator, name) {
+    attribute(operator, name) {
         let map = this._attributeCache[operator];
         if (!map) {
             map = {};
-            const schema = this.getSchema(operator);
+            const schema = this.type(operator);
             if (schema && schema.attributes && schema.attributes.length > 0) {
                 for (const attribute of schema.attributes) {
                     map[attribute.name] = attribute;

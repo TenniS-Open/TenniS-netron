@@ -3,7 +3,7 @@
 
 var sidebar = sidebar || {};
 var long = long || { Long: require('long') };
-var Handlebars = Handlebars || require('handlebars');
+var marked = marked || require('marked');
 
 sidebar.Sidebar = class {
 
@@ -84,21 +84,20 @@ sidebar.Sidebar = class {
             sidebarElement.innerHTML = '';
 
             let titleElement = this._host.document.createElement('h1');
-            titleElement.setAttribute('class', 'sidebar-title');
+            titleElement.classList.add('sidebar-title');
             titleElement.innerHTML = item.title ? item.title.toUpperCase() : '';
             sidebarElement.appendChild(titleElement);
 
             let closeButton = this._host.document.createElement('a');
-            closeButton.setAttribute('class', 'sidebar-closebutton');
+            closeButton.classList.add('sidebar-closebutton');
             closeButton.setAttribute('id', 'sidebar-closebutton');
             closeButton.setAttribute('href', 'javascript:void(0)');
             closeButton.innerHTML = '&times;'
             closeButton.addEventListener('click', this._closeSidebarHandler);
-            closeButton.style.color = '#818181';
             sidebarElement.appendChild(closeButton);
 
             let contentElement = this._host.document.createElement('div');
-            contentElement.setAttribute('class', 'sidebar-content');
+            contentElement.classList.add('sidebar-content');
             contentElement.setAttribute('id', 'sidebar-content');
             sidebarElement.appendChild(contentElement);
 
@@ -142,7 +141,7 @@ sidebar.NodeSidebar = class {
 
         if (node.operator) {
             let showDocumentation = null;
-            if (node.documentation) {
+            if (node.metadata) {
                 showDocumentation = {};
                 showDocumentation.text = '?';
                 showDocumentation.callback = () => {
@@ -154,6 +153,10 @@ sidebar.NodeSidebar = class {
 
         if (node.name) {
             this._addProperty('name', new sidebar.ValueTextView(this._host, node.name));
+        }
+
+        if (node.location) {
+            this._addProperty('location', new sidebar.ValueTextView(this._host, node.location));
         }
 
         if (node.domain) {
@@ -168,15 +171,21 @@ sidebar.NodeSidebar = class {
             this._addProperty('device', new sidebar.ValueTextView(this._host, node.device));
         }
 
-        let attributes = node.attributes;
+        const attributes = node.attributes;
         if (attributes && attributes.length > 0) {
+            let sortedAttributes = node.attributes.slice();
+            sortedAttributes.sort((a, b) => { 
+                const au = a.name.toUpperCase();
+                const bu = b.name.toUpperCase();
+                return (au < bu) ? -1 : (au > bu) ? 1 : 0;
+            });
             this._addHeader('Attributes');
-            for (const attribute of attributes) {
+            for (const attribute of sortedAttributes) {
                 this._addAttribute(attribute.name, attribute);
             }
         }
 
-        let inputs = node.inputs;
+        const inputs = node.inputs;
         if (inputs && inputs.length > 0) {
             this._addHeader('Inputs');
             for (const input of inputs) {
@@ -184,7 +193,7 @@ sidebar.NodeSidebar = class {
             }
         }
 
-        let outputs = node.outputs;
+        const outputs = node.outputs;
         if (outputs && outputs.length > 0) {
             this._addHeader('Outputs');
             for (const output of outputs) {
@@ -192,7 +201,7 @@ sidebar.NodeSidebar = class {
             }
         }
 
-        let divider = this._host.document.createElement('div');
+        const divider = this._host.document.createElement('div');
         divider.setAttribute('style', 'margin-bottom: 20px');
         this._elements.push(divider);
     }
@@ -202,26 +211,26 @@ sidebar.NodeSidebar = class {
     }
 
     _addHeader(title) {
-        let headerElement = this._host.document.createElement('div');
+        const headerElement = this._host.document.createElement('div');
         headerElement.className = 'sidebar-view-header';
         headerElement.innerText = title;
         this._elements.push(headerElement);
     }
 
     _addProperty(name, value) {
-        let item = new sidebar.NameValueView(this._host, name, value);
+        const item = new sidebar.NameValueView(this._host, name, value);
         this._elements.push(item.render());
     }
 
     _addAttribute(name, attribute) {
-        let item = new sidebar.NameValueView(this._host, name, new NodeAttributeView(this._host, attribute));
+        const item = new sidebar.NameValueView(this._host, name, new NodeAttributeView(this._host, attribute));
         this._attributes.push(item);
         this._elements.push(item.render());
     }
 
     _addInput(name, input) {
         if (input.arguments.length > 0) {
-            let view = new sidebar.ParameterView(this._host, input);
+            const view = new sidebar.ParameterView(this._host, input);
             view.on('export-tensor', (sender, tensor) => {
                 this._raise('export-tensor', tensor);
             });
@@ -325,7 +334,7 @@ sidebar.NodeSidebar = class {
             return value.toString();
         }
         let list = [];
-        let keys = Object.keys(value).filter((key) => !key.startsWith('__') && !key.endsWith('__'));
+        const keys = Object.keys(value).filter((key) => !key.startsWith('__') && !key.endsWith('__'));
         if (keys.length == 1) {
             list.push(sidebar.NodeSidebar.formatAttributeValue(value[Object.keys(value)[0]], null, true))
         }
@@ -359,17 +368,17 @@ sidebar.NameValueView = class {
         this._name = name;
         this._value = value;
 
-        let nameElement = this._host.document.createElement('div');
+        const nameElement = this._host.document.createElement('div');
         nameElement.className = 'sidebar-view-item-name';
 
-        let nameInputElement = this._host.document.createElement('input');
+        const nameInputElement = this._host.document.createElement('input');
         nameInputElement.setAttribute('type', 'text');
         nameInputElement.setAttribute('value', name);
         nameInputElement.setAttribute('title', name);
         nameInputElement.setAttribute('readonly', 'true');
         nameElement.appendChild(nameInputElement);
 
-        let valueElement = this._host.document.createElement('div');
+        const valueElement = this._host.document.createElement('div');
         valueElement.className = 'sidebar-view-item-value-list';
 
         for (const element of value.render()) {
@@ -401,7 +410,7 @@ sidebar.SelectView = class {
         this._host = host;
         this._elements = [];
 
-        let selectElement = this._host.document.createElement('select');
+        const selectElement = this._host.document.createElement('select');
         selectElement.setAttribute('class', 'sidebar-view-item-select');
         selectElement.addEventListener('change', (e) => {
             this._raise('change', e.target.value);
@@ -409,7 +418,7 @@ sidebar.SelectView = class {
         this._elements.push(selectElement);
 
         for (const value of values) {
-            let optionElement = this._host.document.createElement('option');
+            const optionElement = this._host.document.createElement('option');
             optionElement.innerText = value;
             if (value == selected) {
                 optionElement.setAttribute('selected', 'selected');
@@ -442,7 +451,7 @@ sidebar.ValueTextView = class {
     constructor(host, value, action) {
         this._host = host;
         this._elements = [];
-        let element = this._host.document.createElement('div');
+        const element = this._host.document.createElement('div');
         element.className = 'sidebar-view-item-value';
         this._elements.push(element);
 
@@ -456,7 +465,7 @@ sidebar.ValueTextView = class {
             element.appendChild(this._action);
         }
 
-        let line = this._host.document.createElement('div');
+        const line = this._host.document.createElement('div');
         line.className = 'sidebar-view-item-value-line';
         line.innerText = value;
         element.appendChild(line);
@@ -508,10 +517,10 @@ class NodeAttributeView {
         if (this._expander.innerText == '+') {
             this._expander.innerText = '-';
 
-            let typeLine = this._host.document.createElement('div');
+            const typeLine = this._host.document.createElement('div');
             typeLine.className = 'sidebar-view-item-value-line-border';
-            let type = this._attribute.type;
-            let value = this._attribute.value;
+            const type = this._attribute.type;
+            const value = this._attribute.value;
             if (type == 'tensor' && value && value.type) {
                 typeLine.innerHTML = 'type: ' + '<code><b>' + value.type.toString() + '</b></code>';
                 this._element.appendChild(typeLine);
@@ -521,19 +530,19 @@ class NodeAttributeView {
                 this._element.appendChild(typeLine);
             }
 
-            let description = this._attribute.description;
+            const description = this._attribute.description;
             if (description) {
-                let descriptionLine = this._host.document.createElement('div');
+                const descriptionLine = this._host.document.createElement('div');
                 descriptionLine.className = 'sidebar-view-item-value-line-border';
                 descriptionLine.innerHTML = description;
                 this._element.appendChild(descriptionLine);
             }
 
             if (this._attribute.type == 'tensor' && value) {
-                let state = value.state;
-                let valueLine = this._host.document.createElement('div');
+                const state = value.state;
+                const valueLine = this._host.document.createElement('div');
                 valueLine.className = 'sidebar-view-item-value-line-border';
-                let contentLine = this._host.document.createElement('pre');
+                const contentLine = this._host.document.createElement('pre');
                 contentLine.innerHTML = state || value.toString();
                 valueLine.appendChild(contentLine);
                 this._element.appendChild(valueLine);
@@ -555,7 +564,7 @@ sidebar.ParameterView = class {
         this._elements = [];
         this._items = [];
         for (const argument of list.arguments) {
-            let item = new sidebar.ArgumentView(host, argument);
+            const item = new sidebar.ArgumentView(host, argument);
             item.on('export-tensor', (sender, tensor) => {
                 this._raise('export-tensor', tensor);
             });
@@ -598,13 +607,13 @@ sidebar.ArgumentView = class {
         this._element = this._host.document.createElement('div');
         this._element.className = 'sidebar-view-item-value';
 
-        let initializer = argument.initializer;
+        const initializer = argument.initializer;
         if (initializer) {
             this._element.classList.add('sidebar-view-item-value-dark');
         }
 
-        let quantization = argument.quantization;
-        let type = argument.type;
+        const quantization = argument.quantization;
+        const type = argument.type;
         if (type || initializer || quantization) {
             this._expander = this._host.document.createElement('div');
             this._expander.className = 'sidebar-view-item-value-expander';
@@ -615,21 +624,24 @@ sidebar.ArgumentView = class {
             this._element.appendChild(this._expander);
         }
 
-        let id = this._argument.id || '';
-        this._hasId = id ? true : false;
+        let name = this._argument.name || '';
+        this._hasId = name ? true : false;
         if (initializer && !this._hasId) {
-            let kindLine = this._host.document.createElement('div');
+            const kindLine = this._host.document.createElement('div');
             kindLine.className = 'sidebar-view-item-value-line';
             kindLine.innerHTML = 'kind: <b>' + initializer.kind + '</b>';
             this._element.appendChild(kindLine);
         }
         else {
-            let idLine = this._host.document.createElement('div');
-            idLine.className = 'sidebar-view-item-value-line';
-            id = id.split('\n').shift(); // custom argument id
-            id = id || ' ';
-            idLine.innerHTML = '<span class=\'sidebar-view-item-value-line-content\'>id: <b>' + id + '</b></span>';
-            this._element.appendChild(idLine);
+            const nameLine = this._host.document.createElement('div');
+            nameLine.className = 'sidebar-view-item-value-line';
+            if (typeof name !== 'string') {
+                throw new Error("Invalid argument identifier '" + JSON.stringify(name) + "'.");
+            }
+            name = name.split('\n').shift(); // custom argument id
+            name = name || ' ';
+            nameLine.innerHTML = '<span class=\'sidebar-view-item-value-line-content\'>name: <b>' + name + '</b></span>';
+            this._element.appendChild(nameLine);
         }
     }
 
@@ -641,7 +653,7 @@ sidebar.ArgumentView = class {
         if (this._expander) {
             if (this._expander.innerText == '+') {
                 this._expander.innerText = '-';
-    
+
                 let initializer = this._argument.initializer;
                 if (initializer && this._hasId) {
                     let kind = initializer.kind;
@@ -652,7 +664,7 @@ sidebar.ArgumentView = class {
                         this._element.appendChild(kindLine);
                     }
                 }
-    
+
                 let type = '?';
                 let denotation = null;
                 if (this._argument.type) {
@@ -689,6 +701,13 @@ sidebar.ArgumentView = class {
                     this._element.appendChild(quantizationLine);
                 }
 
+                if (this._argument.location) {
+                    let location = this._host.document.createElement('div');
+                    location.className = 'sidebar-view-item-value-line-border';
+                    location.innerHTML = 'location: ' + '<b>' + this._argument.location + '</b>';
+                    this._element.appendChild(location);
+                }
+
                 if (initializer) {
                     let reference = initializer.reference;
                     if (reference) {
@@ -713,7 +732,13 @@ sidebar.ArgumentView = class {
                     let valueLine = this._host.document.createElement('div');
                     valueLine.className = 'sidebar-view-item-value-line-border';
                     let contentLine = this._host.document.createElement('pre');
-                    contentLine.innerHTML = state || initializer.toString();
+                    try {
+                        contentLine.innerHTML = state || initializer.toString();
+                    }
+                    catch (err) {
+                        contentLine.innerHTML = err.toString();
+                        this._host.exception(err, false);
+                    }
                     valueLine.appendChild(contentLine);
                     this._element.appendChild(valueLine);
                 }
@@ -869,97 +894,90 @@ sidebar.ModelSidebar = class {
     }
 };
 
-sidebar.OperatorDocumentationSidebar = class {
+sidebar.DocumentationSidebar = class {
 
-    constructor(documentation) {
-        this._documentation = documentation;
+    constructor(host, metadata) {
+        this._host = host;
+        this._metadata = metadata;
     }
 
     render() {
         if (!this._elements) {
             this._elements = [];
-            let template = `
-<div id='documentation' class='sidebar-view-documentation'>
 
-<h1>{{{name}}}</h1>
-{{#if summary}}
-<p>{{{summary}}}</p>
-{{/if}}
-{{#if description}}
-<p>{{{description}}}</p>
-{{/if}}
+            const documentation = sidebar.DocumentationSidebar.formatDocumentation(this._metadata);
 
-{{#if attributes}}
-<h2>Attributes</h2>
-<dl>
-{{#attributes}}
-<dt>{{{name}}}{{#if type}}: <tt>{{{type}}}</tt>{{/if}}</dt>
-<dd>{{{description}}}</dd>
-{{/attributes}}
-</dl>
-{{/if}}
+            const element = this._host.document.createElement('div');
+            element.setAttribute('class', 'sidebar-view-documentation');
 
-{{#if inputs}}
-<h2>Inputs{{#if inputs_range}} ({{{inputs_range}}}){{/if}}</h2>
-<dl>
-{{/if}}
-{{#inputs}}
-<dt>{{{name}}}{{#if type}}: <tt>{{{type}}}</tt>{{/if}} {{#if option}}({{{option}}}){{/if}}</dt>
-<dd>{{{description}}}</dd>
-{{/inputs}}
-</dl>
+            this._append(element, 'h1', documentation.name);
 
-{{#if outputs.length}}
-<h2>Outputs{{#if outputs_range}} ({{{outputs_range}}}){{/if}}</h2>
-<dl>
-{{/if}}
-{{#outputs}}
-<dt>{{{name}}}{{#if type}}: <tt>{{{type}}}</tt>{{/if}} {{#if option}}({{{option}}}){{/if}}</dt>
-<dd>{{{description}}}</dd>
-{{/outputs}}
-</dl>
+            if (documentation.summary) {
+                this._append(element, 'p', documentation.summary);
+            }
 
-{{#if type_constraints}}
-<h2>Type Constraints</h2>
-<dl>
-{{#type_constraints}}
-<dt>{{{type_param_str}}}: {{#allowed_type_strs}}<tt>{{this}}</tt>{{#unless @last}}, {{/unless}}{{/allowed_type_strs}}</dt>
-<dd>{{{description}}}</dd>
-{{/type_constraints}}
-</dl>
-{{/if}}
+            if (documentation.description) {
+                this._append(element, 'p', documentation.description);
+            }
 
-{{#if examples}}
-<h2>Examples</h2>
-{{#examples}}
-<h3>{{{summary}}}</h3>
-<pre>{{{code}}}</pre>
-{{/examples}}
-{{/if}}
+            if (documentation.attributes) {
+                this._append(element, 'h2', 'Attributes');
+                const attributes = this._append(element, 'dl');
+                for (const attribute of documentation.attributes) {
+                    this._append(attributes, 'dt', attribute.name + (attribute.type ? ': <tt>' + attribute.type + '</tt>' : ''));
+                    this._append(attributes, 'dd', attribute.description);
+                }
+                element.appendChild(attributes);
+            }
 
-{{#if references}}
-<h2>References</h2>
-<ul>
-{{#references}}
-<li>{{{description}}}</li>
-{{/references}}
-</ul>
-{{/if}}
+            if (documentation.inputs) {
+                this._append(element, 'h2', 'Inputs' + (documentation.inputs_range ? ' (' + documentation.inputs_range + ')' : ''));
+                const inputs = this._append(element, 'dl');
+                for (const input of documentation.inputs) {
+                    this._append(inputs, 'dt', input.name + (input.type ? ': <tt>' + input.type + '</tt>' : '') + (input.option ? ' (' + input.option + ')' : ''));
+                    this._append(inputs, 'dd', input.description);
+                }
+            }
 
-{{#if domain}}{{#if since_version}}{{#if support_level}}
-<h2>Support</h2>
-<dl>
-In domain <tt>{{{domain}}}</tt> since version <tt>{{{since_version}}}</tt> at support level <tt>{{{support_level}}}</tt>.
-</dl>
-{{/if}}{{/if}}{{/if}}
+            if (documentation.outputs) {
+                this._append(element, 'h2', 'Outputs' + (documentation.outputs_range ? ' (' + documentation.outputs_range + ')' : ''));
+                const outputs = this._append(element, 'dl');
+                for (const output of documentation.outputs) {
+                    this._append(outputs, 'dt', output.name + (output.type ? ': <tt>' + output.type + '</tt>' : '') + (output.option ? ' (' + output.option + ')' : ''));
+                    this._append(outputs, 'dd', output.description);
+                }
+            }
 
-</div>
-`;
-            let generator = Handlebars.compile(template, 'utf-8');
-            let html = generator(this._documentation);
-            let parser = new DOMParser();
-            let document = parser.parseFromString(html, 'text/html');
-            let element = document.firstChild;
+            if (documentation.type_constraints) {
+                this._append(element, 'h2', 'Type Constraints');
+                const type_constraints = this._append(element, 'dl');
+                for (const type_constraint of documentation.type_constraints) {
+                    this._append(type_constraints, 'dt', type_constraint.type_param_str + ': ' + type_constraint.allowed_type_strs.map((item) => '<tt>' + item + '</tt>').join(', '));
+                    this._append(type_constraints, 'dd', type_constraint.description);
+                }
+            }
+
+            if (documentation.examples) {
+                this._append(element, 'h2', 'Examples');
+                for (const example of documentation.examples) {
+                    this._append(element, 'h3', example.summary);
+                    this._append(element, 'pre', example.code);
+                }
+            }
+
+            if (documentation.references) {
+                this._append(element, 'h2', 'References');
+                const references = this._append(element, 'ul');
+                for (const reference of documentation.references) {
+                    this._append(references, 'li', reference.description);
+                }
+            }
+
+            if (documentation.domain && documentation.since_version && documentation.support_level) {
+                this._append(element, 'h2', 'Support');
+                this._append(element, 'dl', 'In domain <tt>' + documentation.domain + '</tt> since version <tt>' + documentation.since_version + '</tt> at support level <tt>' + documentation.support_level + '</tt>.');
+            }
+
             element.addEventListener('click', (e) => {
                 if (e.target && e.target.href) {
                     let link = e.target.href;
@@ -969,9 +987,9 @@ In domain <tt>{{{domain}}}</tt> since version <tt>{{{since_version}}}</tt> at su
                     }
                 }
             });
-            this._elements.push(element);
-            return this._elements;
+            this._elements = [ element ];
         }
+        return this._elements;
     }
 
     on(event, callback) {
@@ -986,6 +1004,57 @@ In domain <tt>{{{domain}}}</tt> since version <tt>{{{since_version}}}</tt> at su
                 callback(this, data);
             }
         }
+    }
+
+    _append(parent, type, content) {
+        const element = this._host.document.createElement(type);
+        if (content) {
+            element.innerHTML = content;
+        }
+        parent.appendChild(element);
+        return element;
+    }
+
+    static formatDocumentation(data) {
+        if (data) {
+            data = JSON.parse(JSON.stringify(data));
+            if (data.summary) {
+                data.summary = marked(data.summary);
+            }
+            if (data.description) {
+                data.description = marked(data.description);
+            }
+            if (data.attributes) {
+                for (const attribute of data.attributes) {
+                    if (attribute.description) {
+                        attribute.description = marked(attribute.description);
+                    }
+                }
+            }
+            if (data.inputs) {
+                for (const input of data.inputs) {
+                    if (input.description) {
+                        input.description = marked(input.description);
+                    }
+                }
+            }
+            if (data.outputs) {
+                for (const output of data.outputs) {
+                    if (output.description) {
+                        output.description = marked(output.description);
+                    }
+                }
+            }
+            if (data.references) {
+                for (const reference of data.references) {
+                    if (reference) {
+                        reference.description = marked(reference.description);
+                    }
+                }
+            }
+            return data;
+        }
+        return '';
     }
 };
 
@@ -1089,13 +1158,13 @@ sidebar.FindSidebar = class {
 
             for (const input of node.inputs) {
                 for (const argument of input.arguments) {
-                    if (argument.id && argument.id.toLowerCase().indexOf(text) != -1 && !edgeMatches.has(argument.id)) {
+                    if (argument.name && argument.name.toLowerCase().indexOf(text) != -1 && !edgeMatches.has(argument.name)) {
                         if (!argument.initializer) {
                             let inputItem = this._host.document.createElement('li');
-                            inputItem.innerText = '\u2192 ' + argument.id.split('\n').shift(); // custom argument id
-                            inputItem.id = 'edge-' + argument.id;
+                            inputItem.innerText = '\u2192 ' + argument.name.split('\n').shift(); // custom argument id
+                            inputItem.id = 'edge-' + argument.name;
                             this._resultElement.appendChild(inputItem);
-                            edgeMatches.add(argument.id);
+                            edgeMatches.add(argument.name);
                         }
                         else {
                             initializers.push(argument.initializer);
@@ -1127,12 +1196,12 @@ sidebar.FindSidebar = class {
         for (const node of this._graph.nodes) {
             for (const output of node.outputs) {
                 for (const argument of output.arguments) {
-                    if (argument.id && argument.id.toLowerCase().indexOf(text) != -1 && !edgeMatches[argument.id]) {
+                    if (argument.name && argument.name.toLowerCase().indexOf(text) != -1 && !edgeMatches[argument.name]) {
                         let outputItem = this._host.document.createElement('li');
-                        outputItem.innerText = '\u2192 ' + argument.id.split('\n').shift(); // custom argument id
-                        outputItem.id = 'edge-' + argument.id;
+                        outputItem.innerText = '\u2192 ' + argument.name.split('\n').shift(); // custom argument id
+                        outputItem.id = 'edge-' + argument.name;
                         this._resultElement.appendChild(outputItem);
-                        edgeMatches[argument.id] = true;
+                        edgeMatches[argument.name] = true;
                     }    
                 }
             }
@@ -1150,6 +1219,6 @@ if (typeof module !== 'undefined' && typeof module.exports === 'object') {
     module.exports.Sidebar = sidebar.Sidebar;
     module.exports.ModelSidebar = sidebar.ModelSidebar;
     module.exports.NodeSidebar = sidebar.NodeSidebar;
-    module.exports.OperatorDocumentationSidebar = sidebar.OperatorDocumentationSidebar;
+    module.exports.DocumentationSidebar = sidebar.DocumentationSidebar;
     module.exports.FindSidebar = sidebar.FindSidebar;
 }

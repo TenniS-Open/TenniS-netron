@@ -26,8 +26,7 @@ chainer.ModelFactory = class {
     }
 
     open(context, host) {
-        const identifier = context.identifier;
-        const extension = identifier.split('.').pop().toLowerCase();
+        const extension = context.identifier.split('.').pop().toLowerCase();
         switch (extension) {
             case 'npz':
                 return this._openNumPy(context, host);
@@ -44,7 +43,7 @@ chainer.ModelFactory = class {
             return host.require('./pickle').then((pickle) => {
                 try {
                     let modules = [];
-                    let map = new Map();
+                    let modulesMap = new Map();
 
                     let functionTable = new Map();
                     let constructorTable = new Map();
@@ -170,32 +169,26 @@ chainer.ModelFactory = class {
                         if (!entry.name.endsWith('.npy')) {
                             throw new chainer.Error("Invalid file name '" + entry.name + "'.");
                         }
-                        const id = entry.name.split('/');
-                        if (id.length < 2) {
+                        const id = entry.name.replace(/\.npy$/, '');
+                        const parts = id.split('/');
+                        if (parts.length < 2) {
                             throw new chainer.Error("Invalid parameter name '" + entry.name + "'.");
                         }
-                        let parameterName = id.pop();
-                        parameterName = parameterName.substring(0, parameterName.length - 4);
-                        const moduleName = id.join('/');
-                        let module = null;
-                        if (map.has(id[0])) {
-                            module = map.get(moduleName);
+                        const parameterName = parts.pop();
+                        const moduleName = parts.join('/');
+                        if (!modulesMap.has(moduleName)) {
+                            const newModule = { name: moduleName, parameters: [] };
+                            modules.push(newModule);
+                            modulesMap.set(moduleName, newModule);
                         }
-                        else {
-                            module = { 
-                                name: moduleName,
-                                parameters: []
-                            };
-                            map.set(moduleName, module);
-                            modules.push(module);
-                        }
+                        const module = modulesMap.get(moduleName);
                         let array = new numpy.Array(entry.data);
                         if (array.byteOrder === '|') {
                             if (array.dataType !== 'O') {
                                 throw new chainer.Error("Invalid data type '" + array.dataType + "'.");
                             }
                             const unpickler = new pickle.Unpickler(array.data);
-                            let root = unpickler.load(function_call);
+                            const root = unpickler.load(function_call);
                             array = { dataType: root.dtype.name, shape: null, data: null, byteOrder: '|' };
                         }
 
@@ -210,9 +203,8 @@ chainer.ModelFactory = class {
                     return new chainer.Model(modules, 'Chainer NumPy');
                 }
                 catch (error) {
-                    let message = error && error.message ? error.message : error.toString();
-                    message = message.endsWith('.') ? message.substring(0, message.length - 1) : message;
-                    throw new chainer.Error(message + " in '" + identifier + "'.");
+                    const message = error && error.message ? error.message : error.toString();
+                    throw new chainer.Error(message.replace(/\.$/, '') + " in '" + identifier + "'.");
                 }
             });
         });
@@ -227,48 +219,74 @@ chainer.ModelFactory = class {
                 if (Object.keys(rootGroup.attributes).length !== 0 || rootGroup.value !== null) {
                     throw new chainer.Error('File format is not Chainer HDF5');
                 }
+                let format = null;
                 let modules = [];
-                let map = new Map();
-                for (const moduleGroup of rootGroup.groups) {
-                    if (Object.keys(moduleGroup.attributes).length !== 0 || moduleGroup.value !== null) {
-                        throw new chainer.Error('Module group format is not Chainer HDF5');
-                    }
-                    let moduleName = moduleGroup.name;
-                    let module = null;
-                    if (map.has(moduleName)) {
-                        module = map.get(moduleName);
-                    }
-                    else {
-                        module = { 
-                            name: moduleName,
-                            parameters: []
-                        };
-                        map.set(moduleName, module);
-                        modules.push(module);
-                    }
-                    for (const variableGroup of moduleGroup.groups) {
-                        if (Object.keys(variableGroup.attributes).length !== 0 || variableGroup.groups.length !== 0) {
-                            throw new chainer.Error('Variable format is not Chainer HDF5');
+                let modulesMap = new Map();
+                if (rootGroup.groups.every((moduleGroup) => Object.keys(moduleGroup.attributes).length === 0 && moduleGroup.value === null)) {
+                    format = 'Chainer HDF5';
+                    for (const moduleGroup of rootGroup.groups) {
+                        const moduleName = moduleGroup.attributes.name || moduleGroup.name;
+                        if (!modulesMap.has(moduleName)) {
+                            const newModule = { name: moduleName, parameters: [] };
+                            modulesMap.set(moduleName, newModule);
+                            modules.push(newModule);
                         }
-                        const variable = variableGroup.value;
-                        if (!variable) {
-                            throw new chainer.Error('Variable value is not Chainer HDF5');
+                        const module = modulesMap.get(moduleName);
+                        for (const variableGroup of moduleGroup.groups) {
+                            if (Object.keys(variableGroup.attributes).length !== 0 || variableGroup.groups.length !== 0) {
+                                throw new chainer.Error('Variable format is not Chainer HDF5');
+                            }
+                            const variable = variableGroup.value;
+                            if (!variable) {
+                                throw new chainer.Error('Variable value is not Chainer HDF5');
+                            }
+                            module.parameters.push({ 
+                                name: variableGroup.name,
+                                dataType: variable.type,
+                                byteOrder: variable.littleEndian ? '<' : '>',
+                                shape: variable.shape, 
+                                data: variable.data,
+                            });
                         }
-                        module.parameters.push({ 
-                            name: variableGroup.name,
-                            dataType: variable.type,
-                            byteOrder: variable.littleEndian ? '<' : '>',
-                            shape: variable.shape, 
-                            data: variable.data });
                     }
                 }
+                else if (rootGroup.groups.every((group) => group.value === null && group.groups.every((variable) => Object.keys(variable.attributes).length === 0 && variable.value !== null))) {
+                    format = 'Weights HDF5';
+                    for (const group of rootGroup.groups) {
+                        const moduleName = group.attributes.name || group.name;
+                        if (!modulesMap.has(moduleName)) {
+                            const newModule = { name: moduleName, parameters: [] };
+                            modulesMap.set(moduleName, newModule);
+                            modules.push(newModule);
+                        }
+                        const module = modulesMap.get(moduleName);
+                        for (const variableGroup of group.groups) {
+                            if (Object.keys(variableGroup.attributes).length !== 0 || variableGroup.groups.length !== 0) {
+                                throw new chainer.Error('Variable format is not Chainer HDF5');
+                            }
+                            const variable = variableGroup.value;
+                            if (!variable) {
+                                throw new chainer.Error('Variable value is not Chainer HDF5');
+                            }
+                            module.parameters.push({ 
+                                name: variableGroup.name,
+                                dataType: variable.type,
+                                byteOrder: variable.littleEndian ? '<' : '>',
+                                shape: variable.shape, 
+                                data: variable.data,
+                            });
+                        }
+                    }
+                }
+                else {
+                    throw new chainer.Error('Module group format is not Chainer HDF5');
+                }
 
-                return new chainer.Model(modules, 'Chainer HDF5');
+                return new chainer.Model(modules, format);
             }
             catch (error) {
-                let message = error && error.message ? error.message : error.toString();
-                message = message.endsWith('.') ? message.substring(0, message.length - 1) : message;
-                throw new chainer.Error(message + " in '" + identifier + "'.");
+                const message = error && error.message ? error.message : error.toString();
+                throw new chainer.Error(message.replace(/\.$/, '') + " in '" + identifier + "'.");
             }
         });
     }
@@ -335,13 +353,16 @@ chainer.Parameter = class {
 
 chainer.Argument = class {
 
-    constructor(id, initializer) {
-        this._id = id;
+    constructor(name, initializer) {
+        if (typeof name !== 'string') {
+            throw new chainer.Error("Invalid argument identifier '" + JSON.stringify(name) + "'.");
+        }
+        this._name = name;
         this._initializer = initializer || null;
     }
 
-    get id() {
-        return this._id;
+    get name() {
+        return this._name;
     }
 
     get type() {
@@ -375,12 +396,8 @@ chainer.Node = class {
         return this._name;
     }
 
-    get category() {
-        return '';
-    }
-
-    get documentation() {
-        return '';
+    get metadata() {
+        return null;
     }
 
     get inputs() {
@@ -460,16 +477,41 @@ chainer.Tensor = class  {
         }
         switch (this._type.dataType) {
             case 'float16':
+                context.itemSize = 2;
+                break;
             case 'float32':
+                context.itemSize = 4;
+                break;
             case 'float64':
+                context.itemSize = 8;
+                break;
+            case 'int8':
+                context.itemSize = 1;
+                break;
+            case 'int16':
+                context.itemSize = 2;
+                break;
+            case 'int32':
+                context.itemSize = 4;
+                break;
             case 'int64':
-                context.dataType = this._type.dataType;
+                context.itemSize = 8;
+                break;
+            case 'uint8':
+                context.itemSize = 1;
+                break;
+            case 'uint16':
+                context.itemSize = 2;
+                break;
+            case 'uint32':
+                context.itemSize = 4;
                 break;
             default:
                 context.state = 'Tensor data type is not supported.';
-                break;
+                return context;
         }
         context.dimensions = this._type.shape.dimensions;
+        context.dataType = this._type.dataType;
         context.littleEndian = this._byteOrder == '<';
         context.data = this._data;
         context.rawData = new DataView(this._data.buffer, this._data.byteOffset, this._data.byteLength);
@@ -494,21 +536,36 @@ chainer.Tensor = class  {
                     switch (context.dataType) {
                         case 'float16':
                             results.push(context.rawData.getFloat16(context.index, littleEndian));
-                            context.index += 2;
                             break;
                         case 'float32':
                             results.push(context.rawData.getFloat32(context.index, littleEndian));
-                            context.index += 4;
                             break;
                         case 'float64':
                             results.push(context.rawData.getFloat64(context.index, littleEndian));
-                            context.index += 8;
+                            break;
+                        case 'int8':
+                            results.push(context.rawData.getInt8(context.index, littleEndian));
+                            break;
+                        case 'int16':
+                            results.push(context.rawData.getInt16(context.index, littleEndian));
+                            break;
+                        case 'int32':
+                            results.push(context.rawData.getInt32(context.index, littleEndian));
                             break;
                         case 'int64':
                             results.push(long.Long.fromBytes(context.data.subarray(context.index, context.index + 8), true, littleEndian));
-                            context.index += 8;
+                            break;
+                        case 'uint8':
+                            results.push(context.rawData.getUint8(context.index, littleEndian));
+                            break;
+                        case 'uint16':
+                            results.push(context.rawData.getUint16(context.index, littleEndian));
+                            break;
+                        case 'uint32':
+                            results.push(context.rawData.getUint32(context.index, littleEndian));
                             break;
                     }
+                    context.index += context.itemSize;
                     context.count++;
                 }
             }

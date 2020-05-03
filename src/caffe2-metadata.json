@@ -2466,7 +2466,7 @@
           "option": "optional"
         }
       ],
-      "description": "\nCreates a cursor to iterate through a list of tensors, where some of those\ntensors contains the lengths in a nested schema. The schema is determined by\nthe `fields` arguments.\n\nFor example, to represent the following schema:\n\n  Struct(\n      a=Int(),\n      b=List(List(Int),\n      c=List(\n          Struct(\n             c1=String,\n             c2=List(Int),\n          ),\n      ),\n  )\n\nthe field list will be:\n  [\n      \"a\",\n      \"b:lengths\",\n      \"b:values:lengths\",\n      \"b:values:values\",\n      \"c:lengths\",\n      \"c:c1\",\n      \"c:c2:lengths\",\n      \"c:c2:values\",\n  ]\n\nAnd for the following instance of the struct:\n\n  Struct(\n      a=3,\n      b=[[4, 5], [6, 7, 8], [], [9]],\n      c=[\n          Struct(c1='alex', c2=[10, 11]),\n          Struct(c1='bob', c2=[12]),\n      ],\n  )\n\nThe values of the fields will be:\n  {\n      \"a\": [3],\n      \"b:lengths\": [4],\n      \"b:values:lengths\": [2, 3, 0, 1],\n      \"b:values:values\": [4, 5, 6, 7, 8, 9],\n      \"c:lengths\": [2],\n      \"c:c1\": [\"alex\", \"bob\"],\n      \"c:c2:lengths\": [2, 1],\n      \"c:c2:values\", [10, 11, 12],\n  }\n\nIn general, every field name in the format \"{prefix}:lengths\" defines a domain\n\"{prefix}\", and every subsequent field in the format \"{prefix}:{field}\" will\nbe in that domain, and the length of the domain is provided for each entry of\nthe parent domain. In the example, \"b:lengths\" defines a domain of length 4, so\nevery field under domain \"b\" will have 4 entries.\nThe \"lengths\" field for a given domain must appear before any reference to\nthat domain.\n\nReturns a pointer to an instance of the Cursor, which keeps the current offset\non each of the domains defined by `fields`. Cursor also ensures thread-safety\nsuch that ReadNextBatch and ResetCursor can be used safely in parallel.\n\nA cursor does not contain data per se, so calls to ReadNextBatch actually need\nto pass a list of blobs containing the data to read for each one of the fields.\n",
+      "description": "\nCreates a cursor to iterate through a list of tensors, where some of those\ntensors contain the lengths in a nested schema. The schema is determined by\nthe `fields` arguments.\n\nFor example, to represent the following schema:\n\n  Struct(\n      a=Int(),\n      b=List(List(Int)),\n      c=List(\n          Struct(\n             c1=String,\n             c2=List(Int),\n          ),\n      ),\n  )\n\nthe field list will be:\n  [\n      \"a\",\n      \"b:lengths\",\n      \"b:values:lengths\",\n      \"b:values:values\",\n      \"c:lengths\",\n      \"c:c1\",\n      \"c:c2:lengths\",\n      \"c:c2:values\",\n  ]\n\nAnd for the following instance of the struct:\n\n  Struct(\n      a=3,\n      b=[[4, 5], [6, 7, 8], [], [9]],\n      c=[\n          Struct(c1='alex', c2=[10, 11]),\n          Struct(c1='bob', c2=[12]),\n      ],\n  )\n\nThe values of the fields will be:\n  {\n      \"a\": [3],\n      \"b:lengths\": [4],\n      \"b:values:lengths\": [2, 3, 0, 1],\n      \"b:values:values\": [4, 5, 6, 7, 8, 9],\n      \"c:lengths\": [2],\n      \"c:c1\": [\"alex\", \"bob\"],\n      \"c:c2:lengths\": [2, 1],\n      \"c:c2:values\", [10, 11, 12],\n  }\n\nIn general, every field name in the format \"{prefix}:lengths\" defines a domain\n\"{prefix}\", and every subsequent field in the format \"{prefix}:{field}\" will\nbe in that domain, and the length of the domain is provided for each entry of\nthe parent domain. In the example, \"b:lengths\" defines a domain of length 4, so\nevery field under domain \"b\" will have 4 entries.\nThe \"lengths\" field for a given domain must appear before any reference to\nthat domain.\n\nReturns a pointer to an instance of the Cursor, which keeps the current offset\non each of the domains defined by `fields`. Cursor also ensures thread-safety\nsuch that ReadNextBatch and ResetCursor can be used safely in parallel.\n\nA cursor does not contain data per se, so calls to ReadNextBatch actually need\nto pass a list of blobs containing the data to read for each one of the fields.\n",
       "outputs": [
         {
           "description": "A blob pointing to an instance of a new TreeCursor.",
@@ -8725,7 +8725,7 @@
           "option": "optional"
         },
         {
-          "description": "An error log is triggered when ratio of empty ranges exceeds this.",
+          "description": "An error is raised when ratio of empty ranges exceeds this (default is 1, which means by default no error will be triggered).",
           "name": "max_empty_ratio",
           "option": "optional"
         },
@@ -9320,6 +9320,7 @@
           "option": "optional"
         }
       ],
+      "category": "Tensor",
       "description": "\nProduces a slice of the input tensor.\n\n- Currently, only slicing in a single dimension is supported.\n\n- Start and end indices are either passed as two 1D input tensors or using the `starts` and `ends` arguments.\n\n- If a negative value is passed for any of the start or end indices, it represents the number of elements before the end of that dimension. End indices are non-inclusive unless negative (end index -1 means up to and including the last element).\n\nGithub Links:\n- https://github.com/pytorch/pytorch/blob/master/caffe2/operators/slice_op.cc\n\n<details>\n\n<summary> <b>Example</b> </summary>\n\n**Code**\n\n```\n\nworkspace.ResetWorkspace()\n\nop = core.CreateOperator(\n    \"Slice\",\n    [\"X\"],\n    [\"Y\"],\n    starts=(0,1),\n    ends=(-1,3)\n)\n\nworkspace.FeedBlob(\"X\", np.array([[1,2,3,4],[5,6,7,8]]))\nprint(\"X:\", workspace.FetchBlob(\"X\"))\nworkspace.RunOperatorOnce(op)\nprint(\"Y:\", workspace.FetchBlob(\"Y\"))\n\n```\n\n**Result**\n\n```\n\nX:\n[[1 2 3 4]\n [5 6 7 8]]\nY:\n[[2 3]\n [6 7]]\n\n```\n\n</details>\n\n",
       "inputs": [
         {
@@ -11594,7 +11595,7 @@
           "option": "optional"
         }
       ],
-      "description": "\nGiven a dataset under a schema specified by the `fields` argument will pack all\nthe input tensors into one, where each tensor element represents a row of data\n(batch of size 1). This format allows easier use with the rest of Caffe2\noperators.\n",
+      "description": "\nGiven a dataset under a schema specified by the `fields` argument, pack all\nthe input tensors into one, where each tensor element represents a row of data\n(batch of size 1). This format allows easier use with the rest of Caffe2\noperators.\n",
       "outputs": [
         {
           "description": "One dimensional tensor having a complex type of SharedTensorVectorPtr. In order to reverse it back to the original input it has to be inserted into UnPackRecordsOp.",
@@ -12039,7 +12040,7 @@
   {
     "name": "FloatToFused8BitRowwiseQuantized",
     "schema": {
-      "description": "\nApplies 8-bit row-wise quantization by determining the range\n(maximum - minimum) and offset (minimum value) of each row in the input\nmatrix, and then scaling each element to an 8-bit number between 0 and\n255. To later de-quantize values, the scale (range / 255) and offset\n(bias) are stored alongside the data. More precisely, each row contains\nint8 elements for each quantized element, and the last 8 bytes\nof each row in the output matrix are a float storing the scale\nfollowed by another float containing the scale.)\n",
+      "description": "\nApplies 8-bit row-wise quantization by determining the range\n(maximum - minimum) and offset (minimum value) of each row in the input\nmatrix, and then scaling each element to an 8-bit number between 0 and\n255. To later de-quantize values, the scale (range / 255) and offset\n(bias) are stored alongside the data. More precisely, each row contains\nint8 elements for each quantized element, and the last 8 bytes\nof each row in the output matrix are a float storing the scale\nfollowed by another float containing the scale.\nFor N-dimensional input tensor, the first N-1 dimensions are interpreted as\nrows and the last dimension is interpreted as a column. For example, an\ninput tensor with dimension 5x2x4 is interpreted as 10 rows and 4 columns.\n)\n",
       "inputs": [
         {
           "description": "Float32 input data",
@@ -14465,7 +14466,7 @@
           "option": "optional"
         }
       ],
-      "description": "\nTakes in a tensor of type *bool*, *int*, *long*, or *long long* and checks if all values are True when coerced into a boolean. In other words, for non-bool types this asserts that all values in the tensor are non-zero. If a value is False after coerced into a boolean, the operator throws an error. Else, if all values are True, nothing is returned. For tracability, a custom error message can be set using the `error_msg` arguement.\n\nGithub Links:\n- https://github.com/pytorch/pytorch/blob/master/caffe2/operators/assert_op.cc\n\n<details>\n\n<summary> <b>Example</b> </summary>\n\n**Code**\n\n```\n\nworkspace.ResetWorkspace()\n\nop = core.CreateOperator(\n    \"Assert\",\n    [\"A\"],\n    [],\n    error_msg=\"Failed assertion from Assert operator\"\n)\n\nworkspace.FeedBlob(\"A\", np.random.randint(10, size=(3,3)).astype(np.int32))\nprint(\"A:\", workspace.FetchBlob(\"A\"))\ntry:\n    workspace.RunOperatorOnce(op)\nexcept RuntimeError:\n    print(\"Assertion Failed!\")\nelse:\n    print(\"Assertion Passed!\")\n\n```\n\n**Result**\n\n```\n\nA:\n[[7 5 6]\n [1 2 4]\n [5 3 7]]\nAssertion Passed!\n\n```\n\n</details>\n\n        ",
+      "description": "\nTakes in a tensor of type *bool*, *int*, *long*, or *long long* and checks if all values are True when coerced into a boolean. In other words, for non-bool types this asserts that all values in the tensor are non-zero. If a value is False after coerced into a boolean, the operator throws an error. Else, if all values are True, nothing is returned. For tracability, a custom error message can be set using the `error_msg` argument.\n\nGithub Links:\n- https://github.com/pytorch/pytorch/blob/master/caffe2/operators/assert_op.cc\n\n<details>\n\n<summary> <b>Example</b> </summary>\n\n**Code**\n\n```\n\nworkspace.ResetWorkspace()\n\nop = core.CreateOperator(\n    \"Assert\",\n    [\"A\"],\n    [],\n    error_msg=\"Failed assertion from Assert operator\"\n)\n\nworkspace.FeedBlob(\"A\", np.random.randint(10, size=(3,3)).astype(np.int32))\nprint(\"A:\", workspace.FetchBlob(\"A\"))\ntry:\n    workspace.RunOperatorOnce(op)\nexcept RuntimeError:\n    print(\"Assertion Failed!\")\nelse:\n    print(\"Assertion Passed!\")\n\n```\n\n**Result**\n\n```\n\nA:\n[[7 5 6]\n [1 2 4]\n [5 3 7]]\nAssertion Passed!\n\n```\n\n</details>\n\n        ",
       "inputs": [
         {
           "description": "(*Tensor*): input tensor",
@@ -15048,7 +15049,7 @@
           "option": "optional"
         }
       ],
-      "description": "\nGiven a packed dataset (packed by the PackRecordsOp) and the `fields` argument\ndescribing the datasets schema returns the original dataset format. Number of\nreturned tensors is equal to the number of fields in the `fields` argument.\n\nThe first input is the packed tensor to be unpacked. Optionally, you can provide\nprototype tensors to give the expected shapes of the output tensors. This is\nhelpful when you expected to unpack empty tensor, e.g., output of a sampling\nprocess.\n",
+      "description": "\nGiven a packed dataset (packed by the PackRecordsOp) and the `fields` argument\ndescribing the datasets schema, return the original dataset format. Number of\nreturned tensors is equal to the number of fields in the `fields` argument.\n\nThe first input is the packed tensor to be unpacked. Optionally, you can provide\nprototype tensors to give the expected shapes of the output tensors. This is\nhelpful when you expected to unpack empty tensor, e.g., output of a sampling\nprocess.\n",
       "inputs": [
         {
           "description": "The tensor to be unpacked",
@@ -17218,6 +17219,1251 @@
         {
           "description": "Value of the first operand before sum.",
           "name": "fetched_value"
+        }
+      ],
+      "support_level": "default"
+    }
+  },
+  {
+    "name": "Quantile",
+    "schema": {
+      "attributes": [
+        {
+          "description": "If true (default), apply abs() on the tensor values.",
+          "name": "abs",
+          "option": "optional"
+        },
+        {
+          "description": "multiplicative tolerance of the quantile_value.",
+          "name": "tol",
+          "option": "optional"
+        }
+      ],
+      "description": "\n    Calculate the quantile for the value in the given list of tensors.\n",
+      "inputs": [
+        {
+          "description": "*(type: Tensor`<float>`)* List of input tensors.",
+          "name": "X1, X2, ..."
+        }
+      ],
+      "outputs": [
+        {
+          "description": "Value at the given quantile",
+          "name": "quantile_value"
+        }
+      ],
+      "support_level": "default"
+    }
+  },
+  {
+    "name": "SparseLengthsSumFused2BitRowwise",
+    "schema": {
+      "description": "\nPerforms the same operation as SparseLengthsSum, but operating on\n2-bit rowwise quantized matrices with fused storage (where each row\nstores quantized values, and then 2-byte fp16 scale and bias).\n",
+      "inputs": [
+        {
+          "description": "uint8 tensor obtained with operator FloatToFused2BitRowwiseQuantized",
+          "name": "DATA"
+        },
+        {
+          "description": "Integer vector containing indices of the first dimension of DATA for the slices that are being aggregated",
+          "name": "INDICES"
+        },
+        {
+          "description": "Vector with the same sum of elements as the first dimension of DATA",
+          "name": "LENGTHS"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "output",
+          "name": "output"
+        }
+      ],
+      "support_level": "default"
+    }
+  },
+  {
+    "name": "FloatToFused4BitRowwiseQuantized",
+    "schema": {
+      "description": "\nApplies 4-bit row-wise quantization by determining the range\n(maximum - minimum) and offset (minimum value) of each row in the input\nmatrix, and then scaling each element to an 4-bit number between 0 and\n15. To later de-quantize values, the scale (range / 15) and zero_point\nare stored alongside the data. More precisely, each row first has quantized\nvalues, and then 2-byte fp16 scale and 2-byte zero_offset.)\n",
+      "inputs": [
+        {
+          "description": "Float32 input data",
+          "name": "input"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "Fused scale, bias and quantized data",
+          "name": "output"
+        }
+      ],
+      "support_level": "default"
+    }
+  },
+  {
+    "name": "SparseLengthsWeightedSum2BitRowwiseSparse",
+    "schema": {
+      "description": "\nPerforms SparseLengthsWeightedSum, but operating on 2-bit rowwise quantized\nmatrices with fused storage (where each row stores quantized values, and then\n2-byte fp16 scale and bias), and where rows are pruned.\n",
+      "inputs": [
+        {
+          "description": "uint8 tensor obtained with operator FloatToFused2BitRowwiseQuantized",
+          "name": "DATA"
+        },
+        {
+          "description": "Integer vector containing indices of the first dimension of DATA for the slices that are being aggregated",
+          "name": "INDICES"
+        },
+        {
+          "description": "Vector with the same sum of elements as the first dimension of DATA",
+          "name": "LENGTHS"
+        },
+        {
+          "description": "Vector of weights to scale rows of DATA with before reduction",
+          "name": "WEIGHTS"
+        },
+        {
+          "description": "Integer vector mapping uncompressed indices to compressed indices",
+          "name": "COMPRESSED_INDICES_MAPPING"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "output",
+          "name": "output"
+        }
+      ],
+      "support_level": "default"
+    }
+  },
+  {
+    "name": "FloatToFused2BitRowwiseQuantized",
+    "schema": {
+      "description": "\nApplies 2-bit row-wise quantization by determining the range\n(maximum - minimum) and offset (minimum value) of each row in the input\nmatrix, and then scaling each element to an 2-bit number between 0 and\n3. To later de-quantize values, the scale (range / 3) and zero_point\nare stored alongside the data. More precisely, each row first has quantized\nvalues, and then 2-byte fp16 scale and 2-byte zero_offset.)\n",
+      "inputs": [
+        {
+          "description": "Float32 input data",
+          "name": "input"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "Fused scale, bias and quantized data",
+          "name": "output"
+        }
+      ],
+      "support_level": "default"
+    }
+  },
+  {
+    "name": "SparseLengthsWeightedSum4BitRowwiseSparse",
+    "schema": {
+      "description": "\nPerforms SparseLengthsWeightedSum, but operating on 4-bit rowwise quantized\nmatrices with fused storage (where each row stores quantized values, and then\n2-byte fp16 scale and bias), and where rows are pruned.\n",
+      "inputs": [
+        {
+          "description": "uint8 tensor obtained with operator FloatToFused4BitRowwiseQuantized",
+          "name": "DATA"
+        },
+        {
+          "description": "Integer vector containing indices of the first dimension of DATA for the slices that are being aggregated",
+          "name": "INDICES"
+        },
+        {
+          "description": "Vector with the same sum of elements as the first dimension of DATA",
+          "name": "LENGTHS"
+        },
+        {
+          "description": "Vector of weights to scale rows of DATA with before reduction",
+          "name": "WEIGHTS"
+        },
+        {
+          "description": "Integer vector mapping uncompressed indices to compressed indices",
+          "name": "COMPRESSED_INDICES_MAPPING"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "output",
+          "name": "output"
+        }
+      ],
+      "support_level": "default"
+    }
+  },
+  {
+    "name": "SparseLengthsMean4BitRowwiseSparse",
+    "schema": {
+      "description": "\nPerforms SparseLengthsMean, but operating on 4-bit rowwise quantized matrices\nwith fused storage (where each row stores quantized values, and then 2-byte\nfp16 scale and bias), and where rows are pruned.\n",
+      "inputs": [
+        {
+          "description": "uint8 tensor obtained with operator FloatToFused4BitRowwiseQuantized",
+          "name": "DATA"
+        },
+        {
+          "description": "Integer vector containing indices of the first dimension of DATA for the slices that are being aggregated",
+          "name": "INDICES"
+        },
+        {
+          "description": "Vector with the same sum of elements as the first dimension of DATA",
+          "name": "LENGTHS"
+        },
+        {
+          "description": "Integer vector mapping uncompressed indices to compressed indices",
+          "name": "COMPRESSED_INDICES_MAPPING"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "output",
+          "name": "output"
+        }
+      ],
+      "support_level": "default"
+    }
+  },
+  {
+    "name": "SparseLengthsMean2BitRowwiseSparse",
+    "schema": {
+      "description": "\nPerforms SparseLengthsMean, but operating on 2-bit rowwise quantized matrices\nwith fused storage (where each row stores quantized values, and then 2-byte\nfp16 scale and bias), and where rows are pruned.\n",
+      "inputs": [
+        {
+          "description": "uint8 tensor obtained with operator FloatToFused2BitRowwiseQuantized",
+          "name": "DATA"
+        },
+        {
+          "description": "Integer vector containing indices of the first dimension of DATA for the slices that are being aggregated",
+          "name": "INDICES"
+        },
+        {
+          "description": "Vector with the same sum of elements as the first dimension of DATA",
+          "name": "LENGTHS"
+        },
+        {
+          "description": "Integer vector mapping uncompressed indices to compressed indices",
+          "name": "COMPRESSED_INDICES_MAPPING"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "output",
+          "name": "output"
+        }
+      ],
+      "support_level": "default"
+    }
+  },
+  {
+    "name": "SparseLengthsWeightedSumFused2BitRowwise",
+    "schema": {
+      "description": "\nPerforms the same operation as SparseLengthsWeightedSum,\nbut operating on 2-bit rowwise quantized matrices with fused storage\n(where each row stores quantized values, and then 2-byte fp16 scale and bias).\n",
+      "inputs": [
+        {
+          "description": "uint8 tensor obtained with operator FloatToFused2BitRowwiseQuantized",
+          "name": "DATA"
+        },
+        {
+          "description": "Integer vector containing indices of the first dimension of DATA for the slices that are being aggregated",
+          "name": "INDICES"
+        },
+        {
+          "description": "Vector with the same sum of elements as the first dimension of DATA",
+          "name": "LENGTHS"
+        },
+        {
+          "description": "Vector of weights to scale rows of DATA with before reduction",
+          "name": "WEIGHTS"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "output",
+          "name": "output"
+        }
+      ],
+      "support_level": "default"
+    }
+  },
+  {
+    "name": "Fused4BitRowwiseQuantizedToFloat",
+    "schema": {
+      "description": "\nDe-quantizes the result of the\nFloatToFused4BitRowwiseQuantized operator. The input is expected to first have\nquantized values, then 2-byte fp16 scale and 1-byte zero_offset. The output is a\nmatrix containing only the values, but de-quantized. De-quantization is\nperformed by multiplying each value by its row's scale and zero_point\nparameters. The de-quantized values will thus not be exactly equal to\nthe original, un-quantized floating point values.\n",
+      "inputs": [
+        {
+          "description": "Fused scale, bias and quantized data",
+          "name": "scale_bias_quantized_input"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "Float32 data",
+          "name": "float_output"
+        }
+      ],
+      "support_level": "default"
+    }
+  },
+  {
+    "name": "SparseLengthsMean8BitRowwiseSparse",
+    "schema": {
+      "description": "\nPerforms SparseLengthsMean, but operating on 8-bit rowwise quantized matrices\nwith fused storage (where each row stores quantized values, and then 4-byte\nfp32 scale and bias), and where rows are pruned.\n",
+      "inputs": [
+        {
+          "description": "uint8 tensor obtained with operator FloatToFused4BitRowwiseQuantized",
+          "name": "DATA"
+        },
+        {
+          "description": "Integer vector containing indices of the first dimension of DATA for the slices that are being aggregated",
+          "name": "INDICES"
+        },
+        {
+          "description": "Vector with the same sum of elements as the first dimension of DATA",
+          "name": "LENGTHS"
+        },
+        {
+          "description": "Integer vector mapping uncompressed indices to compressed indices",
+          "name": "COMPRESSED_INDICES_MAPPING"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "output",
+          "name": "output"
+        }
+      ],
+      "support_level": "default"
+    }
+  },
+  {
+    "name": "HalfToFused4BitRowwiseQuantized",
+    "schema": {
+      "description": "\nApplies 4-bit row-wise quantization by determining the range\n(maximum - minimum) and offset (minimum value) of each row in the input\nmatrix, and then scaling each element to an 4-bit number between 0 and\n15. To later de-quantize values, the scale (range / 15) and zero_point\nare stored alongside the data. More precisely, each row first has quantized\nvalues, and then 2-byte fp16 scale and 2-byte zero_offset.)\n",
+      "inputs": [
+        {
+          "description": "Float16 input data",
+          "name": "input"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "Fused scale, bias and quantized data",
+          "name": "output"
+        }
+      ],
+      "support_level": "default"
+    }
+  },
+  {
+    "name": "SparseLengthsSumFused4BitRowwise",
+    "schema": {
+      "description": "\nPerforms the same operation as SparseLengthsSum, but operating on\n4-bit rowwise quantized matrices with fused storage (where each row\nstores quantized values, and then 2-byte fp16 scale and bias).\n",
+      "inputs": [
+        {
+          "description": "uint8 tensor obtained with operator FloatToFused4BitRowwiseQuantized",
+          "name": "DATA"
+        },
+        {
+          "description": "Integer vector containing indices of the first dimension of DATA for the slices that are being aggregated",
+          "name": "INDICES"
+        },
+        {
+          "description": "Vector with the same sum of elements as the first dimension of DATA",
+          "name": "LENGTHS"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "output",
+          "name": "output"
+        }
+      ],
+      "support_level": "default"
+    }
+  },
+  {
+    "name": "Fused4BitRowwiseQuantizedToHalf",
+    "schema": {
+      "description": "\nDe-quantizes the result of the\nFloatToFused4BitRowwiseQuantized operator. The input is expected to first have\nquantized values, then 2-byte fp16 scale and 1-byte zero_offset. The output is a\nmatrix containing only the values, but de-quantized. De-quantization is\nperformed by multiplying each value by its row's scale and zero_point\nparameters. The de-quantized values will thus not be exactly equal to\nthe original, un-quantized floating point values.\n",
+      "inputs": [
+        {
+          "description": "Fused scale, bias and quantized data",
+          "name": "scale_bias_quantized_input"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "Float16 data",
+          "name": "float16_output"
+        }
+      ],
+      "support_level": "default"
+    }
+  },
+  {
+    "name": "SparseLengthsMeanFused4BitRowwise",
+    "schema": {
+      "description": "\nPerforms the same operation as SparseLengthsMean, but\noperating on 4-bit rowwise quantized matrices with fused storage\n(where each row stores quantized values, and then 2-byte fp16 scale and bias).\n",
+      "inputs": [
+        {
+          "description": "uint8 tensor obtained with operator FloatToFused4BitRowwiseQuantized",
+          "name": "DATA"
+        },
+        {
+          "description": "Integer vector containing indices of the first dimension of DATA for the slices that are being aggregated",
+          "name": "INDICES"
+        },
+        {
+          "description": "Vector with the same sum of elements as the first dimension of DATA",
+          "name": "LENGTHS"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "output",
+          "name": "output"
+        }
+      ],
+      "support_level": "default"
+    }
+  },
+  {
+    "name": "HalfToFused2BitFakeRowwiseQuantized",
+    "schema": {
+      "description": "\nApplies 2-bit row-wise fake quantization to a tensor of half floats.\nThe output looks like an int8 rowwise quantized blob with\nscale and biases in half float.\n",
+      "inputs": [
+        {
+          "description": "Float16 input data",
+          "name": "input"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "Fused scale, bias and quantized data",
+          "name": "output"
+        }
+      ],
+      "support_level": "default"
+    }
+  },
+  {
+    "name": "FloatToFused2BitFakeRowwiseQuantized",
+    "schema": {
+      "description": "\nApplies 2-bit row-wise fake quantization to a tensor of floats.\nThe output looks like an int8 rowwise quantized blob with\nscale and biases in half float.\n",
+      "inputs": [
+        {
+          "description": "Float32 input data",
+          "name": "input"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "Fused scale, bias and quantized data",
+          "name": "output"
+        }
+      ],
+      "support_level": "default"
+    }
+  },
+  {
+    "name": "FloatToFused4BitFakeRowwiseQuantized",
+    "schema": {
+      "description": "\nApplies 4-bit row-wise fake quantization to a tensor of floats.\nThe output looks like an int8 rowwise quantized blob with\nscale and biases in half float.\n",
+      "inputs": [
+        {
+          "description": "Float32 input data",
+          "name": "input"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "Fused scale, bias and quantized data",
+          "name": "output"
+        }
+      ],
+      "support_level": "default"
+    }
+  },
+  {
+    "name": "Fused2BitRowwiseQuantizedToFloat",
+    "schema": {
+      "description": "\nDe-quantizes the result of the\nFloatToFused2BitRowwiseQuantized operator. The input is expected to first have\nquantized values, then 2-byte fp16 scale and 1-byte zero_offset. The output is a\nmatrix containing only the values, but de-quantized. De-quantization is\nperformed by multiplying each value by its row's scale and zero_point\nparameters. The de-quantized values will thus not be exactly equal to\nthe original, un-quantized floating point values.\n",
+      "inputs": [
+        {
+          "description": "Fused scale, bias and quantized data",
+          "name": "scale_bias_quantized_input"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "Float32 data",
+          "name": "float_output"
+        }
+      ],
+      "support_level": "default"
+    }
+  },
+  {
+    "name": "SparseLengthsSum4BitRowwiseSparse",
+    "schema": {
+      "description": "\nPerforms SparseLengthsSum, but operating on 4-bit rowwise quantized matrices\nwith fused storage (where each row stores quantized values, and then 2-byte\nfp16 scale and 2-byte fp16 bias), and where rows are pruned.\n",
+      "inputs": [
+        {
+          "description": "uint8 tensor obtained with operator FloatToFused4BitRowwiseQuantized",
+          "name": "DATA"
+        },
+        {
+          "description": "Integer vector containing indices of the first dimension of DATA for the slices that are being aggregated",
+          "name": "INDICES"
+        },
+        {
+          "description": "Vector with the same sum of elements as the first dimension of DATA",
+          "name": "LENGTHS"
+        },
+        {
+          "description": "Integer vector mapping uncompressed indices to compressed indices",
+          "name": "COMPRESSED_INDICES_MAPPING"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "output",
+          "name": "output"
+        }
+      ],
+      "support_level": "default"
+    }
+  },
+  {
+    "name": "HalfToFused2BitRowwiseQuantized",
+    "schema": {
+      "description": "\nApplies 2-bit row-wise quantization by determining the range\n(maximum - minimum) and offset (minimum value) of each row in the input\nmatrix, and then scaling each element to an 2-bit number between 0 and\n3. To later de-quantize values, the scale (range / 3) and zero_point\nare stored alongside the data. More precisely, each row first has quantized\nvalues, and then 2-byte fp16 scale and 2-byte zero_offset.)\n",
+      "inputs": [
+        {
+          "description": "Float16 input data",
+          "name": "input"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "Fused scale, bias and quantized data",
+          "name": "output"
+        }
+      ],
+      "support_level": "default"
+    }
+  },
+  {
+    "name": "SparseLengthsMeanFused2BitRowwise",
+    "schema": {
+      "description": "\nPerforms the same operation as SparseLengthsMean, but\noperating on 2-bit rowwise quantized matrices with fused storage\n(where each row stores quantized values, and then 2-byte fp16 scale and bias).\n",
+      "inputs": [
+        {
+          "description": "uint8 tensor obtained with operator FloatToFused2BitRowwiseQuantized",
+          "name": "DATA"
+        },
+        {
+          "description": "Integer vector containing indices of the first dimension of DATA for the slices that are being aggregated",
+          "name": "INDICES"
+        },
+        {
+          "description": "Vector with the same sum of elements as the first dimension of DATA",
+          "name": "LENGTHS"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "output",
+          "name": "output"
+        }
+      ],
+      "support_level": "default"
+    }
+  },
+  {
+    "name": "SparseLengthsWeightedSumFused4BitRowwise",
+    "schema": {
+      "description": "\nPerforms the same operation as SparseLengthsWeightedSum,\nbut operating on 4-bit rowwise quantized matrices with fused storage\n(where each row stores quantized values, and then 2-byte fp16 scale and bias).\n",
+      "inputs": [
+        {
+          "description": "uint8 tensor obtained with operator FloatToFused4BitRowwiseQuantized",
+          "name": "DATA"
+        },
+        {
+          "description": "Integer vector containing indices of the first dimension of DATA for the slices that are being aggregated",
+          "name": "INDICES"
+        },
+        {
+          "description": "Vector with the same sum of elements as the first dimension of DATA",
+          "name": "LENGTHS"
+        },
+        {
+          "description": "Vector of weights to scale rows of DATA with before reduction",
+          "name": "WEIGHTS"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "output",
+          "name": "output"
+        }
+      ],
+      "support_level": "default"
+    }
+  },
+  {
+    "name": "SparseLengthsSum8BitRowwiseSparse",
+    "schema": {
+      "description": "\nPerforms SparseLengthsSum, but operating on 8-bit rowwise quantized matrices\nwith fused storage (where each row stores quantized values, and then 4-byte\nfp32 scale and 4-byte fp32 bias), and where rows are pruned.\n",
+      "inputs": [
+        {
+          "description": "uint8 tensor obtained with operator FloatToFused4BitRowwiseQuantized",
+          "name": "DATA"
+        },
+        {
+          "description": "Integer vector containing indices of the first dimension of DATA for the slices that are being aggregated",
+          "name": "INDICES"
+        },
+        {
+          "description": "Vector with the same sum of elements as the first dimension of DATA",
+          "name": "LENGTHS"
+        },
+        {
+          "description": "Integer vector mapping uncompressed indices to compressed indices",
+          "name": "COMPRESSED_INDICES_MAPPING"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "output",
+          "name": "output"
+        }
+      ],
+      "support_level": "default"
+    }
+  },
+  {
+    "name": "SparseLengthsSum2BitRowwiseSparse",
+    "schema": {
+      "description": "\nPerforms SparseLengthsSum, but operating on 2-bit rowwise quantized matrices\nwith fused storage (where each row stores quantized values, and then 2-byte\nfp16 scale and 2-byte fp16 bias), and where rows are pruned.\n",
+      "inputs": [
+        {
+          "description": "uint8 tensor obtained with operator FloatToFused2BitRowwiseQuantized",
+          "name": "DATA"
+        },
+        {
+          "description": "Integer vector containing indices of the first dimension of DATA for the slices that are being aggregated",
+          "name": "INDICES"
+        },
+        {
+          "description": "Vector with the same sum of elements as the first dimension of DATA",
+          "name": "LENGTHS"
+        },
+        {
+          "description": "Integer vector mapping uncompressed indices to compressed indices",
+          "name": "COMPRESSED_INDICES_MAPPING"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "output",
+          "name": "output"
+        }
+      ],
+      "support_level": "default"
+    }
+  },
+  {
+    "name": "HalfToFused4BitFakeRowwiseQuantized",
+    "schema": {
+      "description": "\nApplies 4-bit row-wise fake quantization to a tensor of half floats.\nThe output looks like an int8 rowwise quantized blob with\nscale and biases in half float.\n",
+      "inputs": [
+        {
+          "description": "Float16 input data",
+          "name": "input"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "Fused scale, bias and quantized data",
+          "name": "output"
+        }
+      ],
+      "support_level": "default"
+    }
+  },
+  {
+    "name": "SparseLengthsWeightedSum8BitRowwiseSparse",
+    "schema": {
+      "description": "\nPerforms SparseLengthsWeightedSum, but operating on 8-bit rowwise quantized\nmatrices with fused storage (where each row stores quantized values, and then\n4-byte fp32 scale and bias), and where rows are pruned.\n",
+      "inputs": [
+        {
+          "description": "uint8 tensor obtained with operator FloatToFused4BitRowwiseQuantized",
+          "name": "DATA"
+        },
+        {
+          "description": "Integer vector containing indices of the first dimension of DATA for the slices that are being aggregated",
+          "name": "INDICES"
+        },
+        {
+          "description": "Vector with the same sum of elements as the first dimension of DATA",
+          "name": "LENGTHS"
+        },
+        {
+          "description": "Vector of weights to scale rows of DATA with before reduction",
+          "name": "WEIGHTS"
+        },
+        {
+          "description": "Integer vector mapping uncompressed indices to compressed indices",
+          "name": "COMPRESSED_INDICES_MAPPING"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "output",
+          "name": "output"
+        }
+      ],
+      "support_level": "default"
+    }
+  },
+  {
+    "name": "Fused2BitRowwiseQuantizedToHalf",
+    "schema": {
+      "description": "\nDe-quantizes the result of the\nFloatToFused2BitRowwiseQuantized operator. The input is expected to first have\nquantized values, then 2-byte fp16 scale and 1-byte zero_offset. The output is a\nmatrix containing only the values, but de-quantized. De-quantization is\nperformed by multiplying each value by its row's scale and zero_point\nparameters. The de-quantized values will thus not be exactly equal to\nthe original, un-quantized floating point values.\n",
+      "inputs": [
+        {
+          "description": "Fused scale, bias and quantized data",
+          "name": "scale_bias_quantized_input"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "Float16 data",
+          "name": "float16_output"
+        }
+      ],
+      "support_level": "default"
+    }
+  },
+  {
+    "name": "WeightScale",
+    "schema": {
+      "attributes": [
+        {
+          "description": "Every iteration number to do weight scaling",
+          "name": "stepsize",
+          "option": "optional"
+        },
+        {
+          "description": "After iter passes this bound, do not perform the weight rescaling",
+          "name": "upper_bound_iter",
+          "option": "optional"
+        },
+        {
+          "description": "The multiplicative factor applied to weights.",
+          "name": "scale",
+          "option": "optional"
+        }
+      ],
+      "description": "\nEvery `stepsize` iterations, multiply the weights by a constant `scale`:\n    nw = w * scale\n",
+      "inputs": [
+        {
+          "description": "Current weights",
+          "name": "w"
+        },
+        {
+          "description": "Training Iteration",
+          "name": "iter"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "Updated weights",
+          "name": "nw"
+        }
+      ],
+      "support_level": "default"
+    }
+  },
+  {
+    "name": "SparseAdagradFusedWithSparseLengthsSumGradient",
+    "schema": {
+      "attributes": [
+        {
+          "description": "Default 1e-5",
+          "name": "epsilon",
+          "option": "optional"
+        }
+      ],
+      "description": "\n\nFused operator of\nSparseLengthsIndicesInGradientSumGradient (gradient of SparseLengthsSum) +\nSparseAdagrad.\n\nGiven inputs (param, moment, indices, grad, lr), runs the sparse AdaGrad\nupdate on (param, grad, moment[indices], lr), and returns (new_param,\nnew_moment) as in the dense case. Additional input (lengths) is for fused\nSparseLengthsIndicesInGradientSumGradient operator.\n\n",
+      "inputs": [
+        {
+          "description": "Parameters to be updated",
+          "name": "param"
+        },
+        {
+          "description": "Moment history",
+          "name": "moment"
+        },
+        {
+          "description": "Integer vector containing indices of the first dimension of param for the slices that are being updated",
+          "name": "indices"
+        },
+        {
+          "description": "Gradient computed",
+          "name": "grad"
+        },
+        {
+          "description": "learning rate",
+          "name": "lr"
+        },
+        {
+          "description": "Non negative vector with sum of elements equal to indices length",
+          "name": "lengths"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "Updated parameters",
+          "name": "output_param"
+        },
+        {
+          "description": "Updated moment",
+          "name": "output_moment"
+        }
+      ],
+      "support_level": "default"
+    }
+  },
+  {
+    "name": "SparseAdagradFusedWithSparseLengthsWeightedSumGradientApprox",
+    "schema": {
+      "attributes": [
+        {
+          "description": "Default 1e-5",
+          "name": "epsilon",
+          "option": "optional"
+        }
+      ],
+      "description": "\n\nApproximately fused operator of\nSparseLengthsIndicesInGradientWeightedSumWithMainInputGradient\n(gradient of SparseLengthsWeightedSum) + SparseAdagrad, where weights are\npositional weights computed with LengthsRangeFill + Gather pattern.\n\nGiven inputs (param, moment, indices, grad, lr), runs the sparse AdaGrad\nupdate on (param, grad, moment[indices], lr), and returns (new_param,\nnew_moment) as in the dense case.\nThere's race condition w.r.t. ordering between reading params and writing to\nparam, hence the name Approx.\nThere're auxiliary inputs (aux_param) for which gradient is computed and\nreturns (aux_grad).\nYet additional input (lengths) is for fused\nSparseLengthsIndicesInGradientWeightedSumWithMainInputGradient operator.\n\n",
+      "inputs": [
+        {
+          "description": "Parameters to be updated",
+          "name": "param"
+        },
+        {
+          "description": "Moment history",
+          "name": "moment"
+        },
+        {
+          "description": "Auxiliary parameters to be updated",
+          "name": "aux_param"
+        },
+        {
+          "description": "Integer vector containing indices of the first dimension of param for the slices that are being updated",
+          "name": "indices"
+        },
+        {
+          "description": "Gradient computed",
+          "name": "grad"
+        },
+        {
+          "description": "learning rate",
+          "name": "lr"
+        },
+        {
+          "description": "Non negative vector with sum of elements equal to indices length",
+          "name": "lengths"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "Updated parameters",
+          "name": "output_param"
+        },
+        {
+          "description": "Updated moment",
+          "name": "output_moment"
+        },
+        {
+          "description": "Auxiliary gradients",
+          "name": "aux_grad"
+        }
+      ],
+      "support_level": "default"
+    }
+  },
+  {
+    "name": "RowWiseSparseAdagradFusedWithSparseLengthsWeightedSumGradient",
+    "schema": {
+      "attributes": [
+        {
+          "description": "Default 1e-5",
+          "name": "epsilon",
+          "option": "optional"
+        }
+      ],
+      "description": "\n\nFused operator of SparseLengthsIndicesInGradientWeightedSumWithMainInputGradient\n(gradient of SparseLengthsWeightedSum) + RowWiseSparseAdagrad, where weights are\npositional weights computed with LengthsRangeFill + Gather pattern.\n\nGiven inputs (param, moment, indices, grad, lr), runs the row-wise sparse\nAdaGrad update on (param, grad, moment[indices], lr), and returns (new_param,\nnew_moment) as in the dense case.\nThere're auxiliary inputs (aux_param) for which gradient is computed and\nreturns (aux_grad).\nYet additional input (lengths) is for fused SparseLengthsWeightedSumGradient\noperator.\n\n",
+      "inputs": [
+        {
+          "description": "Parameters to be updated",
+          "name": "param"
+        },
+        {
+          "description": "Moment history",
+          "name": "moment"
+        },
+        {
+          "description": "Auxiliary parameters to be updated",
+          "name": "aux_param"
+        },
+        {
+          "description": "Integer vector containing indices of the first dimension of param for the slices that are being updated",
+          "name": "indices"
+        },
+        {
+          "description": "Gradient computed",
+          "name": "grad"
+        },
+        {
+          "description": "learning rate",
+          "name": "lr"
+        },
+        {
+          "description": "Non negative vector with sum of elements equal to indices length",
+          "name": "lengths"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "Updated parameters",
+          "name": "output_param"
+        },
+        {
+          "description": "Updated moment",
+          "name": "output_moment"
+        },
+        {
+          "description": "Auxiliary gradient",
+          "name": "aux_grad"
+        }
+      ],
+      "support_level": "default"
+    }
+  },
+  {
+    "name": "RowWiseSparseAdagradFusedWithSparseLengthsSumGradient",
+    "schema": {
+      "attributes": [
+        {
+          "description": "Default 1e-5",
+          "name": "epsilon",
+          "option": "optional"
+        }
+      ],
+      "description": "\n\nFused operator of\nSparseLengthsIndicesInGradientSumGradient (gradient of SparseLengthsSum) +\nRowWiseSparseAdagrad.\n\nGiven inputs (param, moment, indices, grad, lr), runs the row-wise sparse\nAdaGrad update on (param, grad, moment[indices], lr), and returns (new_param,\nnew_moment) as in the dense case. Additional input (lengths) is for fused\nSparseLengthsSumGradient operator.\n\n",
+      "inputs": [
+        {
+          "description": "Parameters to be updated",
+          "name": "param"
+        },
+        {
+          "description": "Moment history",
+          "name": "moment"
+        },
+        {
+          "description": "Integer vector containing indices of the first dimension of param for the slices that are being updated",
+          "name": "indices"
+        },
+        {
+          "description": "Gradient computed",
+          "name": "grad"
+        },
+        {
+          "description": "learning rate",
+          "name": "lr"
+        },
+        {
+          "description": "Non negative vector with sum of elements equal to indices length",
+          "name": "lengths"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "Updated parameters",
+          "name": "output_param"
+        },
+        {
+          "description": "Updated moment",
+          "name": "output_moment"
+        }
+      ],
+      "support_level": "default"
+    }
+  },
+  {
+    "name": "SparseAdagradFusedWithSparseLengthsWeightedSumGradient",
+    "schema": {
+      "attributes": [
+        {
+          "description": "Default 1e-5",
+          "name": "epsilon",
+          "option": "optional"
+        }
+      ],
+      "description": "\n\nFused operator of SparseLengthsIndicesInGradientWeightedSumWithMainInputGradient\n(gradient of SparseLengthsWeightedSum) + SparseAdagrad, where weights are\npositional weights computed with LengthsRangeFill + Gather pattern.\n\nGiven inputs (param, moment, indices, grad, lr), runs the sparse AdaGrad\nupdate on (param, grad, moment[indices], lr), and returns (new_param,\nnew_moment) as in the dense case.\nThere're auxiliary inputs (aux_param) for which gradient is computed\nand returns (aux_grad).\nYet additional input (lengths) is for fused\nSparseLengthsIndicesInGradientWeightedSumWithMainInputGradient operator.\n\n",
+      "inputs": [
+        {
+          "description": "Parameters to be updated",
+          "name": "param"
+        },
+        {
+          "description": "Moment history",
+          "name": "moment"
+        },
+        {
+          "description": "Auxiliary parameters to be updated",
+          "name": "aux_param"
+        },
+        {
+          "description": "Integer vector containing indices of the first dimension of param for the slices that are being updated",
+          "name": "indices"
+        },
+        {
+          "description": "Gradient computed",
+          "name": "grad"
+        },
+        {
+          "description": "learning rate",
+          "name": "lr"
+        },
+        {
+          "description": "Non negative vector with sum of elements equal to indices length",
+          "name": "lengths"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "Updated parameters",
+          "name": "output_param"
+        },
+        {
+          "description": "Updated moment",
+          "name": "output_moment"
+        },
+        {
+          "description": "Auxiliary gradient",
+          "name": "aux_grad"
+        }
+      ],
+      "support_level": "default"
+    }
+  },
+  {
+    "name": "RowWiseSparseAdagradFusedWithSparseLengthsWeightedSumGradientApprox",
+    "schema": {
+      "attributes": [
+        {
+          "description": "Default 1e-5",
+          "name": "epsilon",
+          "option": "optional"
+        }
+      ],
+      "description": "\n\nApproximately fused operator of\nSparseLengthsIndicesInGradientWeightedSumWithMainInputGradient\n(gradient of SparseLengthsWeightedSum) + RowWiseSparseAdagrad, where weights are\npositional weights computed with LengthsRangeFill + Gather pattern.\n\nGiven inputs (param, moment, indices, grad, lr), runs the row-wise sparse\nAdaGrad update on (param, grad, moment[indices], lr), and returns (new_param,\nnew_moment) as in the dense case.\nThere's race condition w.r.t. ordering between reading params and writing to\nparam, hence the name Approx.\nThere're auxiliary inputs (aux_param) for which gradient is computed\nand returns (aux_grad).\nYet additional input (lengths) is for fused SparseLengthsWeightedSumGradient\noperator.\n\n",
+      "inputs": [
+        {
+          "description": "Parameters to be updated",
+          "name": "param"
+        },
+        {
+          "description": "Moment history",
+          "name": "moment"
+        },
+        {
+          "description": "Auxiliary parameters to be updated",
+          "name": "aux_param"
+        },
+        {
+          "description": "Integer vector containing indices of the first dimension of param for the slices that are being updated",
+          "name": "indices"
+        },
+        {
+          "description": "Gradient computed",
+          "name": "grad"
+        },
+        {
+          "description": "learning rate",
+          "name": "lr"
+        },
+        {
+          "description": "Non negative vector with sum of elements equal to indices length",
+          "name": "lengths"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "Updated parameters",
+          "name": "output_param"
+        },
+        {
+          "description": "Updated moment",
+          "name": "output_moment"
+        },
+        {
+          "description": "Auxiliary gradient",
+          "name": "aux_grad"
+        }
+      ],
+      "support_level": "default"
+    }
+  },
+  {
+    "name": "SparseLengthsSumSparseLookup",
+    "schema": {
+      "description": "\nThis op converts compressed indices of SparseLengthsSum*Sparse to\nuncompressed indices of SparseLengthsSum*. For compressed indices that maps\nto -1. It means it will correspond to a zero row in the uncompressed data.\nTherefore we will remove this indices and adjust the lengths.\n",
+      "inputs": [
+        {
+          "description": "Integer vector containing compressed indices of the first dimension of DATA for the slices that are being aggregated",
+          "name": "INDICES"
+        },
+        {
+          "description": "Vector with the same sum of elements as the first dimension of INDICES",
+          "name": "LENGTHS"
+        },
+        {
+          "description": "Integer vector mapping uncompressed indices to compressed indices",
+          "name": "COMPRESSED_INDICES_MAPPING"
+        },
+        {
+          "description": "Vector of weights to scale rows of DATA with before reduction. Same size as INDICES.",
+          "name": "WEIGHTS"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "Uncompressed indices",
+          "name": "output_indices"
+        },
+        {
+          "description": "Adjusted lengths",
+          "name": "output_lengths"
+        },
+        {
+          "description": "Adjusted weights",
+          "name": "output_weights"
+        }
+      ],
+      "support_level": "default"
+    }
+  },
+  {
+    "name": "Storm",
+    "schema": {
+      "attributes": [
+        {
+          "description": "Momentum hyperparameter, c in the original paper.",
+          "name": "momentum",
+          "option": "optional"
+        },
+        {
+          "description": "denominator in adaptive learning rate, w in the original paper.",
+          "name": "beta",
+          "option": "optional"
+        }
+      ],
+      "description": "\n\nComputes the STORM (https://arxiv.org/abs/1905.10018) update for an input\ngradient and accumulated history of gradients. Concretely, given inputs\n(param, moment, grad_sq_sum, grad, lr), computes:\n\n    new_grad_sq_sum = grad_sq_sum + norm(grad)^2\n    effective_lr = lr / (beta + new_grad_sq_sum)^1/3\n    alpha = momentum * square(effective_lr)\n    new_moment = grad + (1 - alpha) * (moment - grad)\n    new_param = param + effective_lr * new_moment\n\nand returns (new_param, new_moment, new_grad_sq_sum).\n\nNote that due to caffe2 limitation, it is difficult to re-calculate gradient\nin the previous iteration using the current example. We simplied calculation\nfor new_moment by using the gradient from the current iteration.\n\n",
+      "inputs": [
+        {
+          "description": "Parameters to be updated.",
+          "name": "param"
+        },
+        {
+          "description": "Moment history.",
+          "name": "moment"
+        },
+        {
+          "description": "Sum of observed squared gradients.",
+          "name": "grad_sq_sum"
+        },
+        {
+          "description": "Gradients computed.",
+          "name": "grad"
+        },
+        {
+          "description": "Learning rate, k in the original paper.",
+          "name": "lr"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "Updated parameters.",
+          "name": "output_param"
+        },
+        {
+          "description": "Updated moment.",
+          "name": "output_moment"
+        },
+        {
+          "description": "Updated sum of squared gradients.",
+          "name": "output_grad_sq_sum"
+        }
+      ],
+      "support_level": "default"
+    }
+  },
+  {
+    "name": "SparseStorm",
+    "schema": {
+      "attributes": [
+        {
+          "description": "Momentum hyperparameter, c in the original paper.",
+          "name": "momentum",
+          "option": "optional"
+        },
+        {
+          "description": "denominator in adaptive learning rate, w in the original paper.",
+          "name": "beta",
+          "option": "optional"
+        }
+      ],
+      "description": "\n\nThis operator implement the STORM (https://arxiv.org/abs/1905.10018)\noptimization algorithm. Given inputs (param, moment, grad_sq_sum, grad,\nindices, lr), computes the dense STORM update on (param, moment[indices],\ngrad_sq_sum, grad, lr), and returns (new_param, new_moment, new_grad_sq_sum)\nas in the dense case.\n",
+      "inputs": [
+        {
+          "description": "Parameters to be updated.",
+          "name": "param"
+        },
+        {
+          "description": "Moment history.",
+          "name": "moment"
+        },
+        {
+          "description": "Sum of observed squared gradients.",
+          "name": "grad_sq_sum"
+        },
+        {
+          "description": "Gradients computed.",
+          "name": "grad"
+        },
+        {
+          "description": "Sparse indices.",
+          "name": "indices"
+        },
+        {
+          "description": "Learning rate, k in the original paper.",
+          "name": "lr"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "Updated parameters.",
+          "name": "output_param"
+        },
+        {
+          "description": "Updated moment.",
+          "name": "output_moment"
+        },
+        {
+          "description": "Updated sum of squared gradients.",
+          "name": "output_grad_sq_sum"
         }
       ],
       "support_level": "default"
