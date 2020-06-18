@@ -1201,7 +1201,7 @@ tennis.Node = class {
 
     /// [New in v4]
     get metadata() {
-        return this._metadata.type(this._type);
+        return this._metadata.type(this._operator);
     }
 
     get attributes() {
