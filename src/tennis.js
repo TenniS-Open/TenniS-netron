@@ -993,10 +993,12 @@ tennis.Argument = class {
         this._name = node.name;
     }
 
+    /// [Deprecated]
     get id() {
         return this._id;
     }
 
+    /// [New in v4]
     get name() {
         return this._id;
     }
@@ -1134,6 +1136,7 @@ tennis.Node = class {
         return this._name;
     }
 
+    /// [Deprecated]
     get operator() {
         return this._operator;
     }
@@ -1142,7 +1145,8 @@ tennis.Node = class {
         return this._operator;
     }
 
-    get documentation_d() {
+    /// [Deprecated]
+    get documentation() {
         let schema = this._metadata.getSchema(this._operator);
         if (schema) {
             schema = JSON.parse(JSON.stringify(schema));
@@ -1189,11 +1193,13 @@ tennis.Node = class {
         return '';
     }
 
-    get category_d() {
+    /// [Deprecated]
+    get category() {
         const schema = this._metadata.getSchema(this._operator);
         return (schema && schema.category) ? schema.category : '';
     }
 
+    /// [New in v4]
     get metadata() {
         return this._metadata.type(this._type);
     }
