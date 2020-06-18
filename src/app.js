@@ -9,6 +9,10 @@ const path = require('path');
 const process = require('process');
 const url = require('url');
 
+if (electron.nativeTheme == undefined) {
+    electron.nativeTheme = electron;
+}
+
 class Application {
 
     constructor() {
