@@ -1138,6 +1138,10 @@ tennis.Node = class {
         return this._operator;
     }
 
+    get type() {
+        return this._operator;
+    }
+
     get documentation_d() {
         let schema = this._metadata.getSchema(this._operator);
         if (schema) {
