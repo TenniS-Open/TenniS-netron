@@ -3,19 +3,19 @@
 /* TenniS: Tensor based Edge Neural Network Inference System */
 
 // var tennis = tennis || require("./tennis")
-var ts = ts || require("./tennis-utils")
+var ts = ts || require("./tennis")
 var fs = fs || require("fs")
 
 
-const filepath = "/Users/seetadev/Documents/SDK/CLion/TensorStack/python/test/0.add.tsm"
+const filepath = "O:\\Data\\caffe.tsm"
 var data = fs.readFileSync(filepath)
 
-let stream = new ts.Stream(data)
+let stream = new ts.utils.Stream(data)
 stream.skip(4)
 let mask = stream.int32()
 console.log(mask.toString(16))
 
-node = new ts.Node({"a":1})
+node = new ts.utils.Node({"a":1})
 console.log(node.has("a"))
 
 console.log("+-----------+")

@@ -817,9 +817,9 @@ tennis.ModelFactory = class {
             return new tennis.Model(metadata, stream);
         }
         catch (error) {
-            let message = error && error.message ? error.message : error.toString();
-            message = message.endsWith('.') ? message.substring(0, message.length - 1) : message;
-            throw new tennis.Error(message + " in '" + identifier + "'.");
+            const message = error && error.message ? error.message : error.toString();
+            // message = message.endsWith('.') ? message.substring(0, message.length - 1) : message;
+            throw new tennis.Error(message.replace(/\.$/, '') + " in '" + identifier + "'.");
         }
     }
 };
@@ -990,9 +990,14 @@ tennis.Argument = class {
                 this._initializer = new tennis.Tensor(node.get("value"), node.name);
             }
         }
+        this._name = node.name;
     }
 
     get id() {
+        return this._id;
+    }
+
+    get name() {
         return this._id;
     }
 
@@ -1133,7 +1138,7 @@ tennis.Node = class {
         return this._operator;
     }
 
-    get documentation() {
+    get documentation_d() {
         let schema = this._metadata.getSchema(this._operator);
         if (schema) {
             schema = JSON.parse(JSON.stringify(schema));
@@ -1180,9 +1185,13 @@ tennis.Node = class {
         return '';
     }
 
-    get category() {
+    get category_d() {
         const schema = this._metadata.getSchema(this._operator);
         return (schema && schema.category) ? schema.category : '';
+    }
+
+    get metadata() {
+        return this._metadata.type(this._type);
     }
 
     get attributes() {
@@ -1422,11 +1431,20 @@ tennis.Metadata = class {
                         if (this._map.has(item.name)) {
                             throw new tennis.Error("Duplicate metadata key '" + item.name + "'.");
                         }
+                        item.schema.name = item.name;
                         this._map.set(item.name, item.schema);
                     }
                 }
             }
         }
+    }
+
+    type(operator) {
+        return this.getSchema(operator);
+    }
+
+    attribute(operator, name) {
+        return this.getAttributeSchema(operator, name);
     }
 
     getSchema(operator) {
