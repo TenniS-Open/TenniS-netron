@@ -56,7 +56,7 @@ host.ElectronHost = class {
                         accept();
                     });
                 }
-            }
+            };
             const time = this._getConfiguration('consent');
             if (time && (Date.now() - time) < 30 * 24 * 60 * 60 * 1000) {
                 accept();
@@ -136,7 +136,7 @@ host.ElectronHost = class {
             this._view.showModelProperties();
         });
 
-        let openFileButton = this.document.getElementById('open-file-button');
+        const openFileButton = this.document.getElementById('open-file-button');
         if (openFileButton) {
             openFileButton.style.opacity = 1;
             openFileButton.addEventListener('click', () => {
@@ -150,9 +150,9 @@ host.ElectronHost = class {
         this.document.addEventListener('drop', (e) => {
             e.preventDefault();
         });
-        this.document.body.addEventListener('drop', (e) => { 
+        this.document.body.addEventListener('drop', (e) => {
             e.preventDefault();
-            let files = [];
+            const files = [];
             for (let i = 0; i < e.dataTransfer.files.length; i++) {
                 const file = e.dataTransfer.files[i].path;
                 if (this._view.accept(file)) {
@@ -277,7 +277,7 @@ host.ElectronHost = class {
     exception(error, fatal) {
         if (this._telemetry && error && error.telemetry !== false) {
             try {
-                let description = [];
+                const description = [];
                 description.push((error && error.name ? (error.name + ': ') : '') + (error && error.message ? error.message : '(null)'));
                 if (error.stack) {
                     const match = error.stack.match(/\n {4}at (.*)\((.*)\)/);
@@ -285,8 +285,8 @@ host.ElectronHost = class {
                         description.push(match[1] + '(' + match[2].split('/').pop().split('\\').pop() + ')');
                     }
                 }
-    
-                const params = { 
+
+                const params = {
                     applicationName: this.type,
                     applicationVersion: this.version,
                     userAgentOverride: navigator.userAgent
@@ -316,7 +316,7 @@ host.ElectronHost = class {
     event(category, action, label, value) {
         if (this._telemetry) {
             try {
-                const params = { 
+                const params = {
                     applicationName: this.type,
                     applicationVersion: this.version,
                     userAgentOverride: navigator.userAgent
@@ -431,7 +431,7 @@ host.ElectronHost = class {
     _setConfiguration(name, value) {
         const configuration = electron.remote.getGlobal('global').application.service('configuration');
         if (configuration) {
-            configuration.set(name, value)
+            configuration.set(name, value);
         }
     }
 

@@ -1565,7 +1565,7 @@
           "type": "boolean"
         }
       ],
-      "description": "accum_new = accum + grad * grad\nlinear += grad + (accum_new^(-lr_power) - accum^(-lr_power)) / lr * var\nquadratic = 1.0 / (accum_new^(lr_power) * lr) + 2 * l2\nvar = (sign(linear) * l1 - linear) / quadratic if |linear| > l1 else 0.0\naccum = accum_new",
+      "description": "accum_new = accum + grad * grad\nlinear += grad - (accum_new^(-lr_power) - accum^(-lr_power)) / lr * var\nquadratic = 1.0 / (accum_new^(lr_power) * lr) + 2 * l2\nvar = (sign(linear) * l1 - linear) / quadratic if |linear| > l1 else 0.0\naccum = accum_new",
       "inputs": [
         {
           "description": "Should be from a Variable().",
@@ -1643,7 +1643,7 @@
           "type": "boolean"
         }
       ],
-      "description": "grad_with_shrinkage = grad + 2 * l2_shrinkage * var\naccum_new = accum + grad_with_shrinkage * grad_with_shrinkage\nlinear += grad_with_shrinkage +\n    (accum_new^(-lr_power) - accum^(-lr_power)) / lr * var\nquadratic = 1.0 / (accum_new^(lr_power) * lr) + 2 * l2\nvar = (sign(linear) * l1 - linear) / quadratic if |linear| > l1 else 0.0\naccum = accum_new",
+      "description": "grad_with_shrinkage = grad + 2 * l2_shrinkage * var\naccum_new = accum + grad * grad\nlinear += grad_with_shrinkage -\n    (accum_new^(-lr_power) - accum^(-lr_power)) / lr * var\nquadratic = 1.0 / (accum_new^(lr_power) * lr) + 2 * l2\nvar = (sign(linear) * l1 - linear) / quadratic if |linear| > l1 else 0.0\naccum = accum_new",
       "inputs": [
         {
           "description": "Should be from a Variable().",
@@ -2079,7 +2079,7 @@
           "type": "type"
         },
         {
-          "default": 1e-05,
+          "default": 9.999999747378752e-06,
           "name": "tolerance",
           "type": "float32"
         }
@@ -3616,6 +3616,12 @@
           "minimum": 1,
           "name": "Tout",
           "type": "type[]"
+        },
+        {
+          "default": false,
+          "description": "input with a large size (i.e., larger than the largest value of\n`allowed_batch_sizes`) will be splitted into multiple batches with batch size.",
+          "name": "enable_large_batch_splitting",
+          "type": "boolean"
         }
       ],
       "description": "So, for example, in the following code\n\n  ```python\n\n  # This input will be captured.\n  y = tf.placeholder_with_default(1.0, shape=[])\n\n  @tf.Defun(tf.float32)\n  def computation(a):\n    return tf.matmul(a, a) + y\n\n  b = gen_batch_ops.batch_function(\n          f=computation\n          in_tensors=[a],\n          captured_tensors=computation.captured_inputs,\n          Tout=[o.type for o in computation.definition.signature.output_arg],\n          num_batch_threads=1,\n          max_batch_size=10,\n          batch_timeout_micros=100000,  # 100ms\n          allowed_batch_sizes=[3, 10],\n          batching_queue=\"\")\n\nIf more than one session.run call is simultaneously trying to compute `b`\nthe values of `a` will be gathered, non-deterministically concatenated\nalong the first axis, and only one thread will run the computation.\n\nAssumes that all arguments of the function are Tensors which will be batched\nalong their first dimension.\n\nArguments that are captured, are not batched. The session.run call which does\nthe concatenation, will use the values of the captured tensors available to it.\nTherefore, typical uses of captured tensors should involve values which remain\nunchanged across session.run calls. Inference is a good example of this.\n\nSparseTensor is not supported. The return value of the decorated function\nmust be a Tensor or a list/tuple of Tensors.",
@@ -7676,6 +7682,11 @@
           "default": "auto",
           "name": "communication_hint",
           "type": "string"
+        },
+        {
+          "default": 0.0,
+          "name": "timeout_seconds",
+          "type": "float32"
         }
       ],
       "outputs": [
@@ -7716,6 +7727,11 @@
           "default": "auto",
           "name": "communication_hint",
           "type": "string"
+        },
+        {
+          "default": 0.0,
+          "name": "timeout_seconds",
+          "type": "float32"
         }
       ],
       "inputs": [
@@ -7762,6 +7778,11 @@
           "default": "auto",
           "name": "communication_hint",
           "type": "string"
+        },
+        {
+          "default": 0.0,
+          "name": "timeout_seconds",
+          "type": "float32"
         }
       ],
       "inputs": [
@@ -7856,6 +7877,11 @@
           "default": "auto",
           "name": "communication_hint",
           "type": "string"
+        },
+        {
+          "default": 0.0,
+          "name": "timeout_seconds",
+          "type": "float32"
         }
       ],
       "inputs": [
@@ -8061,6 +8087,31 @@
         }
       ],
       "summary": "Computes the complex absolute value of a tensor."
+    }
+  },
+  {
+    "name": "CompressElement",
+    "schema": {
+      "attributes": [
+        {
+          "minimum": 1,
+          "name": "input_types",
+          "type": "type[]"
+        }
+      ],
+      "inputs": [
+        {
+          "name": "components",
+          "typeListAttr": "input_types"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "compressed",
+          "type": 21
+        }
+      ],
+      "summary": "Compresses a dataset element."
     }
   },
   {
@@ -10806,8 +10857,16 @@
           "type": 7
         },
         {
+          "name": "job_name",
+          "type": 7
+        },
+        {
           "name": "max_outstanding_requests",
           "type": 9
+        },
+        {
+          "name": "iteration_counter",
+          "type": 20
         }
       ],
       "outputs": [
@@ -10838,23 +10897,6 @@
         }
       ],
       "summary": "Returns the cardinality of `input_dataset`."
-    }
-  },
-  {
-    "name": "DatasetCardinalityV2",
-    "schema": {
-      "inputs": [
-        {
-          "name": "input_dataset",
-          "type": 21
-        }
-      ],
-      "outputs": [
-        {
-          "name": "cardinality",
-          "type": 2
-        }
-      ]
     }
   },
   {
@@ -11168,6 +11210,16 @@
           "description": "List of URLs to debug targets, e.g., file:///foo/tfdbg_dump.",
           "name": "debug_urls",
           "type": "string[]"
+        },
+        {
+          "default": 1000,
+          "name": "circular_buffer_size",
+          "type": "int64"
+        },
+        {
+          "default": "",
+          "name": "tfdbg_run_id",
+          "type": "string"
         }
       ],
       "description": "Provides an identity mapping from input to output, while writing the content of\nthe input tensor by calling DebugEventsWriter.\n\nThe semantics of the input tensor depends on tensor_debug_mode. In typical\nusage, the input tensor comes directly from the user computation only when\ngraph_debug_mode is FULL_TENSOR (see protobuf/debug_event.proto for a\nlist of all the possible values of graph_debug_mode). For the other debug modes,\nthe input tensor should be produced by an additional op or subgraph that\ncomputes summary information about one or more tensors.",
@@ -11995,35 +12047,84 @@
     }
   },
   {
+    "name": "DenseBincount",
+    "schema": {
+      "attributes": [
+        {
+          "description": "Must be one of the following: `int32`, `int64`.",
+          "name": "Tidx",
+          "type": "type"
+        },
+        {
+          "description": "Must be one of the following: `int32`, `int64`, `float32`, `float64`.",
+          "name": "T",
+          "type": "type"
+        },
+        {
+          "default": false,
+          "description": "bool; Whether the kernel should count the appearance or number of occurrences.",
+          "name": "binary_output",
+          "type": "boolean"
+        }
+      ],
+      "description": "Outputs a vector with length `size` and the same dtype as `weights`. If\n`weights` are empty, then index `i` stores the number of times the value `i` is\ncounted in `arr`. If `weights` are non-empty, then index `i` stores the sum of\nthe value in `weights` at each index where the corresponding value in `arr` is\n`i`.\n\nValues in `arr` outside of the range [0, size) are ignored.",
+      "inputs": [
+        {
+          "description": "1D or 2D int `Tensor`.",
+          "name": "input",
+          "typeAttr": "Tidx"
+        },
+        {
+          "description": "non-negative int scalar `Tensor`.",
+          "name": "size",
+          "typeAttr": "Tidx"
+        },
+        {
+          "description": "is an int32, int64, float32, or float64 `Tensor` with the same\nshape as `arr`, or a length-0 `Tensor`, in which case it acts as all weights\nequal to 1.",
+          "name": "weights",
+          "typeAttr": "T"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "1D `Tensor` with length equal to `size` or 2D `Tensor` with [batch_size, `size`].\nThe counts or summed weights for each value in the range [0, size).",
+          "name": "output",
+          "typeAttr": "T"
+        }
+      ],
+      "summary": "Counts the number of occurrences of each value in an integer array."
+    }
+  },
+  {
     "name": "DenseCountSparseOutput",
     "schema": {
       "attributes": [
         {
-          "description": "dtype; dtype of the input values tensor. Must be one of the following: `int32`, `int64`.",
+          "description": "Dtype of the input values tensor. Must be one of the following: `int32`, `int64`.",
           "name": "T",
           "type": "type"
         },
         {
           "default": -1,
-          "description": "int32; minimum value to count. Can be set to -1 for no minimum.",
+          "description": "Minimum value to count. Can be set to -1 for no minimum.",
           "minimum": -1,
           "name": "minlength",
           "type": "int64"
         },
         {
           "default": -1,
-          "description": "int32; maximum value to count. Can be set to -1 for no maximum.",
+          "description": "Maximum value to count. Can be set to -1 for no maximum.",
           "minimum": -1,
           "name": "maxlength",
           "type": "int64"
         },
         {
-          "description": "bool; whether to output the number of occurrences of each value or 1.",
-          "name": "binary_count",
+          "description": "Whether to output the number of occurrences of each value or 1.",
+          "name": "binary_output",
           "type": "boolean"
         },
         {
-          "description": "dtype; dtype of the output values tensor. Must be one of the following: `int64`, `float32`.",
+          "description": "Dtype of the output values tensor. Must be one of the following: `int32`, `int64`, `float32`, `float64`.",
           "name": "output_type",
           "type": "type"
         }
@@ -12031,29 +12132,29 @@
       "description": "  Counts the number of times each value occurs in the input.",
       "inputs": [
         {
-          "description": "int32 or int64; Tensor containing data to count.",
+          "description": "Tensor containing data to count.",
           "name": "values",
           "typeAttr": "T"
         },
         {
-          "description": "float32; Optional rank 1 Tensor (shape=[max_values]) with weights for each count value.",
+          "description": "A Tensor of the same shape as indices containing per-index weight values. May\nalso be the empty tensor if no weights are used.",
           "name": "weights",
-          "type": 1
+          "typeAttr": "output_type"
         }
       ],
       "outputs": [
         {
-          "description": "int64; indices tensor for the resulting sparse tensor object.",
+          "description": "Indices tensor for the resulting sparse tensor object.",
           "name": "output_indices",
           "type": 9
         },
         {
-          "description": "int64 or float32; values tensor for the resulting sparse tensor object.",
+          "description": "Values tensor for the resulting sparse tensor object.",
           "name": "output_values",
           "typeAttr": "output_type"
         },
         {
-          "description": "int64; shape tensor for the resulting sparse tensor object.",
+          "description": "Shape tensor for the resulting sparse tensor object.",
           "name": "output_dense_shape",
           "type": 9
         }
@@ -12700,6 +12801,24 @@
     }
   },
   {
+    "name": "DeviceIndex",
+    "schema": {
+      "attributes": [
+        {
+          "name": "device_names",
+          "type": "string[]"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "index",
+          "type": 3
+        }
+      ],
+      "summary": "Return the index of device the op runs."
+    }
+  },
+  {
     "name": "Diag",
     "schema": {
       "attributes": [
@@ -13117,6 +13236,17 @@
         }
       ],
       "summary": "Draw bounding boxes on a batch of images."
+    }
+  },
+  {
+    "name": "DummyIterationCounter",
+    "schema": {
+      "outputs": [
+        {
+          "name": "handle",
+          "type": 20
+        }
+      ]
     }
   },
   {
@@ -15996,6 +16126,63 @@
     }
   },
   {
+    "name": "ExtractGlimpseV2",
+    "schema": {
+      "attributes": [
+        {
+          "default": true,
+          "description": "indicates if the offset coordinates are centered relative to\nthe image, in which case the (0, 0) offset is relative to the center\nof the input images. If false, the (0,0) offset corresponds to the\nupper left corner of the input images.",
+          "name": "centered",
+          "type": "boolean"
+        },
+        {
+          "default": true,
+          "description": "indicates if the offset coordinates are normalized.",
+          "name": "normalized",
+          "type": "boolean"
+        },
+        {
+          "default": true,
+          "description": "indicates if the noise should be generated using a\nuniform distribution or a Gaussian distribution.",
+          "name": "uniform_noise",
+          "type": "boolean"
+        },
+        {
+          "default": "uniform",
+          "description": "indicates if the noise should `uniform`, `gaussian`, or\n`zero`. The default is `uniform` which means the the noise type\nwill be decided by `uniform_noise`.",
+          "name": "noise",
+          "type": "string"
+        }
+      ],
+      "description": "Returns a set of windows called glimpses extracted at location\n`offsets` from the input tensor. If the windows only partially\noverlaps the inputs, the non overlapping areas will be filled with\nrandom noise.\n\nThe result is a 4-D tensor of shape `[batch_size, glimpse_height,\nglimpse_width, channels]`. The channels and batch dimensions are the\nsame as that of the input tensor. The height and width of the output\nwindows are specified in the `size` parameter.\n\nThe argument `normalized` and `centered` controls how the windows are built:\n\n* If the coordinates are normalized but not centered, 0.0 and 1.0\n  correspond to the minimum and maximum of each height and width\n  dimension.\n* If the coordinates are both normalized and centered, they range from\n  -1.0 to 1.0. The coordinates (-1.0, -1.0) correspond to the upper\n  left corner, the lower right corner is located at (1.0, 1.0) and the\n  center is at (0, 0).\n* If the coordinates are not normalized they are interpreted as\n  numbers of pixels.",
+      "inputs": [
+        {
+          "description": "A 4-D float tensor of shape `[batch_size, height, width, channels]`.",
+          "name": "input",
+          "type": 1
+        },
+        {
+          "description": "A 1-D tensor of 2 elements containing the size of the glimpses\nto extract.  The glimpse height must be specified first, following\nby the glimpse width.",
+          "name": "size",
+          "type": 3
+        },
+        {
+          "description": "A 2-D integer tensor of shape `[batch_size, 2]` containing\nthe y, x locations of the center of each window.",
+          "name": "offsets",
+          "type": 1
+        }
+      ],
+      "outputs": [
+        {
+          "description": "A tensor representing the glimpses `[batch_size,\nglimpse_height, glimpse_width, channels]`.",
+          "name": "glimpse",
+          "type": 1
+        }
+      ],
+      "summary": "Extracts a glimpse from the input tensor."
+    }
+  },
+  {
     "name": "ExtractImagePatches",
     "schema": {
       "attributes": [
@@ -16372,7 +16559,7 @@
           "type": "boolean"
         }
       ],
-      "description": "Attributes `[min; max]` define the clamping range for the `inputs` data.\n`inputs` values are quantized into the quantization range (`[0; 2^num_bits - 1]`\nwhen `narrow_range` is false and `[1; 2^num_bits - 1]` when it is true) and\nthen de-quantized and output as floats in `[min; max]` interval.\n`num_bits` is the bitwidth of the quantization; between 2 and 16, inclusive.\n\nBefore quantization, `min` and `max` values are adjusted with the following\nlogic.\nIt is suggested to have `min <= 0 <= max`. If `0` is not in the range of values,\nthe behavior can be unexpected:\nIf `0 < min < max`: `min_adj = 0` and `max_adj = max - min`.\nIf `min < max < 0`: `min_adj = min - max` and `max_adj = 0`.\nIf `min <= 0 <= max`: `scale = (max - min) / (2^num_bits - 1) `,\n`min_adj = scale * round(min / scale)` and `max_adj = max + min_adj - min`.\n\nQuantization is called fake since the output is still in floating point.",
+      "description": "Attributes\n\n*   `[min; max]` define the clamping range for the `inputs` data.\n*   `inputs` values are quantized into the quantization range (\n`[0; 2^num_bits - 1]` when `narrow_range` is false and `[1; 2^num_bits - 1]`\nwhen it is true) and then de-quantized and output as floats in `[min; max]`\ninterval.\n*   `num_bits` is the bitwidth of the quantization; between 2 and 16, inclusive.\n\nBefore quantization, `min` and `max` values are adjusted with the following\nlogic.\nIt is suggested to have `min <= 0 <= max`. If `0` is not in the range of values,\nthe behavior can be unexpected:\n\n*   If `0 < min < max`: `min_adj = 0` and `max_adj = max - min`.\n*   If `min < max < 0`: `min_adj = min - max` and `max_adj = 0`.\n*   If `min <= 0 <= max`: `scale = (max - min) / (2^num_bits - 1) `,\n`min_adj = scale * round(min / scale)` and `max_adj = max + min_adj - min`.\n\nQuantization is called fake since the output is still in floating point.",
       "inputs": [
         {
           "name": "inputs",
@@ -16450,7 +16637,7 @@
           "type": "boolean"
         }
       ],
-      "description": "and `max` to 'outputs' tensor of same shape as `inputs`.\n\n`[min; max]` define the clamping range for the `inputs` data.\n`inputs` values are quantized into the quantization range (`[0; 2^num_bits - 1]`\nwhen `narrow_range` is false and `[1; 2^num_bits - 1]` when it is true) and\nthen de-quantized and output as floats in `[min; max]` interval.\n`num_bits` is the bitwidth of the quantization; between 2 and 16, inclusive.\n\nBefore quantization, `min` and `max` values are adjusted with the following\nlogic.\nIt is suggested to have `min <= 0 <= max`. If `0` is not in the range of values,\nthe behavior can be unexpected:\nIf `0 < min < max`: `min_adj = 0` and `max_adj = max - min`.\nIf `min < max < 0`: `min_adj = min - max` and `max_adj = 0`.\nIf `min <= 0 <= max`: `scale = (max - min) / (2^num_bits - 1) `,\n`min_adj = scale * round(min / scale)` and `max_adj = max + min_adj - min`.\n\nThis operation has a gradient and thus allows for training `min` and `max`\nvalues.",
+      "description": "Fake-quantize the `inputs` tensor of type float via global float scalars\n`min` and `max` to `outputs` tensor of same shape as `inputs`.\n\nAttributes\n\n*   `[min; max]` define the clamping range for the `inputs` data.\n*   `inputs` values are quantized into the quantization range (\n`[0; 2^num_bits - 1]` when `narrow_range` is false and `[1; 2^num_bits - 1]`\nwhen it is true) and then de-quantized and output as floats in `[min; max]`\ninterval.\n*   `num_bits` is the bitwidth of the quantization; between 2 and 16, inclusive.\n\nBefore quantization, `min` and `max` values are adjusted with the following\nlogic.\nIt is suggested to have `min <= 0 <= max`. If `0` is not in the range of values,\nthe behavior can be unexpected:\n\n*   If `0 < min < max`: `min_adj = 0` and `max_adj = max - min`.\n*   If `min < max < 0`: `min_adj = min - max` and `max_adj = 0`.\n*   If `min <= 0 <= max`: `scale = (max - min) / (2^num_bits - 1) `,\n`min_adj = scale * round(min / scale)` and `max_adj = max + min_adj - min`.\n\nThis operation has a gradient and thus allows for training `min` and `max`\nvalues.",
       "inputs": [
         {
           "name": "inputs",
@@ -16471,7 +16658,7 @@
           "type": 1
         }
       ],
-      "summary": "Fake-quantize the 'inputs' tensor of type float via global float scalars `min`"
+      "summary": "Fake-quantize the 'inputs' tensor of type float via global float scalars"
     }
   },
   {
@@ -16546,7 +16733,7 @@
           "type": "boolean"
         }
       ],
-      "description": "`[b, d]` `[b, h, w, d]` via per-channel floats `min` and `max` of shape `[d]`\nto 'outputs' tensor of same shape as `inputs`.\n\n`[min; max]` define the clamping range for the `inputs` data.\n`inputs` values are quantized into the quantization range (`[0; 2^num_bits - 1]`\nwhen `narrow_range` is false and `[1; 2^num_bits - 1]` when it is true) and\nthen de-quantized and output as floats in `[min; max]` interval.\n`num_bits` is the bitwidth of the quantization; between 2 and 16, inclusive.\n\nBefore quantization, `min` and `max` values are adjusted with the following\nlogic.\nIt is suggested to have `min <= 0 <= max`. If `0` is not in the range of values,\nthe behavior can be unexpected:\nIf `0 < min < max`: `min_adj = 0` and `max_adj = max - min`.\nIf `min < max < 0`: `min_adj = min - max` and `max_adj = 0`.\nIf `min <= 0 <= max`: `scale = (max - min) / (2^num_bits - 1) `,\n`min_adj = scale * round(min / scale)` and `max_adj = max + min_adj - min`.\n\nThis operation has a gradient and thus allows for training `min` and `max`\nvalues.",
+      "description": "Fake-quantize the `inputs` tensor of type float per-channel and one of the\nshapes: `[d]`, `[b, d]` `[b, h, w, d]` via per-channel floats `min` and `max`\nof shape `[d]` to `outputs` tensor of same shape as `inputs`.\n\nAttributes\n\n*   `[min; max]` define the clamping range for the `inputs` data.\n*   `inputs` values are quantized into the quantization range (\n`[0; 2^num_bits - 1]` when `narrow_range` is false and `[1; 2^num_bits - 1]`\nwhen it is true) and then de-quantized and output as floats in `[min; max]`\ninterval.\n*   `num_bits` is the bitwidth of the quantization; between 2 and 16, inclusive.\n\nBefore quantization, `min` and `max` values are adjusted with the following\nlogic.\nIt is suggested to have `min <= 0 <= max`. If `0` is not in the range of values,\nthe behavior can be unexpected:\n\n*   If `0 < min < max`: `min_adj = 0` and `max_adj = max - min`.\n*   If `min < max < 0`: `min_adj = min - max` and `max_adj = 0`.\n*   If `min <= 0 <= max`: `scale = (max - min) / (2^num_bits - 1) `,\n`min_adj = scale * round(min / scale)` and `max_adj = max + min_adj - min`.\n\nThis operation has a gradient and thus allows for training `min` and `max`\nvalues.",
       "inputs": [
         {
           "name": "inputs",
@@ -16567,7 +16754,7 @@
           "type": 1
         }
       ],
-      "summary": "Fake-quantize the 'inputs' tensor of type float and one of the shapes: `[d]`,"
+      "summary": "Fake-quantize the 'inputs' tensor of type float via per-channel floats"
     }
   },
   {
@@ -17581,7 +17768,7 @@
           "type": "type"
         },
         {
-          "default": 0.0001,
+          "default": 9.999999747378752e-05,
           "description": "A small float number added to the variance of x.",
           "name": "epsilon",
           "type": "float32"
@@ -17673,7 +17860,7 @@
           "type": "type"
         },
         {
-          "default": 0.0001,
+          "default": 9.999999747378752e-05,
           "description": "A small float number added to the variance of x.",
           "name": "epsilon",
           "type": "float32"
@@ -17764,7 +17951,7 @@
           "type": "type"
         },
         {
-          "default": 0.0001,
+          "default": 9.999999747378752e-05,
           "description": "A small float number added to the variance of x.",
           "name": "epsilon",
           "type": "float32"
@@ -17855,7 +18042,7 @@
           "type": "type"
         },
         {
-          "default": 0.0001,
+          "default": 9.999999747378752e-05,
           "description": "A small float number added to the variance of x.",
           "name": "epsilon",
           "type": "float32"
@@ -17951,7 +18138,7 @@
           "type": "type"
         },
         {
-          "default": 0.0001,
+          "default": 9.999999747378752e-05,
           "description": "A small float number added to the variance of x.",
           "name": "epsilon",
           "type": "float32"
@@ -18048,7 +18235,7 @@
           "type": "type"
         },
         {
-          "default": 0.0001,
+          "default": 9.999999747378752e-05,
           "description": "A small float number added to the variance of x.",
           "name": "epsilon",
           "type": "float32"
@@ -18482,7 +18669,7 @@
           "type": "type"
         }
       ],
-      "description": "`indices` must be an integer tensor of any dimension (usually 0-D or 1-D).\nProduces an output tensor with shape `params.shape[:axis] + indices.shape +\nparams.shape[axis + 1:]` where:\n\n```python\n    # Scalar indices (output is rank(params) - 1).\n    output[a_0, ..., a_n, b_0, ..., b_n] =\n      params[a_0, ..., a_n, indices, b_0, ..., b_n]\n\n    # Vector indices (output is rank(params)).\n    output[a_0, ..., a_n, i, b_0, ..., b_n] =\n      params[a_0, ..., a_n, indices[i], b_0, ..., b_n]\n\n    # Higher rank indices (output is rank(params) + rank(indices) - 1).\n    output[a_0, ..., a_n, i, ..., j, b_0, ... b_n] =\n      params[a_0, ..., a_n, indices[i, ..., j], b_0, ..., b_n]\n```\n\n<div style=\"width:70%; margin:auto; margin-bottom:10px; margin-top:20px;\">\n<img style=\"width:100%\" src=\"https://www.tensorflow.org/images/Gather.png\" alt>\n</div>\n\nNote that on CPU, if an out of bound index is found, an error is returned.\nOn GPU, if an out of bound index is found, a 0 is stored in the\ncorresponding output value.\n\nSee also `tf.batch_gather` and `tf.gather_nd`.",
+      "description": "`indices` must be an integer tensor of any dimension (usually 0-D or 1-D).\nProduces an output tensor with shape `params.shape[:axis] +\nindices.shape[batch_dims:] + params.shape[axis + 1:]` where:\n\n```python\n    # Scalar indices (output is rank(params) - 1).\n    output[a_0, ..., a_n, b_0, ..., b_n] =\n      params[a_0, ..., a_n, indices, b_0, ..., b_n]\n\n    # Vector indices (output is rank(params)).\n    output[a_0, ..., a_n, i, b_0, ..., b_n] =\n      params[a_0, ..., a_n, indices[i], b_0, ..., b_n]\n\n    # Higher rank indices (output is rank(params) + rank(indices) - 1).\n    output[a_0, ..., a_n, i, ..., j, b_0, ... b_n] =\n      params[a_0, ..., a_n, indices[i, ..., j], b_0, ..., b_n]\n```\n\n<div style=\"width:70%; margin:auto; margin-bottom:10px; margin-top:20px;\">\n<img style=\"width:100%\" src=\"https://www.tensorflow.org/images/Gather.png\" alt>\n</div>\n\nNote that on CPU, if an out of bound index is found, an error is returned.\nOn GPU, if an out of bound index is found, a 0 is stored in the\ncorresponding output value.\n\nSee also `tf.batch_gather` and `tf.gather_nd`.",
       "inputs": [
         {
           "description": "The tensor from which to gather values. Must be at least rank\n`axis + 1`.",
@@ -20442,6 +20629,7 @@
           "type": "type"
         }
       ],
+      "description": "Computes `x[i, :] = v; return x`.\n\nOriginally this function is mutative however for compilation we make this\noperation create / operate on a copy of `x`.",
       "inputs": [
         {
           "description": "A tensor of type `T`.",
@@ -20466,7 +20654,7 @@
           "typeAttr": "T"
         }
       ],
-      "summary": "    Updates specified rows with values in `v`.\n\n    Computes `x[i, :] = v; return x`."
+      "summary": "Updates specified rows 'i' with values 'v'."
     }
   },
   {
@@ -21592,7 +21780,7 @@
     "schema": {
       "attributes": [
         {
-          "default": 0.2,
+          "default": 0.20000000298023224,
           "name": "alpha",
           "type": "float32"
         },
@@ -21627,7 +21815,7 @@
     "schema": {
       "attributes": [
         {
-          "default": 0.2,
+          "default": 0.20000000298023224,
           "name": "alpha",
           "type": "float32"
         },
@@ -22065,6 +22253,53 @@
         }
       ],
       "summary": "Loads a 2-D (matrix) `Tensor` with name `old_tensor_name` from the checkpoint"
+    }
+  },
+  {
+    "name": "LoadDataset",
+    "schema": {
+      "attributes": [
+        {
+          "minimum": 1,
+          "name": "output_types",
+          "type": "type[]"
+        },
+        {
+          "minimum": 1,
+          "name": "output_shapes",
+          "type": "shape[]"
+        },
+        {
+          "default": "",
+          "name": "compression",
+          "type": "string"
+        },
+        {
+          "name": "reader_func",
+          "type": "function"
+        },
+        {
+          "minimum": 0,
+          "name": "Treader_func_args",
+          "type": "type[]"
+        }
+      ],
+      "inputs": [
+        {
+          "name": "path",
+          "type": 7
+        },
+        {
+          "name": "reader_func_other_args",
+          "typeListAttr": "Treader_func_args"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "handle",
+          "type": 21
+        }
+      ]
     }
   },
   {
@@ -26660,7 +26895,7 @@
           "type": "int64"
         },
         {
-          "default": 0.8,
+          "default": 0.800000011920929,
           "description": "The maximum ratio between number of entries and number of\nbuckets before growing the table. Must be between 0 and 1.",
           "name": "max_load_factor",
           "type": "float32"
@@ -26732,7 +26967,7 @@
           "type": "int64"
         },
         {
-          "default": 0.8,
+          "default": 0.800000011920929,
           "description": "The maximum ratio between number of entries and number of\nbuckets before growing the table. Must be between 0 and 1.",
           "name": "max_load_factor",
           "type": "float32"
@@ -31397,7 +31632,7 @@
           "type": "int64"
         },
         {
-          "default": 0.01,
+          "default": 0.009999999776482582,
           "name": "ensure_minimum_range",
           "type": "float32"
         }
@@ -33506,13 +33741,13 @@
           "type": "float32"
         },
         {
-          "default": 1e-05,
+          "default": 9.999999747378752e-06,
           "description": "A small float number to avoid dividing by 0.",
           "name": "variance_epsilon",
           "type": "float32"
         },
         {
-          "default": 0.001,
+          "default": 0.0010000000474974513,
           "description": "Minimum value of `y_max - y_min`",
           "name": "min_separation",
           "type": "float32"
@@ -35237,6 +35472,60 @@
     }
   },
   {
+    "name": "RaggedBincount",
+    "schema": {
+      "attributes": [
+        {
+          "description": "Must be one of the following: `int32`, `int64`.",
+          "name": "Tidx",
+          "type": "type"
+        },
+        {
+          "description": "Must be one of the following: `int32`, `int64`, `float32`, `float64`.",
+          "name": "T",
+          "type": "type"
+        },
+        {
+          "default": false,
+          "description": "bool; Whether the kernel should count the appearance or number of occurrences.",
+          "name": "binary_output",
+          "type": "boolean"
+        }
+      ],
+      "description": "Outputs a vector with length `size` and the same dtype as `weights`. If\n`weights` are empty, then index `i` stores the number of times the value `i` is\ncounted in `arr`. If `weights` are non-empty, then index `i` stores the sum of\nthe value in `weights` at each index where the corresponding value in `arr` is\n`i`.\n\nValues in `arr` outside of the range [0, size) are ignored.",
+      "inputs": [
+        {
+          "description": "1D int64 `Tensor`.",
+          "name": "splits",
+          "type": 9
+        },
+        {
+          "description": "2D int `Tensor`.",
+          "name": "values",
+          "typeAttr": "Tidx"
+        },
+        {
+          "description": "non-negative int scalar `Tensor`.",
+          "name": "size",
+          "typeAttr": "Tidx"
+        },
+        {
+          "description": "is an int32, int64, float32, or float64 `Tensor` with the same\nshape as `input`, or a length-0 `Tensor`, in which case it acts as all weights\nequal to 1.",
+          "name": "weights",
+          "typeAttr": "T"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "1D `Tensor` with length equal to `size` or 2D `Tensor` with [batch_size, `size`].\nThe counts or summed weights for each value in the range [0, size).",
+          "name": "output",
+          "typeAttr": "T"
+        }
+      ],
+      "summary": "Counts the number of occurrences of each value in an integer array."
+    }
+  },
+  {
     "name": "RaggedCountSparseOutput",
     "schema": {
       "attributes": [
@@ -35247,25 +35536,25 @@
         },
         {
           "default": -1,
-          "description": "int32; minimum value to count. Can be set to -1 for no minimum.",
+          "description": "Minimum value to count. Can be set to -1 for no minimum.",
           "minimum": -1,
           "name": "minlength",
           "type": "int64"
         },
         {
           "default": -1,
-          "description": "int32; maximum value to count. Can be set to -1 for no maximum.",
+          "description": "Maximum value to count. Can be set to -1 for no maximum.",
           "minimum": -1,
           "name": "maxlength",
           "type": "int64"
         },
         {
-          "description": "bool; whether to output the number of occurrences of each value or 1.",
-          "name": "binary_count",
+          "description": "Whether to output the number of occurrences of each value or 1.",
+          "name": "binary_output",
           "type": "boolean"
         },
         {
-          "description": "dtype; dtype of the output values tensor. Must be one of the following: `int64`, `float32`.",
+          "description": "Dtype of the output values tensor. Must be one of the following: `int32`, `int64`, `float32`, `float64`.",
           "name": "output_type",
           "type": "type"
         }
@@ -35273,33 +35562,34 @@
       "description": "  Counts the number of times each value occurs in the input.",
       "inputs": [
         {
-          "description": "int64; Tensor containing the row splits of the ragged tensor to count.",
+          "description": "Tensor containing the row splits of the ragged tensor to count.",
           "name": "splits",
           "type": 9
         },
         {
-          "description": "int32 or int64; Tensor containing values of the sparse tensor to count.",
+          "description": "Tensor containing values of the sparse tensor to count.",
           "name": "values",
           "typeAttr": "T"
         },
         {
-          "description": "float32; Optional rank 1 Tensor (shape=[max_values]) with weights for each count value.",
+          "description": "A Tensor of the same shape as indices containing per-index weight values.\nMay also be the empty tensor if no weights are used.",
           "name": "weights",
-          "type": 1
+          "typeAttr": "output_type"
         }
       ],
       "outputs": [
         {
-          "description": "int64; indices tensor for the resulting sparse tensor object.",
+          "description": "Indices tensor for the resulting sparse tensor object.",
           "name": "output_indices",
           "type": 9
         },
         {
-          "description": "int64 or float32; values tensor for the resulting sparse tensor object.\n  END\n  }\n  out_arg {\n    name: \"output_dense_shape\"\n    description: <<END\nint64; shape tensor for the resulting sparse tensor object.\n  END\n  }\n  attr {\n    name: \"T\"\n    description: <<END\ndtype; dtype of the input values tensor.",
+          "description": "Values tensor for the resulting sparse tensor object.",
           "name": "output_values",
           "typeAttr": "output_type"
         },
         {
+          "description": "Shape tensor for the resulting sparse tensor object.\n  END\n  }\n  attr {\n    name: \"T\"\n    description: <<END\nDtype of the input values tensor.",
           "name": "output_dense_shape",
           "type": 9
         }
@@ -39903,6 +40193,84 @@
     }
   },
   {
+    "name": "ResourceScatterNdMax",
+    "schema": {
+      "attributes": [
+        {
+          "name": "T",
+          "type": "type"
+        },
+        {
+          "description": "Must be one of the following: `int32`, `int64`.",
+          "name": "Tindices",
+          "type": "type"
+        },
+        {
+          "default": true,
+          "description": "An optional bool. Defaults to True. If True, the assignment will\nbe protected by a lock; otherwise the behavior is undefined,\nbut may exhibit less contention.",
+          "name": "use_locking",
+          "type": "boolean"
+        }
+      ],
+      "inputs": [
+        {
+          "description": "A resource handle. Must be from a VarHandleOp.",
+          "name": "ref",
+          "type": 20
+        },
+        {
+          "description": "A Tensor. Must be one of the following types: int32, int64.\nA tensor of indices into ref.",
+          "name": "indices",
+          "typeAttr": "Tindices"
+        },
+        {
+          "description": "A Tensor. Must have the same type as ref. A tensor of\nvalues whose element wise max is taken with ref",
+          "name": "updates",
+          "typeAttr": "T"
+        }
+      ]
+    }
+  },
+  {
+    "name": "ResourceScatterNdMin",
+    "schema": {
+      "attributes": [
+        {
+          "name": "T",
+          "type": "type"
+        },
+        {
+          "description": "Must be one of the following: `int32`, `int64`.",
+          "name": "Tindices",
+          "type": "type"
+        },
+        {
+          "default": true,
+          "description": "An optional bool. Defaults to True. If True, the assignment will\nbe protected by a lock; otherwise the behavior is undefined,\nbut may exhibit less contention.",
+          "name": "use_locking",
+          "type": "boolean"
+        }
+      ],
+      "inputs": [
+        {
+          "description": "A resource handle. Must be from a VarHandleOp.",
+          "name": "ref",
+          "type": 20
+        },
+        {
+          "description": "A Tensor. Must be one of the following types: int32, int64.\nA tensor of indices into ref.",
+          "name": "indices",
+          "typeAttr": "Tindices"
+        },
+        {
+          "description": "A Tensor. Must have the same type as ref. A tensor of\nvalues whose element wise min is taken with ref.",
+          "name": "updates",
+          "typeAttr": "T"
+        }
+      ]
+    }
+  },
+  {
     "name": "ResourceScatterNdSub",
     "schema": {
       "attributes": [
@@ -42429,7 +42797,7 @@
           "type": "int64"
         },
         {
-          "default": 0.1,
+          "default": 0.10000000149011612,
           "description": "The cropped area of the image must contain at least this\nfraction of any bounding box supplied. The value of this parameter should be\nnon-negative. In the case of 0, the cropped area does not need to overlap\nany of the bounding boxes supplied.",
           "name": "min_object_covered",
           "type": "float32"
@@ -42437,7 +42805,7 @@
         {
           "default": [
             0.75,
-            1.33
+            1.3300000429153442
           ],
           "description": "The cropped area of the image must have an aspect ratio =\nwidth / height within this range.",
           "name": "aspect_ratio_range",
@@ -42445,7 +42813,7 @@
         },
         {
           "default": [
-            0.05,
+            0.05000000074505806,
             1.0
           ],
           "description": "The cropped area of the image must contain a fraction of the\nsupplied image within this range.",
@@ -42522,7 +42890,7 @@
         {
           "default": [
             0.75,
-            1.33
+            1.3300000429153442
           ],
           "description": "The cropped area of the image must have an aspect ratio =\nwidth / height within this range.",
           "name": "aspect_ratio_range",
@@ -42530,7 +42898,7 @@
         },
         {
           "default": [
-            0.05,
+            0.05000000074505806,
             1.0
           ],
           "description": "The cropped area of the image must contain a fraction of the\nsupplied image within this range.",
@@ -42663,6 +43031,46 @@
         }
       ],
       "summary": "Saves the input tensors to disk."
+    }
+  },
+  {
+    "name": "SaveDataset",
+    "schema": {
+      "attributes": [
+        {
+          "default": "",
+          "name": "compression",
+          "type": "string"
+        },
+        {
+          "name": "shard_func",
+          "type": "function"
+        },
+        {
+          "default": true,
+          "name": "use_shard_func",
+          "type": "boolean"
+        },
+        {
+          "minimum": 0,
+          "name": "Tshard_func_args",
+          "type": "type[]"
+        }
+      ],
+      "inputs": [
+        {
+          "name": "input_dataset",
+          "type": 21
+        },
+        {
+          "name": "path",
+          "type": 7
+        },
+        {
+          "name": "shard_func_other_args",
+          "typeListAttr": "Tshard_func_args"
+        }
+      ]
     }
   },
   {
@@ -43270,6 +43678,106 @@
         }
       ],
       "summary": "Applies sparse addition to individual values or slices in a Variable."
+    }
+  },
+  {
+    "name": "ScatterNdMax",
+    "schema": {
+      "attributes": [
+        {
+          "description": "Must be one of the following: `float32`, `float64`, `int32`, `uint8`, `int16`, `int8`, `complex64`, `int64`, `qint8`, `quint8`, `qint32`, `bfloat16`, `uint16`, `complex128`, `float16`, `uint32`, `uint64`.",
+          "name": "T",
+          "type": "type"
+        },
+        {
+          "description": "Must be one of the following: `int32`, `int64`.",
+          "name": "Tindices",
+          "type": "type"
+        },
+        {
+          "default": false,
+          "description": "An optional bool. Defaults to True. If True, the assignment will\nbe protected by a lock; otherwise the behavior is undefined,\nbut may exhibit less contention.",
+          "name": "use_locking",
+          "type": "boolean"
+        }
+      ],
+      "inputs": [
+        {
+          "description": "A mutable Tensor. Should be from a Variable node.",
+          "isRef": true,
+          "name": "ref",
+          "typeAttr": "T"
+        },
+        {
+          "description": "A Tensor. Must be one of the following types: int32, int64.\nA tensor of indices into ref.",
+          "name": "indices",
+          "typeAttr": "Tindices"
+        },
+        {
+          "description": "A Tensor. Must have the same type as ref. A tensor of updated values\nto add to ref.",
+          "name": "updates",
+          "typeAttr": "T"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "Same as ref. Returned as a convenience for operations that want\nto use the updated values after the update is done.",
+          "isRef": true,
+          "name": "output_ref",
+          "typeAttr": "T"
+        }
+      ],
+      "summary": "Computes element-wise maximum."
+    }
+  },
+  {
+    "name": "ScatterNdMin",
+    "schema": {
+      "attributes": [
+        {
+          "description": "Must be one of the following: `float32`, `float64`, `int32`, `uint8`, `int16`, `int8`, `complex64`, `int64`, `qint8`, `quint8`, `qint32`, `bfloat16`, `uint16`, `complex128`, `float16`, `uint32`, `uint64`.",
+          "name": "T",
+          "type": "type"
+        },
+        {
+          "description": "Must be one of the following: `int32`, `int64`.",
+          "name": "Tindices",
+          "type": "type"
+        },
+        {
+          "default": false,
+          "description": "An optional bool. Defaults to True. If True, the assignment will\nbe protected by a lock; otherwise the behavior is undefined,\nbut may exhibit less contention.",
+          "name": "use_locking",
+          "type": "boolean"
+        }
+      ],
+      "inputs": [
+        {
+          "description": "A mutable Tensor. Should be from a Variable node.",
+          "isRef": true,
+          "name": "ref",
+          "typeAttr": "T"
+        },
+        {
+          "description": "A Tensor. Must be one of the following types: int32, int64.\nA tensor of indices into ref.",
+          "name": "indices",
+          "typeAttr": "Tindices"
+        },
+        {
+          "description": "A Tensor. Must have the same type as ref. A tensor of updated values\nto add to ref.",
+          "name": "updates",
+          "typeAttr": "T"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "Same as ref. Returned as a convenience for operations that want\nto use the updated values after the update is done.",
+          "isRef": true,
+          "name": "output_ref",
+          "typeAttr": "T"
+        }
+      ],
+      "summary": "Computes element-wise minimum."
     }
   },
   {
@@ -45188,7 +45696,7 @@
           "type": "int64"
         },
         {
-          "default": 0.001,
+          "default": 0.0010000000474974513,
           "description": "Threshold for word occurrence. Words that appear with higher\nfrequency will be randomly down-sampled. Set to 0 to disable.",
           "name": "subsample",
           "type": "float32"
@@ -45473,6 +45981,77 @@
           "description": "The path we should write snapshots to / read snapshots from.",
           "name": "path",
           "type": 7
+        }
+      ],
+      "outputs": [
+        {
+          "name": "handle",
+          "type": 21
+        }
+      ],
+      "summary": "Creates a dataset that will write to / read from a snapshot."
+    }
+  },
+  {
+    "name": "SnapshotDatasetV2",
+    "schema": {
+      "attributes": [
+        {
+          "minimum": 1,
+          "name": "output_types",
+          "type": "type[]"
+        },
+        {
+          "minimum": 1,
+          "name": "output_shapes",
+          "type": "shape[]"
+        },
+        {
+          "default": "",
+          "description": "The type of compression to be applied to the saved snapshot files.",
+          "name": "compression",
+          "type": "string"
+        },
+        {
+          "description": "Optional. A function to control how to read data from snapshot shards.",
+          "name": "reader_func",
+          "type": "function"
+        },
+        {
+          "description": "Optional. A function to control how to shard data when writing a snapshot.",
+          "name": "shard_func",
+          "type": "function"
+        },
+        {
+          "minimum": 0,
+          "name": "Treader_func_args",
+          "type": "type[]"
+        },
+        {
+          "minimum": 0,
+          "name": "Tshard_func_args",
+          "type": "type[]"
+        }
+      ],
+      "description": "This dataset attempts to determine whether a valid snapshot exists at the\n`snapshot_path`, and reads from the snapshot in lieu of using `input_dataset`.\nIf not, it will run the preprocessing pipeline as usual, and write out a\nsnapshot of the data processed for future use.",
+      "inputs": [
+        {
+          "description": "A variant tensor representing the input dataset.",
+          "name": "input_dataset",
+          "type": 21
+        },
+        {
+          "description": "The path we should write snapshots to / read snapshots from.",
+          "name": "path",
+          "type": 7
+        },
+        {
+          "name": "reader_func_other_args",
+          "typeListAttr": "Treader_func_args"
+        },
+        {
+          "name": "shard_func_other_args",
+          "typeListAttr": "Tshard_func_args"
         }
       ],
       "outputs": [
@@ -46551,7 +47130,7 @@
           "type": "boolean"
         }
       ],
-      "description": "That is for rows we have grad for, we update var, accum and linear as follows:\ngrad_with_shrinkage = grad + 2 * l2_shrinkage * var\naccum_new = accum + grad_with_shrinkage * grad_with_shrinkage\nlinear += grad_with_shrinkage +\n    (accum_new^(-lr_power) - accum^(-lr_power)) / lr * var\nquadratic = 1.0 / (accum_new^(lr_power) * lr) + 2 * l2\nvar = (sign(linear) * l1 - linear) / quadratic if |linear| > l1 else 0.0\naccum = accum_new",
+      "description": "That is for rows we have grad for, we update var, accum and linear as follows:\ngrad_with_shrinkage = grad + 2 * l2_shrinkage * var\naccum_new = accum + grad * grad\nlinear += grad_with_shrinkage -\n    (accum_new^(-lr_power) - accum^(-lr_power)) / lr * var\nquadratic = 1.0 / (accum_new^(lr_power) * lr) + 2 * l2\nvar = (sign(linear) * l1 - linear) / quadratic if |linear| > l1 else 0.0\naccum = accum_new",
       "inputs": [
         {
           "description": "Should be from a Variable().",
@@ -46911,6 +47490,65 @@
     }
   },
   {
+    "name": "SparseBincount",
+    "schema": {
+      "attributes": [
+        {
+          "description": "Must be one of the following: `int32`, `int64`.",
+          "name": "Tidx",
+          "type": "type"
+        },
+        {
+          "description": "Must be one of the following: `int32`, `int64`, `float32`, `float64`.",
+          "name": "T",
+          "type": "type"
+        },
+        {
+          "default": false,
+          "description": "bool; Whether the kernel should count the appearance or number of occurrences.",
+          "name": "binary_output",
+          "type": "boolean"
+        }
+      ],
+      "description": "Outputs a vector with length `size` and the same dtype as `weights`. If\n`weights` are empty, then index `i` stores the number of times the value `i` is\ncounted in `arr`. If `weights` are non-empty, then index `i` stores the sum of\nthe value in `weights` at each index where the corresponding value in `arr` is\n`i`.\n\nValues in `arr` outside of the range [0, size) are ignored.",
+      "inputs": [
+        {
+          "description": "2D int64 `Tensor`.",
+          "name": "indices",
+          "type": 9
+        },
+        {
+          "description": "1D int `Tensor`.",
+          "name": "values",
+          "typeAttr": "Tidx"
+        },
+        {
+          "description": "1D int64 `Tensor`.",
+          "name": "dense_shape",
+          "type": 9
+        },
+        {
+          "description": "non-negative int scalar `Tensor`.",
+          "name": "size",
+          "typeAttr": "Tidx"
+        },
+        {
+          "description": "is an int32, int64, float32, or float64 `Tensor` with the same\nshape as `input`, or a length-0 `Tensor`, in which case it acts as all weights\nequal to 1.",
+          "name": "weights",
+          "typeAttr": "T"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "1D `Tensor` with length equal to `size` or 2D `Tensor` with [batch_size, `size`].\nThe counts or summed weights for each value in the range [0, size).",
+          "name": "output",
+          "typeAttr": "T"
+        }
+      ],
+      "summary": "Counts the number of occurrences of each value in an integer array."
+    }
+  },
+  {
     "name": "SparseConcat",
     "schema": {
       "attributes": [
@@ -47020,31 +47658,31 @@
     "schema": {
       "attributes": [
         {
-          "description": "dtype; dtype of the input values tensor. Must be one of the following: `int32`, `int64`.",
+          "description": "Dtype of the input values tensor. Must be one of the following: `int32`, `int64`.",
           "name": "T",
           "type": "type"
         },
         {
           "default": -1,
-          "description": "int32; minimum value to count. Can be set to -1 for no minimum.",
+          "description": "Minimum value to count. Can be set to -1 for no minimum.",
           "minimum": -1,
           "name": "minlength",
           "type": "int64"
         },
         {
           "default": -1,
-          "description": "int32; maximum value to count. Can be set to -1 for no maximum.",
+          "description": "Maximum value to count. Can be set to -1 for no maximum.",
           "minimum": -1,
           "name": "maxlength",
           "type": "int64"
         },
         {
-          "description": "bool; whether to output the number of occurrences of each value or 1.",
-          "name": "binary_count",
+          "description": "Whether to output the number of occurrences of each value or 1.",
+          "name": "binary_output",
           "type": "boolean"
         },
         {
-          "description": "dtype; dtype of the output values tensor. Must be one of the following: `int64`, `float32`.",
+          "description": "Dtype of the output values tensor. Must be one of the following: `int32`, `int64`, `float32`, `float64`.",
           "name": "output_type",
           "type": "type"
         }
@@ -47052,39 +47690,39 @@
       "description": "  Counts the number of times each value occurs in the input.",
       "inputs": [
         {
-          "description": "int64; Tensor containing the indices of the sparse tensor to count.",
+          "description": "Tensor containing the indices of the sparse tensor to count.",
           "name": "indices",
           "type": 9
         },
         {
-          "description": "int32 or int64; Tensor containing values of the sparse tensor to count.",
+          "description": "Tensor containing values of the sparse tensor to count.",
           "name": "values",
           "typeAttr": "T"
         },
         {
-          "description": "int64; Tensor containing the dense shape of the sparse tensor to count.",
+          "description": "Tensor containing the dense shape of the sparse tensor to count.",
           "name": "dense_shape",
           "type": 9
         },
         {
-          "description": "float32; Optional rank 1 Tensor (shape=[max_values]) with weights for each count value.",
+          "description": "A Tensor of the same shape as indices containing per-index weight values.\nMay also be the empty tensor if no weights are used.",
           "name": "weights",
-          "type": 1
+          "typeAttr": "output_type"
         }
       ],
       "outputs": [
         {
-          "description": "int64; indices tensor for the resulting sparse tensor object.",
+          "description": "Indices tensor for the resulting sparse tensor object.",
           "name": "output_indices",
           "type": 9
         },
         {
-          "description": "int64 or float32; values tensor for the resulting sparse tensor object.",
+          "description": "Values tensor for the resulting sparse tensor object.",
           "name": "output_values",
           "typeAttr": "output_type"
         },
         {
-          "description": "int64; shape tensor for the resulting sparse tensor object.",
+          "description": "Shape tensor for the resulting sparse tensor object.",
           "name": "output_dense_shape",
           "type": 9
         }
@@ -47175,6 +47813,160 @@
           "description": "1-D.  Non-empty values of the concatenated or hashed\n`SparseTensor`.",
           "name": "output_values",
           "typeAttr": "out_type"
+        },
+        {
+          "description": "1-D.  Shape of the concatenated `SparseTensor`.",
+          "name": "output_shape",
+          "type": 9
+        }
+      ],
+      "summary": "Generates sparse cross from a list of sparse and dense tensors."
+    }
+  },
+  {
+    "name": "SparseCrossHashed",
+    "schema": {
+      "attributes": [
+        {
+          "minimum": 0,
+          "name": "N",
+          "type": "int64"
+        },
+        {
+          "description": "Must be one of the following: `int64`, `string`.",
+          "minimum": 0,
+          "name": "sparse_types",
+          "type": "type[]"
+        },
+        {
+          "description": "Must be one of the following: `int64`, `string`.",
+          "minimum": 0,
+          "name": "dense_types",
+          "type": "type[]"
+        }
+      ],
+      "description": "The op takes two lists, one of 2D `SparseTensor` and one of 2D `Tensor`, each\nrepresenting features of one feature column. It outputs a 2D `SparseTensor` with\nthe batchwise crosses of these features.\n\nFor example, if the inputs are\n\n    inputs[0]: SparseTensor with shape = [2, 2]\n    [0, 0]: \"a\"\n    [1, 0]: \"b\"\n    [1, 1]: \"c\"\n\n    inputs[1]: SparseTensor with shape = [2, 1]\n    [0, 0]: \"d\"\n    [1, 0]: \"e\"\n\n    inputs[2]: Tensor [[\"f\"], [\"g\"]]\n\nthen the output will be\n\n    shape = [2, 2]\n    [0, 0]: \"a_X_d_X_f\"\n    [1, 0]: \"b_X_e_X_g\"\n    [1, 1]: \"c_X_e_X_g\"\n\nif hashed_output=true then the output will be\n\n    shape = [2, 2]\n    [0, 0]: FingerprintCat64(\n                Fingerprint64(\"f\"), FingerprintCat64(\n                    Fingerprint64(\"d\"), Fingerprint64(\"a\")))\n    [1, 0]: FingerprintCat64(\n                Fingerprint64(\"g\"), FingerprintCat64(\n                    Fingerprint64(\"e\"), Fingerprint64(\"b\")))\n    [1, 1]: FingerprintCat64(\n                Fingerprint64(\"g\"), FingerprintCat64(\n                    Fingerprint64(\"e\"), Fingerprint64(\"c\")))",
+      "inputs": [
+        {
+          "description": "2-D.  Indices of each input `SparseTensor`.",
+          "name": "indices",
+          "numberAttr": "N",
+          "type": 9
+        },
+        {
+          "description": "1-D.   values of each `SparseTensor`.",
+          "name": "values",
+          "typeListAttr": "sparse_types"
+        },
+        {
+          "description": "1-D.   Shapes of each `SparseTensor`.",
+          "name": "shapes",
+          "numberAttr": "N",
+          "type": 9
+        },
+        {
+          "description": "2-D.    Columns represented by dense `Tensor`.",
+          "name": "dense_inputs",
+          "typeListAttr": "dense_types"
+        },
+        {
+          "description": "It is used if hashed_output is true.\noutput = hashed_value%num_buckets if num_buckets > 0 else hashed_value.",
+          "name": "num_buckets",
+          "type": 9
+        },
+        {
+          "description": "boolean, if true, siphash with salt will be used instead of farmhash.",
+          "name": "strong_hash",
+          "type": 10
+        },
+        {
+          "description": "Specify the salt that will be used by the siphash function.",
+          "name": "salt",
+          "type": 9
+        }
+      ],
+      "outputs": [
+        {
+          "description": "2-D.  Indices of the concatenated `SparseTensor`.",
+          "name": "output_indices",
+          "type": 9
+        },
+        {
+          "description": "1-D.  Non-empty values of the concatenated or hashed\n`SparseTensor`.",
+          "name": "output_values",
+          "type": 9
+        },
+        {
+          "description": "1-D.  Shape of the concatenated `SparseTensor`.",
+          "name": "output_shape",
+          "type": 9
+        }
+      ],
+      "summary": "Generates sparse cross from a list of sparse and dense tensors."
+    }
+  },
+  {
+    "name": "SparseCrossV2",
+    "schema": {
+      "attributes": [
+        {
+          "minimum": 0,
+          "name": "N",
+          "type": "int64"
+        },
+        {
+          "description": "Must be one of the following: `int64`, `string`.",
+          "minimum": 0,
+          "name": "sparse_types",
+          "type": "type[]"
+        },
+        {
+          "description": "Must be one of the following: `int64`, `string`.",
+          "minimum": 0,
+          "name": "dense_types",
+          "type": "type[]"
+        }
+      ],
+      "description": "The op takes two lists, one of 2D `SparseTensor` and one of 2D `Tensor`, each\nrepresenting features of one feature column. It outputs a 2D `SparseTensor` with\nthe batchwise crosses of these features.\n\nFor example, if the inputs are\n\n    inputs[0]: SparseTensor with shape = [2, 2]\n    [0, 0]: \"a\"\n    [1, 0]: \"b\"\n    [1, 1]: \"c\"\n\n    inputs[1]: SparseTensor with shape = [2, 1]\n    [0, 0]: \"d\"\n    [1, 0]: \"e\"\n\n    inputs[2]: Tensor [[\"f\"], [\"g\"]]\n\nthen the output will be\n\n    shape = [2, 2]\n    [0, 0]: \"a_X_d_X_f\"\n    [1, 0]: \"b_X_e_X_g\"\n    [1, 1]: \"c_X_e_X_g\"\n\nif hashed_output=true then the output will be\n\n    shape = [2, 2]\n    [0, 0]: FingerprintCat64(\n                Fingerprint64(\"f\"), FingerprintCat64(\n                    Fingerprint64(\"d\"), Fingerprint64(\"a\")))\n    [1, 0]: FingerprintCat64(\n                Fingerprint64(\"g\"), FingerprintCat64(\n                    Fingerprint64(\"e\"), Fingerprint64(\"b\")))\n    [1, 1]: FingerprintCat64(\n                Fingerprint64(\"g\"), FingerprintCat64(\n                    Fingerprint64(\"e\"), Fingerprint64(\"c\")))",
+      "inputs": [
+        {
+          "description": "2-D.  Indices of each input `SparseTensor`.",
+          "name": "indices",
+          "numberAttr": "N",
+          "type": 9
+        },
+        {
+          "description": "1-D.   values of each `SparseTensor`.",
+          "name": "values",
+          "typeListAttr": "sparse_types"
+        },
+        {
+          "description": "1-D.   Shapes of each `SparseTensor`.",
+          "name": "shapes",
+          "numberAttr": "N",
+          "type": 9
+        },
+        {
+          "description": "2-D.    Columns represented by dense `Tensor`.",
+          "name": "dense_inputs",
+          "typeListAttr": "dense_types"
+        },
+        {
+          "description": "string used when joining a list of string inputs, can be used as separator later.",
+          "name": "sep",
+          "type": 7
+        }
+      ],
+      "outputs": [
+        {
+          "description": "2-D.  Indices of the concatenated `SparseTensor`.",
+          "name": "output_indices",
+          "type": 9
+        },
+        {
+          "description": "1-D.  Non-empty values of the concatenated or hashed\n`SparseTensor`.",
+          "name": "output_values",
+          "type": 7
         },
         {
           "description": "1-D.  Shape of the concatenated `SparseTensor`.",
@@ -48158,7 +48950,7 @@
     "schema": {
       "attributes": [
         {
-          "description": "Must be one of the following: `float32`, `float64`.",
+          "description": "Must be one of the following: `bfloat16`, `float32`, `float64`.",
           "name": "T",
           "type": "type"
         },
@@ -48273,7 +49065,7 @@
     "schema": {
       "attributes": [
         {
-          "description": "Must be one of the following: `float32`, `float64`.",
+          "description": "Must be one of the following: `bfloat16`, `float32`, `float64`.",
           "name": "T",
           "type": "type"
         },
@@ -48342,7 +49134,7 @@
     "schema": {
       "attributes": [
         {
-          "description": "Must be one of the following: `float32`, `float64`.",
+          "description": "Must be one of the following: `bfloat16`, `float32`, `float64`.",
           "name": "T",
           "type": "type"
         },
@@ -48457,7 +49249,7 @@
     "schema": {
       "attributes": [
         {
-          "description": "Must be one of the following: `float32`, `float64`.",
+          "description": "Must be one of the following: `bfloat16`, `float32`, `float64`.",
           "name": "T",
           "type": "type"
         },
@@ -51237,7 +52029,7 @@
         }
       ],
       "category": "Tensor",
-      "description": "Note, most python users will want to use the Python `Tensor.__getitem__`\nor `Variable.__getitem__` rather than this op directly.\n\nThe goal of this op is to produce a new tensor with a subset of\nthe elements from the `n` dimensional `input` tensor. The subset is chosen using\na sequence of `m` sparse range specifications encoded into the arguments\nof this function. Note, in some cases\n`m` could be equal to `n`, but this need not be the case. Each\nrange specification entry can be one of the following:\n\n- An ellipsis (...). Ellipses are used to imply zero or more\n  dimensions of full-dimension selection and are produced using\n  `ellipsis_mask`. For example, `foo[...]` is the identity slice.\n\n- A new axis. This is used to insert a new shape=1 dimension and is\n  produced using `new_axis_mask`. For example, `foo[:, ...]` where\n  `foo` is shape `(3, 4)` produces a `(1, 3, 4)` tensor.\n\n\n- A range `begin:end:stride`. This is used to specify how much to choose from\n  a given dimension. `stride` can be any integer but 0.  `begin` is an integer\n  which represents the index of the first value to select while `end` represents\n  the index of the last value to select. The number of values selected in each\n  dimension is `end - begin` if `stride > 0` and `begin - end` if `stride < 0`.\n  `begin` and `end` can be negative where `-1` is the last element, `-2` is\n  the second to last. `begin_mask` controls whether to replace the explicitly\n  given `begin` with an implicit effective value of `0` if `stride > 0` and\n  `-1` if `stride < 0`. `end_mask` is analogous but produces the number\n  required to create the largest open interval. For example, given a shape\n  `(3,)` tensor `foo[:]`, the effective `begin` and `end` are `0` and `3`. Do\n  not assume this is equivalent to `foo[0:-1]` which has an effective `begin`\n  and `end` of `0` and `2`. Another example is `foo[-2::-1]` which reverses the\n  first dimension of a tensor while dropping the last two (in the original\n  order elements). For example `foo = [1,2,3,4]; foo[-2::-1]` is `[4,3]`.\n\n- A single index. This is used to keep only elements that have a given\n  index. For example (`foo[2, :]` on a shape `(5,6)` tensor produces a\n  shape `(6,)` tensor. This is encoded in `begin` and `end` and\n  `shrink_axis_mask`.\n\nEach conceptual range specification is encoded in the op's argument. This\nencoding is best understand by considering a non-trivial example. In\nparticular,\n`foo[1, 2:4, None, ..., :-3:-1, :]` will be encoded as\n\n```\nbegin = [1, 2, x, x, 0, x] # x denotes don't care (usually 0)\nend = [2, 4, x, x, -3, x]\nstrides = [1, 1, x, x, -1, 1]\nbegin_mask = 1<<4 | 1 << 5 = 48\nend_mask = 1<<5 = 32\nellipsis_mask = 1<<3 = 8\nnew_axis_mask = 1<<2 4\nshrink_axis_mask = 1<<0\n```\n\nIn this case if `foo.shape` is (5, 5, 5, 5, 5, 5) the final shape of\nthe slice becomes (2, 1, 5, 5, 2, 5).\nLet us walk step by step through each argument specification.\n\n1.  The first argument in the example slice is turned into `begin = 1` and\n`end = begin + 1 = 2`. To disambiguate from the original spec `2:4` we\nalso set the appropriate bit in `shrink_axis_mask`.\n\n2. `2:4` is contributes 2, 4, 1 to begin, end, and stride. All masks have\nzero bits contributed.\n\n3. None is a synonym for `tf.newaxis`. This means insert a dimension of size 1\ndimension in the final shape. Dummy values are contributed to begin,\nend and stride, while the new_axis_mask bit is set.\n\n4. `...` grab the full ranges from as many dimensions as needed to\nfully specify a slice for every dimension of the input shape.\n\n5. `:-3:-1` shows the use of negative indices. A negative index `i` associated\nwith a dimension that has shape `s` is converted to a positive index\n`s + i`. So `-1` becomes `s-1` (i.e. the last element). This conversion\nis done internally so begin, end and strides receive x, -3, and -1.\nThe appropriate begin_mask bit is set to indicate the start range is the\nfull range (ignoring the x).\n\n6. `:` indicates that the entire contents of the corresponding dimension\nis selected. This is equivalent to `::` or `0::1`. begin, end, and strides\nreceive 0, 0, and 1, respectively. The appropriate bits in `begin_mask` and\n`end_mask` are also set.\n\n*Requirements*:\n  `0 != strides[i] for i in [0, m)`\n  `ellipsis_mask must be a power of two (only one ellipsis)`",
+      "description": "Note, most python users will want to use the Python `Tensor.__getitem__`\nor `Variable.__getitem__` rather than this op directly.\n\nThe goal of this op is to produce a new tensor with a subset of\nthe elements from the `n` dimensional `input` tensor. The subset is chosen using\na sequence of `m` sparse range specifications encoded into the arguments\nof this function. Note, in some cases\n`m` could be equal to `n`, but this need not be the case. Each\nrange specification entry can be one of the following:\n\n- An ellipsis (...). Ellipses are used to imply zero or more\n  dimensions of full-dimension selection and are produced using\n  `ellipsis_mask`. For example, `foo[...]` is the identity slice.\n\n- A new axis. This is used to insert a new shape=1 dimension and is\n  produced using `new_axis_mask`. For example, `foo[:, ...]` where\n  `foo` is shape `(3, 4)` produces a `(1, 3, 4)` tensor.\n\n\n- A range `begin:end:stride`. This is used to specify how much to choose from\n  a given dimension. `stride` can be any integer but 0.  `begin` is an integer\n  which represents the index of the first value to select while `end` represents\n  the index of the last value to select. The number of values selected in each\n  dimension is `end - begin` if `stride > 0` and `begin - end` if `stride < 0`.\n  `begin` and `end` can be negative where `-1` is the last element, `-2` is\n  the second to last. `begin_mask` controls whether to replace the explicitly\n  given `begin` with an implicit effective value of `0` if `stride > 0` and\n  `-1` if `stride < 0`. `end_mask` is analogous but produces the number\n  required to create the largest open interval. For example, given a shape\n  `(3,)` tensor `foo[:]`, the effective `begin` and `end` are `0` and `3`. Do\n  not assume this is equivalent to `foo[0:-1]` which has an effective `begin`\n  and `end` of `0` and `2`. Another example is `foo[-2::-1]` which reverses the\n  first dimension of a tensor while dropping the last two (in the original\n  order elements). For example `foo = [1,2,3,4]; foo[-2::-1]` is `[4,3]`.\n\n- A single index. This is used to keep only elements that have a given\n  index. For example (`foo[2, :]` on a shape `(5,6)` tensor produces a\n  shape `(6,)` tensor. This is encoded in `begin` and `end` and\n  `shrink_axis_mask`.\n\nEach conceptual range specification is encoded in the op's argument. This\nencoding is best understand by considering a non-trivial example. In\nparticular,\n`foo[1, 2:4, None, ..., :-3:-1, :]` will be encoded as\n\n```\nbegin = [1, 2, x, x, 0, x] # x denotes don't care (usually 0)\nend = [2, 4, x, x, -3, x]\nstrides = [1, 1, x, x, -1, 1]\nbegin_mask = 1<<4 | 1<<5 = 48\nend_mask = 1<<5 = 32\nellipsis_mask = 1<<3 = 8\nnew_axis_mask = 1<<2 = 4\nshrink_axis_mask = 1<<0 = 1\n```\n\nIn this case if `foo.shape` is (5, 5, 5, 5, 5, 5) the final shape of\nthe slice becomes (2, 1, 5, 5, 2, 5).\nLet us walk step by step through each argument specification.\n\n1.  The first argument in the example slice is turned into `begin = 1` and\n`end = begin + 1 = 2`. To disambiguate from the original spec `2:4` we\nalso set the appropriate bit in `shrink_axis_mask`.\n\n2. `2:4` is contributes 2, 4, 1 to begin, end, and stride. All masks have\nzero bits contributed.\n\n3. None is a synonym for `tf.newaxis`. This means insert a dimension of size 1\ndimension in the final shape. Dummy values are contributed to begin,\nend and stride, while the new_axis_mask bit is set.\n\n4. `...` grab the full ranges from as many dimensions as needed to\nfully specify a slice for every dimension of the input shape.\n\n5. `:-3:-1` shows the use of negative indices. A negative index `i` associated\nwith a dimension that has shape `s` is converted to a positive index\n`s + i`. So `-1` becomes `s-1` (i.e. the last element). This conversion\nis done internally so begin, end and strides receive x, -3, and -1.\nThe appropriate begin_mask bit is set to indicate the start range is the\nfull range (ignoring the x).\n\n6. `:` indicates that the entire contents of the corresponding dimension\nis selected. This is equivalent to `::` or `0::1`. begin, end, and strides\nreceive 0, 0, and 1, respectively. The appropriate bits in `begin_mask` and\n`end_mask` are also set.\n\n*Requirements*:\n  `0 != strides[i] for i in [0, m)`\n  `ellipsis_mask must be a power of two (only one ellipsis)`",
       "inputs": [
         {
           "name": "input",
@@ -52439,6 +53231,11 @@
           "default": -1,
           "name": "index",
           "type": "int64"
+        },
+        {
+          "default": false,
+          "name": "is_packed",
+          "type": "boolean"
         }
       ],
       "description": "This operation holds a replicated input to a `tpu.replicate()` computation subgraph.\nEach replicated input has the same shape and type alongside the output.\n\nFor example:\n```\n%a = \"tf.opA\"()\n%b = \"tf.opB\"()\n%replicated_input = \"tf.TPUReplicatedInput\"(%a, %b)\n%computation = \"tf.Computation\"(%replicated_input)\n```\nThe above computation has a replicated input of two replicas.",
@@ -54736,6 +55533,86 @@
     }
   },
   {
+    "name": "TensorScatterMax",
+    "schema": {
+      "attributes": [
+        {
+          "name": "T",
+          "type": "type"
+        },
+        {
+          "description": "Must be one of the following: `int32`, `int64`.",
+          "name": "Tindices",
+          "type": "type"
+        }
+      ],
+      "inputs": [
+        {
+          "description": "Tensor to update.",
+          "name": "tensor",
+          "typeAttr": "T"
+        },
+        {
+          "description": "Index tensor.",
+          "name": "indices",
+          "typeAttr": "Tindices"
+        },
+        {
+          "description": "Updates to scatter into output.",
+          "name": "updates",
+          "typeAttr": "T"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "A new tensor copied from tensor whose values are element-wise maximum between tensor and updates according to the indices.",
+          "name": "output",
+          "typeAttr": "T"
+        }
+      ]
+    }
+  },
+  {
+    "name": "TensorScatterMin",
+    "schema": {
+      "attributes": [
+        {
+          "name": "T",
+          "type": "type"
+        },
+        {
+          "description": "Must be one of the following: `int32`, `int64`.",
+          "name": "Tindices",
+          "type": "type"
+        }
+      ],
+      "inputs": [
+        {
+          "description": "Tensor to update.",
+          "name": "tensor",
+          "typeAttr": "T"
+        },
+        {
+          "description": "Index tensor.",
+          "name": "indices",
+          "typeAttr": "Tindices"
+        },
+        {
+          "description": "Updates to scatter into output.",
+          "name": "updates",
+          "typeAttr": "T"
+        }
+      ],
+      "outputs": [
+        {
+          "description": "A new tensor copied from tensor whose values are element-wise minimum between tensor and updates according to the indices.",
+          "name": "output",
+          "typeAttr": "T"
+        }
+      ]
+    }
+  },
+  {
     "name": "TensorScatterSub",
     "schema": {
       "attributes": [
@@ -55843,6 +56720,36 @@
         }
       ],
       "summary": "Gradient of Unbatch."
+    }
+  },
+  {
+    "name": "UncompressElement",
+    "schema": {
+      "attributes": [
+        {
+          "minimum": 1,
+          "name": "output_types",
+          "type": "type[]"
+        },
+        {
+          "minimum": 1,
+          "name": "output_shapes",
+          "type": "shape[]"
+        }
+      ],
+      "inputs": [
+        {
+          "name": "compressed",
+          "type": 21
+        }
+      ],
+      "outputs": [
+        {
+          "name": "components",
+          "typeListAttr": "output_types"
+        }
+      ],
+      "summary": "Uncompresses a compressed dataset element."
     }
   },
   {

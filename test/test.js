@@ -204,7 +204,7 @@ class HTMLElement {
     getBBox() {
         return { x: 0, y: 0, width: 10, height: 10 };
     }
-    
+
     getElementsByClassName(/* name */) {
         return null;
     }
@@ -284,7 +284,7 @@ function request(location, cookie) {
     const options = { rejectUnauthorized: false };
     let httpRequest = null;
     switch (url.parse(location).protocol) {
-        case 'http:': 
+        case 'http:':
             httpRequest = http.request(location, options);
             break;
         case 'https:':
@@ -306,11 +306,9 @@ function request(location, cookie) {
 }
 
 function downloadFile(location, cookie) {
-    let data = [];
-    let position = 0;
     return request(location, cookie).then((response) => {
         if (response.statusCode == 200 &&
-            url.parse(location).hostname == 'drive.google.com' && 
+            url.parse(location).hostname == 'drive.google.com' &&
             response.headers['set-cookie'].some((cookie) => cookie.startsWith('download_warning_'))) {
             cookie = response.headers['set-cookie'];
             const download = cookie.filter((cookie) => cookie.startsWith('download_warning_')).shift();
@@ -320,7 +318,7 @@ function downloadFile(location, cookie) {
         }
         if (response.statusCode == 301 || response.statusCode == 302) {
             location = url.parse(response.headers.location).hostname ?
-                response.headers.location : 
+                response.headers.location :
                 url.parse(location).protocol + '//' + url.parse(location).hostname + response.headers.location;
             return downloadFile(location, cookie);
         }
@@ -328,11 +326,13 @@ function downloadFile(location, cookie) {
             throw new Error(response.statusCode.toString() + ' ' + location);
         }
         return new Promise((resolve, reject) => {
+            let position = 0;
+            const data = [];
             const length = response.headers['content-length'] ? Number(response.headers['content-length']) : -1;
             response.on('data', (chunk) => {
                 position += chunk.length;
                 if (length >= 0) {
-                    const label = location.length > 70 ? location.substring(0, 66) + '...' : location; 
+                    const label = location.length > 70 ? location.substring(0, 66) + '...' : location;
                     process.stdout.write('  (' + ('  ' + Math.floor(100 * (position / length))).slice(-3) + '%) ' + label + '\r');
                 }
                 else {
@@ -500,19 +500,24 @@ function loadModel(target, item) {
                 }
             }
             for (const node of graph.nodes) {
+                node.type.toString();
+                node.type.length;
+                if (typeof node.type != 'string') {
+                    throw new Error("Invalid node type '" + JSON.stringify(node.type) + "'.");
+                }
                 node.name.toString();
                 node.name.length;
                 node.description;
                 const metadata = node.metadata;
                 if (metadata !== null && metadata !== undefined && (typeof metadata !== 'object' || !metadata.name)) {
-                    throw new Error("Invalid documentation object '" + node.operator + "'.");
+                    throw new Error("Invalid metadata object '" + node.type + "'.");
                 }
                 sidebar.DocumentationSidebar.formatDocumentation(node.metadata);
                 node.attributes.slice();
                 for (const attribute of node.attributes) {
                     attribute.name.toString();
                     attribute.name.length;
-                    let value = sidebar.NodeSidebar.formatAttributeValue(attribute.value, attribute.type)
+                    let value = sidebar.NodeSidebar.formatAttributeValue(attribute.value, attribute.type);
                     if (value && value.length > 1000) {
                         value = value.substring(0, 1000) + '...';
                     }
@@ -587,7 +592,7 @@ function next() {
         console.error("Property 'type' is required for item '" + JSON.stringify(item) + "'.");
         return;
     }
-    if (type && item.type != type) {
+    if (type && item.type !== type) {
         next();
         return;
     }
@@ -599,10 +604,14 @@ function next() {
         next();
         return;
     }
+    process.stdout.write(item.type + '/' + target + '\n');
+    if (item.action && item.action.split(';').some((action) => action == 'skip')) {
+        next();
+        return;
+    }
     if (process.stdout.clearLine) {
         process.stdout.clearLine();
     }
-    process.stdout.write(item.type + '/' + target + '\n');
 
     let promise = null;
     if (item.script) {
@@ -619,7 +628,7 @@ function next() {
     return promise.then(() => {
         return loadModel(folder + '/' + target, item).then((model) => {
             let promise = null;
-            if (item.render == 'skip') {
+            if (item.action && item.action.split(';').some((action) => action == 'skip-render')) {
                 promise = Promise.resolve();
             }
             else {

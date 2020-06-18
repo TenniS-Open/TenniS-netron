@@ -119,7 +119,7 @@ hdf5.Group = class {
         return this._attributes;
     }
 
-    get value() { 
+    get value() {
         this._decodeDataObject();
         return this._value;
     }
@@ -162,7 +162,7 @@ hdf5.Group = class {
                             this._groupMap[name] = group;
                         }
                     }
-                }    
+                }
             }
             else {
                 this._decodeDataObject();
@@ -253,7 +253,7 @@ hdf5.Variable = class {
             default: {
                 throw new hdf5.Error("Unknown data layout class '" + this.layoutClass + "'.");
             }
-        } 
+        }
         return null;
     }
 };
@@ -383,7 +383,7 @@ hdf5.Reader = class {
             while (this._buffer[position] != 0) {
                 position++;
             }
-            size = position - this._position + this._offset + 1;
+            size = position - this._position - this._offset + 1;
         }
         const data = this.bytes(size);
         return hdf5.Reader.decode(data, encoding);
@@ -406,7 +406,7 @@ hdf5.Reader = class {
         return text.replace(/\0/g, '');
     }
 
-    offset() { 
+    offset() {
         switch (this._offsetSize) {
             case 8: {
                 const lo = this.uint32();
@@ -449,7 +449,7 @@ hdf5.Reader = class {
     }
 
     at(position) {
-        let reader = new hdf5.Reader(null);
+        const reader = new hdf5.Reader(null);
         reader._buffer = this._buffer;
         reader._dataView = this._dataView;
         reader._position = position;
@@ -460,7 +460,7 @@ hdf5.Reader = class {
     }
 
     clone() {
-        let reader =  new hdf5.Reader(this._buffer, this._position);
+        const reader =  new hdf5.Reader(this._buffer, this._position);
         reader._buffer = this._buffer;
         reader._dataView = this._dataView;
         reader._position = this._position;
@@ -517,7 +517,7 @@ hdf5.SymbolTableNode = class {
         }
         else {
             throw new hdf5.Error('Unsupported symbol table node version \'' + version + '\'.');
-        }        
+        }
     }
 };
 
@@ -602,7 +602,7 @@ hdf5.DataObjectHeader = class {
                             reader.uint16();
                         }
                         next = this._readMessage(reader, messageType, messageSize, messageFlags);
-                    } 
+                    }
                     if ((!next || reader.position >= end) && this.continuations.length > 0) {
                         const continuation = this.continuations.shift();
                         reader = reader.at(continuation.offset);
@@ -642,7 +642,7 @@ hdf5.DataObjectHeader = class {
                 this.links.push(new hdf5.Link(reader.clone()));
                 break;
             case 0x0008: // Data Layout
-                this.dataLayout = new hdf5.DataLayout(reader.clone()); 
+                this.dataLayout = new hdf5.DataLayout(reader.clone());
                 break;
             case 0x000A: // Group Info
                 this.groupInfo = new hdf5.GroupInfo(reader.clone());
@@ -730,7 +730,7 @@ hdf5.Dataspace = class {
                 break;
             default:
                 throw new hdf5.Error("Unsupported dataspace message version '" + version + "'.");
-    
+
         }
     }
 
@@ -757,7 +757,7 @@ hdf5.Dataspace = class {
             for (let j = 0; j < size; j++) {
                 array.push(this._readArray(datatype, reader, shape, dimension + 1));
             }
-        }     
+        }
         return array;
     }
 
@@ -816,10 +816,33 @@ hdf5.Datatype = class {
         this._class = format & 0xf;
         switch (version) {
             case 1:
-            case 2:
+            case 2: {
                 this._flags = reader.byte() | reader.byte() << 8 | reader.byte() << 16;
                 this._size = reader.uint32();
+                switch (this._class) {
+                    case 0: {
+                        this._bitOffset = reader.uint16();
+                        this._bitPrecision = reader.uint16();
+                        break;
+                    }
+                    case 8: {
+                        this._base = new hdf5.Datatype(reader);
+                        this._names = [];
+                        this._values = [];
+                        const count = this._flags & 0xffff;
+                        for (let i = 0; i < count; i++) {
+                            const name = reader.clone().string(-1, 'ascii');
+                            this._names.push(name);
+                            reader.skip(Math.round((name.length + 1) / 8) * 8);
+                        }
+                        for (let i = 0; i < count; i++) {
+                            this._values.push(this._base.read(reader));
+                        }
+                        break;
+                    }
+                }
                 break;
+            }
             default:
                 throw new hdf5.Error('Unsupported datatype version \'' + version + '\'.');
         }
@@ -862,6 +885,13 @@ hdf5.Datatype = class {
                 return 'string';
             case 5: // opaque
                 return 'uint8[]';
+            case 8: // enumerated
+                if (this._base.type === 'int8' &&
+                    this._names.length === 2 && this._names[0] === 'FALSE' && this._names[1] === 'TRUE' &&
+                    this._values.length === 2 && this._values[0] === 0 && this._values[1] === 1) {
+                    return 'boolean';
+                }
+                break;
             case 9: // variable-length
                 if ((this._flags & 0x0f) == 1) { // type
                     return 'char[]';
@@ -939,7 +969,7 @@ hdf5.Datatype = class {
             case 9: { // variable-length
                 const globalHeapObject = globalHeap.get(data.globalHeapID);
                 if (globalHeapObject != null) {
-                    const characterSet = (this._flags >> 8) & 0x0f; 
+                    const characterSet = (this._flags >> 8) & 0x0f;
                     switch (characterSet) {
                         case 0:
                             return hdf5.Reader.decode(globalHeapObject.data, 'ascii');
@@ -1026,7 +1056,7 @@ hdf5.DataLayout = class {
         // https://support.hdfgroup.org/HDF5/doc/H5.format.html#LayoutMessage
         const version = reader.byte();
         switch (version) {
-            case 1: 
+            case 1:
             case 2: {
                 this.dimensionality = reader.byte();
                 this.layoutClass = reader.byte();
@@ -1121,7 +1151,7 @@ hdf5.FilterPipeline = class {
                 break;
             }
             default:
-                throw new hdf5.Error('Unsupported filter pipeline message version \'' + version + '\'.'); 
+                throw new hdf5.Error('Unsupported filter pipeline message version \'' + version + '\'.');
         }
     }
 };
@@ -1147,7 +1177,7 @@ hdf5.Filter = class {
                 throw hdf5.Error("Unsupported filter '" + this.name + "'.");
         }
     }
-}
+};
 
 hdf5.Attribute = class {
 
@@ -1185,7 +1215,7 @@ hdf5.Attribute = class {
                 break;
             }
             default:
-                throw new hdf5.Error('Unsupported attribute message version \'' + version + '\'.'); 
+                throw new hdf5.Error('Unsupported attribute message version \'' + version + '\'.');
         }
     }
 
@@ -1236,13 +1266,13 @@ hdf5.ObjectModificationTime = class {
                         this.timestamp = reader.uint32();
                         break;
                     default:
-                        throw new hdf5.Error('Unsupported object modification time message version \'' + version + '\'.'); 
+                        throw new hdf5.Error('Unsupported object modification time message version \'' + version + '\'.');
                 }
                 break;
             }
         }
     }
-}
+};
 
 hdf5.AttributeInfo = class {
 
@@ -1262,7 +1292,7 @@ hdf5.AttributeInfo = class {
                 break;
             }
             default:
-                throw new hdf5.Error('Unsupported attribute info message version \'' + version + '\'.'); 
+                throw new hdf5.Error('Unsupported attribute info message version \'' + version + '\'.');
         }
     }
 };
@@ -1300,7 +1330,7 @@ hdf5.Tree = class {
                     const filterMask = reader.int32();
                     const fields = [];
                     for (let j = 0; j < dimensionality; j++) {
-                        fields.push(reader.uint64())
+                        fields.push(reader.uint64());
                     }
                     const childPointer = reader.offset();
                     if (this.level == 0) {
@@ -1312,7 +1342,7 @@ hdf5.Tree = class {
                         this.nodes = this.nodes.concat(tree.nodes);
                     }
                 }
-                break;  
+                break;
             default:
                 throw new hdf5.Error('Unsupported B-Tree node type \'' + this.type + '\'.');
         }
@@ -1350,7 +1380,7 @@ hdf5.Heap = class {
 hdf5.GlobalHeap = class {
 
     constructor(reader) {
-        this._reader = reader; 
+        this._reader = reader;
         this._collections = new Map();
     }
 
@@ -1414,7 +1444,7 @@ hdf5.GlobalHeapID = class {
 
     constructor(reader) {
         this.address = reader.offset();
-        this.objectIndex = reader.uint32(); 
+        this.objectIndex = reader.uint32();
     }
 };
 
@@ -1427,5 +1457,5 @@ hdf5.Error = class extends Error {
 };
 
 if (typeof module !== 'undefined' && typeof module.exports === 'object') {
-    module.exports.File = hdf5.File; 
+    module.exports.File = hdf5.File;
 }

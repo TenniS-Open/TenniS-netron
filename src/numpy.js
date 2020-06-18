@@ -41,7 +41,7 @@ numpy.Array = class {
                         throw new numpy.Error("Unsupported data type '" + header.descr + "'.");
                     }
                     this._dataType = header.descr.substring(1);
-                    const size = parseInt(header.descr[2]) * this._shape.reduce((a, b) => a * b);
+                    const size = parseInt(header.descr[2], 10) * this._shape.reduce((a, b) => a * b, 1);
                     this._data = reader.bytes(size);
                     break;
                 }
@@ -98,7 +98,7 @@ numpy.Array = class {
             byteOrder: this._byteOrder || '<',
             shape: this._shape,
             descr: '',
-        }
+        };
 
         if (context.byteOrder !== '<' && context.byteOrder !== '>') {
             throw new numpy.Error("Unknown byte order '" + this._byteOrder + "'.");
@@ -130,7 +130,7 @@ numpy.Array = class {
         header += ' '.repeat(16 - ((header.length + 2 + 8 + 1) & 0x0f)) + '\n';
         writer.string(header);
 
-        const size = context.itemSize * this._shape.reduce((a, b) => a * b)
+        const size = context.itemSize * this._shape.reduce((a, b) => a * b);
         context.data = new Uint8Array(size);
         context.dataView = new DataView(context.data.buffer, context.data.byteOffset, size);
         numpy.Array._encodeDimension(context, this._data, 0);
@@ -188,7 +188,7 @@ numpy.Array = class {
             }
         }
     }
-}
+};
 
 numpy.Reader = class {
 
@@ -227,7 +227,7 @@ numpy.Reader = class {
         }
         return value;
     }
-}
+};
 
 numpy.Writer = class {
 

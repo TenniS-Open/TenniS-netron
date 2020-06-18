@@ -18,6 +18,13 @@
             }
         },
         {
+            "type": "electron",
+            "request": "launch",
+            "name": "Debug Electron",
+            "sourceMaps": false,
+            "appDir": "${workspaceFolder}","address": "127.0.0.1","port": 9222
+        },
+        {
             "name": "Debug Renderer Process",
             "type": "chrome",
             "request": "launch",

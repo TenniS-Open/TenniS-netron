@@ -4997,10 +4997,18 @@ tflite_schema.ResizeNearestNeighborOptions.prototype.alignCorners = function() {
 };
 
 /**
+ * @returns {boolean}
+ */
+tflite_schema.ResizeNearestNeighborOptions.prototype.halfPixelCenters = function() {
+  var offset = this.bb.__offset(this.bb_pos, 6);
+  return offset ? !!this.bb.readInt8(this.bb_pos + offset) : false;
+};
+
+/**
  * @param {flatbuffers.Builder} builder
  */
 tflite_schema.ResizeNearestNeighborOptions.startResizeNearestNeighborOptions = function(builder) {
-  builder.startObject(1);
+  builder.startObject(2);
 };
 
 /**
@@ -5009,6 +5017,14 @@ tflite_schema.ResizeNearestNeighborOptions.startResizeNearestNeighborOptions = f
  */
 tflite_schema.ResizeNearestNeighborOptions.addAlignCorners = function(builder, alignCorners) {
   builder.addFieldInt8(0, +alignCorners, +false);
+};
+
+/**
+ * @param {flatbuffers.Builder} builder
+ * @param {boolean} halfPixelCenters
+ */
+tflite_schema.ResizeNearestNeighborOptions.addHalfPixelCenters = function(builder, halfPixelCenters) {
+  builder.addFieldInt8(1, +halfPixelCenters, +false);
 };
 
 /**
@@ -5023,11 +5039,13 @@ tflite_schema.ResizeNearestNeighborOptions.endResizeNearestNeighborOptions = fun
 /**
  * @param {flatbuffers.Builder} builder
  * @param {boolean} alignCorners
+ * @param {boolean} halfPixelCenters
  * @returns {flatbuffers.Offset}
  */
-tflite_schema.ResizeNearestNeighborOptions.createResizeNearestNeighborOptions = function(builder, alignCorners) {
+tflite_schema.ResizeNearestNeighborOptions.createResizeNearestNeighborOptions = function(builder, alignCorners, halfPixelCenters) {
   tflite_schema.ResizeNearestNeighborOptions.startResizeNearestNeighborOptions(builder);
   tflite_schema.ResizeNearestNeighborOptions.addAlignCorners(builder, alignCorners);
+  tflite_schema.ResizeNearestNeighborOptions.addHalfPixelCenters(builder, halfPixelCenters);
   return tflite_schema.ResizeNearestNeighborOptions.endResizeNearestNeighborOptions(builder);
 }
 
@@ -13068,7 +13086,8 @@ tflite_metadata_schema.AssociatedFileType = {
   DESCRIPTIONS: 1,
   TENSOR_AXIS_LABELS: 2,
   TENSOR_VALUE_LABELS: 3,
-  TENSOR_AXIS_SCORE_CALIBRATION: 4
+  TENSOR_AXIS_SCORE_CALIBRATION: 4,
+  VOCABULARY: 5
 };
 
 /**
@@ -13079,7 +13098,8 @@ tflite_metadata_schema.AssociatedFileTypeName = {
   '1': 'DESCRIPTIONS',
   '2': 'TENSOR_AXIS_LABELS',
   '3': 'TENSOR_VALUE_LABELS',
-  '4': 'TENSOR_AXIS_SCORE_CALIBRATION'
+  '4': 'TENSOR_AXIS_SCORE_CALIBRATION',
+  '5': 'VOCABULARY'
 };
 
 /**
@@ -15364,10 +15384,19 @@ tflite_metadata_schema.ModelMetadata.prototype.associatedFilesLength = function(
 };
 
 /**
+ * @param {flatbuffers.Encoding=} optionalEncoding
+ * @returns {string|Uint8Array|null}
+ */
+tflite_metadata_schema.ModelMetadata.prototype.minParserVersion = function(optionalEncoding) {
+  var offset = this.bb.__offset(this.bb_pos, 18);
+  return offset ? this.bb.__string(this.bb_pos + offset, optionalEncoding) : null;
+};
+
+/**
  * @param {flatbuffers.Builder} builder
  */
 tflite_metadata_schema.ModelMetadata.startModelMetadata = function(builder) {
-  builder.startObject(7);
+  builder.startObject(8);
 };
 
 /**
@@ -15470,6 +15499,14 @@ tflite_metadata_schema.ModelMetadata.startAssociatedFilesVector = function(build
 
 /**
  * @param {flatbuffers.Builder} builder
+ * @param {flatbuffers.Offset} minParserVersionOffset
+ */
+tflite_metadata_schema.ModelMetadata.addMinParserVersion = function(builder, minParserVersionOffset) {
+  builder.addFieldOffset(7, minParserVersionOffset, 0);
+};
+
+/**
+ * @param {flatbuffers.Builder} builder
  * @returns {flatbuffers.Offset}
  */
 tflite_metadata_schema.ModelMetadata.endModelMetadata = function(builder) {
@@ -15502,9 +15539,10 @@ tflite_metadata_schema.ModelMetadata.finishSizePrefixedModelMetadataBuffer = fun
  * @param {flatbuffers.Offset} authorOffset
  * @param {flatbuffers.Offset} licenseOffset
  * @param {flatbuffers.Offset} associatedFilesOffset
+ * @param {flatbuffers.Offset} minParserVersionOffset
  * @returns {flatbuffers.Offset}
  */
-tflite_metadata_schema.ModelMetadata.createModelMetadata = function(builder, nameOffset, descriptionOffset, versionOffset, subgraphMetadataOffset, authorOffset, licenseOffset, associatedFilesOffset) {
+tflite_metadata_schema.ModelMetadata.createModelMetadata = function(builder, nameOffset, descriptionOffset, versionOffset, subgraphMetadataOffset, authorOffset, licenseOffset, associatedFilesOffset, minParserVersionOffset) {
   tflite_metadata_schema.ModelMetadata.startModelMetadata(builder);
   tflite_metadata_schema.ModelMetadata.addName(builder, nameOffset);
   tflite_metadata_schema.ModelMetadata.addDescription(builder, descriptionOffset);
@@ -15513,6 +15551,7 @@ tflite_metadata_schema.ModelMetadata.createModelMetadata = function(builder, nam
   tflite_metadata_schema.ModelMetadata.addAuthor(builder, authorOffset);
   tflite_metadata_schema.ModelMetadata.addLicense(builder, licenseOffset);
   tflite_metadata_schema.ModelMetadata.addAssociatedFiles(builder, associatedFilesOffset);
+  tflite_metadata_schema.ModelMetadata.addMinParserVersion(builder, minParserVersionOffset);
   return tflite_metadata_schema.ModelMetadata.endModelMetadata(builder);
 }
 

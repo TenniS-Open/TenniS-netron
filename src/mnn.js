@@ -66,20 +66,20 @@ mnn.Graph = class {
         this._nodes = [];
         this._inputs = [];
         this._outputs = [];
-        let inputSet = new Set();
+        const inputSet = new Set();
         for (let i = 0; i < net.oplistsLength(); i++) {
             const op = net.oplists(i);
             if (mnn.schema.OpTypeName[op.type()] === 'Input') {
-                let args = [];
+                const args = [];
                 for (let j = 0; j < op.outputIndexesLength(); j++) {
                     const index = op.outputIndexes(j);
                     const name = net.tensorName(index);
                     const extraTensorDescribe = net.extraTensorDescribe(index);
                     const blob = extraTensorDescribe ? extraTensorDescribe.blob() : null;
                     const type = blob ? mnn.Graph._blobTensorType(blob) : null;
-                    args.push(new mnn.Argument(name, type, null))
+                    args.push(new mnn.Argument(name, type, null));
                 }
-                this._inputs.push(new mnn.Parameter(op.name(), true, args))
+                this._inputs.push(new mnn.Parameter(op.name(), true, args));
             }
             else {
                 this._nodes.push(new mnn.Node(metadata, op, net));
@@ -158,20 +158,20 @@ mnn.Node = class {
 
     constructor(metadata, op, net) {
         this._metadata = metadata;
-        this._operator = mnn.schema.OpTypeName[op.type()] || '(' + op.type().toString() + ')';
+        this._type = mnn.schema.OpTypeName[op.type()] || '(' + op.type().toString() + ')';
         this._name = op.name() || '';
         this._attributes = [];
         this._inputs = [];
         this._outputs = [];
         this._chains = [];
-        let inputs = [];
+        const inputs = [];
         for (let i = 0; i < op.inputIndexesLength(); i++) {
             const index = op.inputIndexes(i);
             const id = net.tensorName(index);
             inputs.push(new mnn.Argument(id, null, null));
         }
         this._inputs.push(new mnn.Parameter('input', true, inputs));
-        let outputs = [];
+        const outputs = [];
         for (let i = 0; i < op.outputIndexesLength(); i++) {
             const index = op.outputIndexes(i);
             const name = net.tensorName(index);
@@ -250,7 +250,7 @@ mnn.Node = class {
     }
 
     _buildTensor(dataType, name, dimensions, value) {
-        this._inputs.push(new mnn.Parameter(name, true, [ 
+        this._inputs.push(new mnn.Parameter(name, true, [
             new mnn.Argument('', null, new mnn.Tensor('Weight', new mnn.TensorType(dataType, new mnn.TensorShape(dimensions)), value))
         ]));
     }
@@ -259,7 +259,7 @@ mnn.Node = class {
         if (!parameter) return;
 
         let attributeNames = [];
-        let attributeNamesMap = {};
+        const attributeNamesMap = {};
         for (const attributeName of Object.keys(Object.getPrototypeOf(parameter))) {
             if (attributeName != '__init') {
                 attributeNames.push(attributeName);
@@ -267,7 +267,7 @@ mnn.Node = class {
             attributeNamesMap[attributeName] = true;
         }
 
-        let attributeArrayNamesMap = {}; 
+        const attributeArrayNamesMap = {};
         for (const attributeName of Object.keys(attributeNamesMap)) {
             if (attributeNamesMap[attributeName + 'Length']) { // some bugs without array
                 attributeArrayNamesMap[attributeName] = true;
@@ -276,7 +276,7 @@ mnn.Node = class {
         }
 
         for (const attributeName of attributeNames) {
-        
+
             if (invisibleAttributes && invisibleAttributes[attributeName]) {
                 continue;
             }
@@ -308,15 +308,15 @@ mnn.Node = class {
                 }
 
                 if (value != null) {
-                    const schema = metadata.attribute(this.operator, attributeName);
+                    const schema = metadata.attribute(this.type, attributeName);
                     attributeHolders.push(new mnn.Attribute(schema, attributeName, value));
                 }
             }
         }
     }
 
-    get operator() {
-        return this._operator;
+    get type() {
+        return this._type;
     }
 
     get name() {
@@ -328,7 +328,7 @@ mnn.Node = class {
     }
 
     get metadata() {
-        return this._metadata.type(this.operator);
+        return this._metadata.type(this.type);
     }
 
     get group() {
@@ -453,7 +453,7 @@ mnn.Tensor = class {
     }
 
     get value() {
-        let context = this._context();
+        const context = this._context();
         if (context.state) {
             return null;
         }
@@ -462,7 +462,7 @@ mnn.Tensor = class {
     }
 
     toString() {
-        let context = this._context();
+        const context = this._context();
         if (context.state) {
             return '';
         }
@@ -472,7 +472,7 @@ mnn.Tensor = class {
     }
 
     _context() {
-        let context = {};
+        const context = {};
         context.state = null;
         if (!this._data) {
             context.state = 'Tensor data is empty.';
@@ -491,8 +491,8 @@ mnn.Tensor = class {
         if (shape.length == 0) {
             shape = [ 1 ];
         }
-        let results = [];
-        let size = shape[dimension];
+        const results = [];
+        const size = shape[dimension];
         if (dimension == shape.length - 1) {
             for (let i = 0; i < size; i++) {
                 if (context.count > context.limit) {
@@ -538,7 +538,7 @@ mnn.TensorType = class {
     toString() {
         return this._dataType + this._shape.toString();
     }
-}
+};
 
 mnn.TensorShape = class {
 
@@ -588,12 +588,12 @@ mnn.Metadata = class {
         }
     }
 
-    type(operator) {
-        return this._map.has(operator) ? this._map.get(operator) : null;
+    type(name) {
+        return this._map.has(name) ? this._map.get(name) : null;
     }
 
-    attribute(operator, name) {
-        const schema = this.type(operator);
+    attribute(type, name) {
+        const schema = this.type(type);
         if (schema) {
             let attributeMap = schema.attributeMap;
             if (!attributeMap) {
@@ -607,7 +607,7 @@ mnn.Metadata = class {
             }
             const attributeSchema = attributeMap[name];
             if (attributeSchema) {
-                return attributeSchema; 
+                return attributeSchema;
             }
         }
         return null;

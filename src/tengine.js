@@ -40,7 +40,7 @@ tengine.ModelFactory = class {
             }
         });
     }
-}
+};
 
 tengine.Model = class {
 
@@ -60,9 +60,9 @@ tengine.Model = class {
     }
 
     get graphs() {
-        return this._graphs; 
+        return this._graphs;
     }
-}
+};
 
 tengine.Graph = class {
 
@@ -88,7 +88,7 @@ tengine.Graph = class {
         }
 
         for (const node of graph.nodes) {
-            if (node.operator !== 'INPUT') {
+            if (node.type !== 'INPUT') {
                 this._nodes.push(new tengine.Node(metadata, node, tensors));
             }
         }
@@ -109,11 +109,11 @@ tengine.Graph = class {
     get nodes() {
         return this._nodes;
     }
-}
+};
 
 tengine.Parameter = class {
 
-    constructor(name, visible, args) { 
+    constructor(name, visible, args) {
         this._name = name;
         this._visible = visible;
         this._arguments = args;
@@ -132,7 +132,7 @@ tengine.Parameter = class {
     }
 };
 
-tengine.Argument = class { 
+tengine.Argument = class {
 
     constructor(tensor) {
         this._name = tensor.name;
@@ -166,22 +166,22 @@ tengine.Node = class {
     constructor(metadata, node, tensors) {
         this._metadata = metadata;
         this._name = node.name;
-        this._operator = node.operator + (node.operatorVersion && node.operatorVersion !== 1 ? ':' + node.operatorVersion.toString() : '');
+        this._type = node.type + (node.version && node.version !== 1 ? ':' + node.version.toString() : '');
         this._inputs = [];
         this._outputs = [];
         this._attributes = [];
 
-        const schema = metadata.type(this._operator);
+        const schema = metadata.type(this._type);
 
         for (let i = 0; i < node.params.length; i++) {
             const attributeSchema = (schema && schema.attributes && i < schema.attributes.length) ? schema.attributes[i] : null;
             const attributeName = attributeSchema ? attributeSchema.name : i.toString();
-            this._attributes.push(new tengine.Attribute(attributeSchema, attributeName, node.params[i])); 
+            this._attributes.push(new tengine.Attribute(attributeSchema, attributeName, node.params[i]));
         }
 
-        const inputs = node.inputs; 
+        const inputs = node.inputs;
         let inputIndex = 0;
-        if (schema && schema.inputs) { 
+        if (schema && schema.inputs) {
             for (const inputDef of schema.inputs) {
                 if (inputIndex < inputs.length || inputDef.option != 'optional') {
                     const inputCount = (inputDef.option == 'variadic') ? (inputs.length - inputIndex) : 1;
@@ -192,8 +192,8 @@ tengine.Node = class {
             }
         }
         else {
-            this._inputs = this._inputs.concat(inputs.slice(inputIndex).map((id, index) => { 
-                const inputName = ((inputIndex + index) == 0) ? 'input' : (inputIndex + index).toString(); 
+            this._inputs = this._inputs.concat(inputs.slice(inputIndex).map((id, index) => {
+                const inputName = ((inputIndex + index) == 0) ? 'input' : (inputIndex + index).toString();
                 return new tengine.Parameter(inputName, true, [ tensors[id] ]);
             }));
         }
@@ -201,7 +201,7 @@ tengine.Node = class {
         const outputs = node.outputs;
         let outputIndex = 0;
         if (schema && schema.outputs) {
-            for (const outputDef of schema.outputs) { 
+            for (const outputDef of schema.outputs) {
                 if (outputIndex < outputs.length || outputDef.option != 'optional') {
                     const outputCount = (outputDef.option == 'variadic') ? (outputs.length - outputIndex) : 1;
                     const outputArguments = outputs.slice(outputIndex, outputIndex + outputCount).map((id) => tensors[id]);
@@ -218,8 +218,8 @@ tengine.Node = class {
         }
     }
 
-    get operator() {
-        return this._operator.split(':')[0];
+    get type() {
+        return this._type.split(':')[0];
     }
 
     get name() {
@@ -227,7 +227,7 @@ tengine.Node = class {
     }
 
     get metadata() {
-        return this._metadata.type(this._operator);
+        return this._metadata.type(this._type);
     }
 
     get attributes() {
@@ -241,7 +241,7 @@ tengine.Node = class {
     get outputs() {
         return this._outputs;
     }
-}
+};
 
 tengine.Attribute = class {
 
@@ -280,7 +280,7 @@ tengine.Attribute = class {
     get visible() {
         return this._visible == false ? false : true;
     }
-}
+};
 
 tengine.Tensor = class {
 
@@ -418,8 +418,7 @@ tengine.Tensor = class {
         }
         return results;
     }
-
-}
+};
 
 tengine.TensorType = class {
 
@@ -447,7 +446,7 @@ tengine.TensorType = class {
     toString() {
         return this._dataType + this._shape.toString();
     }
-}
+};
 
 tengine.TensorShape = class {
 
@@ -496,21 +495,21 @@ tengine.Metadata = class {
         }
     }
 
-    type(operator) {
-        return this._map[operator] || null;
+    type(name) {
+        return this._map[name] || null;
     }
 
-    attribute(operator, name) {
-        let map = this._attributeCache[operator];
+    attribute(type, name) {
+        let map = this._attributeCache[type];
         if (!map) {
             map = {};
-            const schema = this.type(operator);
+            const schema = this.type(type);
             if (schema && schema.attributes && schema.attributes.length > 0) {
                 for (const attribute of schema.attributes) {
                     map[attribute.name] = attribute;
                 }
             }
-            this._attributeCache[operator] = map;
+            this._attributeCache[type] = map;
         }
         return map[name] || null;
     }
@@ -523,9 +522,9 @@ tengine.ModelFileReader = class {
         // ./third_party/src/tengine/serializer/include/tengine/v2/tm2_format.h
         // https://github.com/OAID/Tengine/wiki/The-format-of-tmfile
 
-        const operators = new Map();
+        const types = new Map();
         const register = (index, version, name, params) => {
-            operators.set(index.toString() + ':' + version.toString(), { name: name, params: params });
+            types.set(index.toString() + ':' + version.toString(), { name: name, params: params });
         };
         register( 0, 1, 'Accuracy', []);
         register( 1, 1, 'BatchNormalization', [ 'f', 'f', 'i' ]);
@@ -637,7 +636,7 @@ tengine.ModelFileReader = class {
             const subgraph = {};
             subgraph.id = reader.int32();
             subgraph.graphLayout = reader.int32();
-            /* 
+            /*
             if (graphLayout == 0) {
                 return "NCHW";
             }
@@ -663,20 +662,20 @@ tengine.ModelFileReader = class {
                 node.id = reader.int32();
                 node.inputs = reader.uint32s();
                 node.outputs = reader.uint32s();
-                const operatorOffset = reader.int32();
+                const typeOffset = reader.int32();
                 node.name = reader.string();
                 const attributeOffsets = reader.uint32s();
                 node.dynamicShape = reader.boolean() ? true : false;
 
-                reader.seek(operatorOffset);
-                node.operatorVersion = reader.int32(); 
-                const operatorIndex = reader.int32();
+                reader.seek(typeOffset);
+                node.version = reader.int32();
+                const index = reader.int32();
                 const paramsOffset = reader.uint32();
 
-                const operator = operatorIndex.toString() + ':' + node.operatorVersion.toString();
-                const schema = operators.has(operator) ? operators.get(operator) : null;
-                node.operator = schema ? schema.name : operatorIndex.toString();
-                const paramTypes = schema ? schema.params : []
+                const type = index.toString() + ':' + node.version.toString();
+                const schema = types.has(type) ? types.get(type) : null;
+                node.type = schema ? schema.name : index.toString();
+                const paramTypes = schema ? schema.params : [];
 
                 node.params = [];
                 if (paramsOffset) {
@@ -708,12 +707,12 @@ tengine.ModelFileReader = class {
                                 node.params.push(reader.anchors(4));
                                 break;
                             default:
-                                throw new tengine.Error("Unsupported param type '" + paramType + "' in '" + node.operator + "'.");
+                                throw new tengine.Error("Unsupported param type '" + paramType + "' in '" + node.type + "'.");
                         }
                     }
                 }
 
-                if (node.operator === 'Slice') {
+                if (node.type === 'Slice') {
                     node.params[6] = (this._originalFormat == 5) ? node.params[6] : 0;
                 }
 
@@ -726,7 +725,7 @@ tengine.ModelFileReader = class {
                     node.attributes.push({ name: name, value: value, type: type });
                 }
 
-                if (node.operator !== 'Const') {
+                if (node.type !== 'Const') {
                     subgraph.nodes.push(node);
                 }
             }
@@ -736,7 +735,7 @@ tengine.ModelFileReader = class {
             for (const buffersOffset of bufferOffsets) {
                 reader.seek(buffersOffset);
                 const size = reader.uint32();
-                reader.seek(reader.int32())
+                reader.seek(reader.int32());
                 buffers.push(reader.bytes(size));
             }
 
@@ -747,8 +746,8 @@ tengine.ModelFileReader = class {
                 tensor.id = reader.int32();
                 tensor.buffer = buffers[reader.int32()];
                 tensor.dims = reader.int32s();
-                tensor.name = reader.string(); 
-                const quantparamsOffset = reader.int32(); 
+                tensor.name = reader.string();
+                const quantparamsOffset = reader.int32();
                 tensor.layout = reader.int32();
                 tensor.type = reader.int32(); // ar = 1, const = 2, input = 3, vdep, unknown
                 tensor.dataType = reader.int32();
@@ -764,7 +763,7 @@ tengine.ModelFileReader = class {
             }
 
             for (const node of subgraph.nodes) {
-                if (node.operator === 'Convolution') {
+                if (node.type === 'Convolution') {
                     switch (subgraph.graphLayout) {
                         case 0: // NCHW
                             node.params[6] = subgraph.tensors[node.inputs[1]].dims[1];
@@ -801,7 +800,7 @@ tengine.ModelFileReader = class {
     get graphs() {
         return this._graphs;
     }
-}
+};
 
 tengine.BinaryReader = class {
 
@@ -950,7 +949,7 @@ tengine.BinaryReader = class {
         }
         return text;
     }
-}
+};
 
 tengine.Error = class extends Error {
 
