@@ -879,14 +879,41 @@ tennis.Graph = class {
 
         let node_output_count = {};
         for (let node of graph.nodes) {
-            node_output_count[node] = 0;
             for (let input of node.inputs) {
-                node_output_count[input] += 1;
+                if (input.id in node_output_count) {
+                    node_output_count[input.id] += 1;
+                } else {
+                    node_output_count[input.id] = 1;
+                }
             }
         }
 
+        // haha, sort nodes by ref
+        let sorted_nodes = [];
+        let cache_nodes = {};
+        const sort_node = function(node) {
+            // if (node.id in cache_nodes) return;
+            for (let input of node.inputs) {
+                if (input.id in cache_nodes) {
+                    continue;
+                }
+                sort_node(input);
+            }
+            sorted_nodes.push(node);
+            cache_nodes[node.id] = true;
+        };
+        for (let node of graph.inputs) {
+            if (node.id in cache_nodes) continue;
+            sort_node(node);
+        }       
+        for (let node of graph.outputs) {
+            if (node.id in cache_nodes) continue;
+            sort_node(node);
+        }       
+ 
+
         let draw_nodes = [];
-        for (let node of graph.nodes) {
+        for (let node of sorted_nodes) {
             if (node.op == "<param>") continue;
             if (node.op == "<const>") continue;
 
@@ -899,10 +926,10 @@ tennis.Graph = class {
 
             if (node.op in node_copy_map) {
                 let input = node.input(node_copy_map[node.op]);
-                if (node_output_count[input] == 1) {
+                if (node_output_count[input.id] == 1) {
                     while (input.op in node_copy_map) {
                         let tmp = input.input(node_copy_map[input.op]);
-                        if (node_output_count[tmp] != 1) {
+                        if (node_output_count[tmp.id] != 1) {
                             break;
                         }
                         input = tmp;
