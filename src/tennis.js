@@ -536,7 +536,7 @@ utils.Node = class {
         if (this._hand_arg_id) {
             return this._hand_arg_id;
         }
-        return this._id.toString() + ": " + this._name;
+        return "[" + this._id.toString() + "] " + this._name;
     }
 
     set arg_id(v) {
