@@ -19,6 +19,7 @@ categories = {
     'Constant': 'Constant',
 
     'Conv': 'Layer',
+    'ConvInteger': 'Layer',
     'ConvTranspose': 'Layer',
     'FC': 'Layer',
     'RNN': 'Layer',
@@ -130,7 +131,7 @@ def format_description(description):
         url = match.group(2)
         if not url.startswith("http://") and not url.startswith("https://"):
             url = "https://github.com/onnx/onnx/blob/master/docs/" + url
-        return "[" + link + "](" + url + ")";
+        return "[" + link + "](" + url + ")"
     description = re.sub("\\[(.+)\\]\\(([^ ]+?)( \"(.+)\")?\\)", replace_line, description)
     return description
 
@@ -175,9 +176,9 @@ def generate_json(schemas, json_file):
         json_schema['min_output'] = schema.min_output
         json_schema['max_output'] = schema.max_output
         if schema.min_input != schema.max_input:
-            json_schema['inputs_range'] = format_range(schema.min_input) + ' - ' + format_range(schema.max_input);
+            json_schema['inputs_range'] = format_range(schema.min_input) + ' - ' + format_range(schema.max_input)
         if schema.min_output != schema.max_output:
-            json_schema['outputs_range'] = format_range(schema.min_output) + ' - ' + format_range(schema.max_output);
+            json_schema['outputs_range'] = format_range(schema.min_output) + ' - ' + format_range(schema.max_output)
         if schema.attributes:
             json_schema['attributes'] = []
             for _, attribute in sorted(schema.attributes.items()):
@@ -227,48 +228,8 @@ def generate_json(schemas, json_file):
 def metadata():
     schemas = defs.get_all_schemas_with_history()
     schemas = sorted(schemas, key=lambda schema: schema.name)
-    json_file = os.path.join(os.path.dirname(__file__), '../src/onnx-metadata.json')
+    json_file = os.path.join(os.path.dirname(__file__), '../source/onnx-metadata.json')
     generate_json(schemas, json_file)
-
-def convert():
-    def pip_import(package):
-        import importlib
-        try:
-            importlib.import_module(package)
-        except:
-            import subprocess
-            subprocess.call([ 'pip', 'install', '--quiet', package ])
-        finally:
-            globals()[package] = importlib.import_module(package)
-    file = sys.argv[2]
-    base, extension = os.path.splitext(file)
-    if extension == '.mlmodel':
-        pip_import('coremltools')
-        import onnxmltools
-        coreml_model = coremltools.utils.load_spec(file)
-        onnx_model = onnxmltools.convert.convert_coreml(coreml_model)
-        onnxmltools.utils.save_model(onnx_model, base + '.onnx')
-    elif extension == '.h5':
-        pip_import('tensorflow')
-        pip_import('keras')
-        import onnxmltools
-        keras_model = keras.models.load_model(file)
-        onnx_model = onnxmltools.convert.convert_keras(keras_model)
-        onnxmltools.utils.save_model(onnx_model, base + '.onnx')
-    elif extension == '.pkl':
-        pip_import('sklearn')
-        import onnxmltools
-        sklearn_model = sklearn.externals.joblib.load(file)
-        onnx_model = onnxmltools.convert.convert_sklearn(sklearn_model)
-        onnxmltools.utils.save_model(onnx_model, base + '.onnx')
-    base, extension = os.path.splitext(file)
-    if extension == '.onnx':
-        import onnx
-        from google.protobuf import text_format
-        onnx_model = onnx.load(file)
-        text = text_format.MessageToString(onnx_model)
-        with open(base + '.pbtxt', 'w') as text_file:
-            text_file.write(text)
 
 def optimize():
     import onnx
@@ -291,6 +252,6 @@ def infer():
     onnx.save(onnx_model, base + '.shape.onnx')
 
 if __name__ == '__main__':
-    command_table = { 'metadata': metadata, 'convert': convert, 'optimize': optimize, 'infer': infer }
+    command_table = { 'metadata': metadata, 'optimize': optimize, 'infer': infer }
     command = sys.argv[1]
     command_table[command]()

@@ -24,26 +24,14 @@ venv() {
     ${python} -m pip install --quiet --upgrade pip
 }
 
-git_sync() {
-    [ -d "./third_party/src/${1}" ] || git clone --quiet --recursive ${2} "./third_party/src/${1}"
-    pushd "./third_party/src/${1}" > /dev/null
+sync() {
+    bold "onnx sync"
+    [ -d "./third_party/source/onnx" ] || git clone --quiet --recursive https://github.com/onnx/onnx.git "./third_party/source/onnx"
+    pushd "./third_party/source/onnx" > /dev/null
     git pull --quiet --prune
     git submodule sync --quiet
     git submodule update --quiet --init --recursive
     popd > /dev/null
-}
-
-clean() {
-    bold "onnx clean"
-    rm -rf "./third_party/env/onnx"
-    rm -rf "./third_party/src/onnx"
-    rm -rf "./third_party/src/onnxmltools"
-}
-
-sync() {
-    bold "onnx sync"
-    git_sync onnx https://github.com/onnx/onnx.git
-    git_sync onnxmltools https://github.com/onnx/onnxmltools.git
 }
 
 install() {
@@ -84,40 +72,29 @@ install() {
     ${python} -m pip install --quiet --upgrade ${protobuf}
     export ONNX_ML=1
     export ONNX_NAMESPACE=onnx
-    ${python} -m pip install --quiet "./third_party/src/onnx"
+    ${python} -m pip install --quiet "./third_party/source/onnx"
     deactivate
 }
 
 schema() {
     bold "onnx schema"
-    [[ $(grep -U $'\x0D' ./src/onnx-proto.js) ]] && crlf=1
-    npx pbjs -t static-module -w closure --no-encode --no-delimited --no-comments --no-convert --no-verify --no-create --keep-case --decode-text -r onnx -o ./src/onnx-proto.js ./third_party/src/onnx/onnx/onnx-ml.proto ./third_party/src/onnx/onnx/onnx-operators-ml.proto
-    node ./tools/update_pbjs.js array ./src/onnx-proto.js float_data float 1
-    node ./tools/update_pbjs.js array ./src/onnx-proto.js double_data double 1
+    [[ $(grep -U $'\x0D' ./source/onnx-proto.js) ]] && crlf=1
+    node ./tools/protoc.js --text --root onnx --out ./source/onnx-proto.js --path ./third_party/source/onnx onnx/onnx-ml.proto onnx/onnx-operators-ml.proto
     if [[ -n ${crlf} ]]; then
-        unix2dos --quiet --newfile ./src/onnx-proto.js ./src/onnx-proto.js
+        unix2dos --quiet --newfile ./source/onnx-proto.js ./source/onnx-proto.js
     fi
 }
 
 metadata() {
     bold "onnx metadata"
-    [[ $(grep -U $'\x0D' ./src/onnx-metadata.json) ]] && crlf=1
+    [[ $(grep -U $'\x0D' ./source/onnx-metadata.json) ]] && crlf=1
     venv
     export PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
     ${python} ./tools/onnx-script.py metadata
     deactivate
     if [[ -n ${crlf} ]]; then
-        unix2dos --quiet --newfile ./src/onnx-metadata.json ./src/onnx-metadata.json
+        unix2dos --quiet --newfile ./source/onnx-metadata.json ./source/onnx-metadata.json
     fi
-}
-
-convert() {
-    bold "onnx convert"
-    venv
-    ${python} -m pip install --quiet ./third_party/src/onnxmltools
-    export PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
-    ${python} ./tools/onnx-script.py convert ${1}
-    deactivate
 }
 
 infer() {
@@ -144,7 +121,6 @@ while [ "$#" != 0 ]; do
         "install") install;;
         "schema") schema;;
         "metadata") metadata;;
-        "convert") convert ${1} && shift;;
         "infer") infer ${1} && shift;;
         "optimize") optimize ${1} && shift;;
     esac

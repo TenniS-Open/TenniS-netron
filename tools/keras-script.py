@@ -67,16 +67,16 @@ def metadata():
     def update_input(schema, description):
         if not 'inputs' in schema:
             schema['inputs'] = [ { name: 'input' } ]
-        parameter = next((parameter for parameter in schema['inputs'] if parameter['name'] == 'input'), None)
+        parameter = next((parameter for parameter in schema['inputs'] if (parameter['name'] == 'input' or parameter['name'] == 'inputs')), None)
         if parameter:
             parameter['description'] = remove_indentation(description)
         else:
             raise Exception('')
 
     def update_output(schema, description):
-        if not 'output' in schema:
-            schema['output'] = [ { name: 'output' } ]
-        parameter = next((parameter for parameter in schema['output'] if parameter['name'] == 'output'), None)
+        if not 'outputs' in schema:
+            schema['outputs'] = [ { name: 'output' } ]
+        parameter = next((parameter for parameter in schema['outputs'] if parameter['name'] == 'output'), None)
         if parameter:
             parameter['description'] = remove_indentation(description)
         else:
@@ -133,7 +133,7 @@ def metadata():
                 schema['references'] = []
             schema['references'].append({ 'description': reference })
 
-    json_path = os.path.join(os.path.dirname(__file__), '../src/keras-metadata.json')
+    json_path = os.path.join(os.path.dirname(__file__), '../source/keras-metadata.json')
     json_file = open(json_path)
     json_root = json.loads(json_file.read())
     json_file.close()
@@ -167,7 +167,7 @@ def metadata():
                 elif key == 'Input shape':
                     update_input(schema, value)
                 elif key == 'Output shape':
-                    update_input(schema, value)
+                    update_output(schema, value)
                 elif key == 'Example' or key == 'Examples' or key == 'Usage':
                     update_examples(schema, value)
                 elif key == 'References':
@@ -192,7 +192,8 @@ def zoo():
             folder = os.path.dirname(file)
             if not os.path.exists(folder):
                 os.makedirs(folder)
-            model = pydoc.locate(type)()
+            model_type = pydoc.locate(type)
+            model = model_type(weights=None)
             model.save(file)
     if not os.environ.get('test'):
         os.environ['test'] = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../test'))
@@ -203,7 +204,6 @@ def zoo():
     download_model('tensorflow.keras.applications.NASNetMobile', '${test}/data/keras/NASNetMobile.h5')
     download_model('tensorflow.keras.applications.ResNet50', '${test}/data/keras/ResNet50.h5')
     download_model('tensorflow.keras.applications.VGG19', '${test}/data/keras/VGG19.h5')
-    download_model('tensorflow.keras.applications.Xception', '${test}/data/keras/Xception.h5')
 
 if __name__ == '__main__':
     command_table = { 'metadata': metadata, 'zoo': zoo }

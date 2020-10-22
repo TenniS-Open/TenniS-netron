@@ -46,6 +46,8 @@ jobs:
           API_KEY_ISSUER_ID: ${{ secrets.API_KEY_ISSUER_ID }}
           CSC_LINK: ${{ secrets.CSC_LINK }}
           CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+          WIN_CSC_LINK: ${{ secrets.WIN_CSC_LINK }}
+          WIN_CSC_KEY_PASSWORD: ${{ secrets.WIN_CSC_KEY_PASSWORD }}
         run: |
           case "${{ matrix.os }}" in
             macos*)
@@ -69,18 +71,18 @@ jobs:
           esac
 
       - if: startsWith(matrix.os, 'ubuntu')
-        name: Publish Python Server
+        name: Publish Python
         env:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.pypi_api_token }}
         run: make publish_python
 
       - if: startsWith(matrix.os, 'ubuntu')
-        name: Publish GitHub Pages
+        name: Publish Web
         env:
           GITHUB_TOKEN: ${{ secrets.PUBLISH_GITHUB_TOKEN }}
           GITHUB_USER: ${{ secrets.PUBLISH_GITHUB_USER }}
-        run: make publish_github_pages
+        run: make publish_web
 
       - if: startsWith(matrix.os, 'macos')
         name: Publish cask

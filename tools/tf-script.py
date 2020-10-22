@@ -29,8 +29,10 @@ def metadata():
         'Identity': 'Control',
         'LeakyRelu': 'Activation',
         'LRN': 'Normalization',
+        'LSTMBlockCell': 'Layer',
         'MaxPool': 'Pool',
         'MaxPoolV2': 'Pool',
+        'MaxPoolWithArgmax': 'Pool',
         'Pad': 'Tensor',
         'Relu': 'Activation',
         'Relu6': 'Activation',
@@ -260,7 +262,7 @@ def metadata():
             return 'false'
         raise Exception()
 
-    tensorflow_repo_dir = os.path.join(os.path.dirname(__file__), '../third_party/src/tensorflow')
+    tensorflow_repo_dir = os.path.join(os.path.dirname(__file__), '../third_party/source/tf')
     api_def_map = read_api_def_map(os.path.join(tensorflow_repo_dir, 'tensorflow/core/api_def/base_api'))
     input_file = os.path.join(tensorflow_repo_dir, 'tensorflow/core/ops/ops.pbtxt')
     ops_list = op_def_pb2.OpList()
@@ -364,7 +366,7 @@ def metadata():
             'schema': json_schema 
         })
 
-    json_file = os.path.join(os.path.dirname(__file__), '../src/tf-metadata.json')
+    json_file = os.path.join(os.path.dirname(__file__), '../source/tf-metadata.json')
     with io.open(json_file, 'w', newline='') as fout:
         json_data = json.dumps(json_root, sort_keys=True, indent=2)
         for line in json_data.splitlines():
@@ -374,5 +376,5 @@ def metadata():
 
 if __name__ == '__main__':
     command_table = { 'metadata': metadata }
-    command = sys.argv[1];
+    command = sys.argv[1]
     command_table[command]()

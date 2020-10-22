@@ -1,9 +1,9 @@
 appId: com.lutzroeder.netron
 productName: Netron
 files:
-  - 'src/**/*'
+  - 'source/**/*'
 directories:
-  buildResources: ./setup
+  buildResources: ./publish
 fileAssociations:
   - name: "Arm NN Model"
     ext: armnn
@@ -61,7 +61,11 @@ fileAssociations:
     ext: tsm
   - name: "UFF Model"
     ext: uff
-afterSign: "./setup/notarize.js"
+  - name: "PaddlePaddle"
+    ext: paddle
+  - name: "PaddlePaddle"
+    ext: pdmodel
+afterSign: "./publish/notarize.js"
 publish:
   - provider: github
     releaseType: release
@@ -88,6 +92,8 @@ snap:
 win:
   target:
   - nsis
+  signingHashAlgorithms:
+  - sha256
   verifyUpdateCodeSignature: false
 dmg:
   iconSize: 160
