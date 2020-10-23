@@ -1318,7 +1318,7 @@ tennis.Attribute = class {
 
     get value() {
         if (this._show_value === null) {
-            return this._value;
+            return this._value.toString();
         }
         return this._show_value;
     }
