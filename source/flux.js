@@ -16,18 +16,19 @@ flux.ModelFactory = class {
         return false;
     }
 
-    open(context, host) {
+    open(context) {
         return Promise.resolve().then(() => {
             let root = null;
             try {
-                const reader = json.BinaryReader.create(context.buffer);
+                const stream = context.stream;
+                const reader = json.BinaryReader.open(stream);
                 root = reader.read();
             }
             catch (error) {
                 const message = error && error.message ? error.message : error.toString();
                 throw new flux.Error('File format is not Flux BSON (' + message.replace(/\.$/, '') + ').');
             }
-            return flux.Metadata.open(host).then((metadata) => {
+            return flux.Metadata.open(context).then((metadata) => {
                 const obj = flux.ModelFactory._backref(root, root);
                 const model = obj.model;
                 if (!model) {
@@ -79,11 +80,11 @@ flux.Model = class {
 
 flux.Metadata = class {
 
-    static open(host) {
+    static open(context) {
         if (flux.Metadata._metadata) {
             return Promise.resolve(flux.Metadata._metadata);
         }
-        return host.request(null, 'flux-metadata.json', 'utf-8').then((data) => {
+        return context.request('flux-metadata.json', 'utf-8', null).then((data) => {
             flux.Metadata._metadata = new flux.Metadata(data);
             return flux.Metadata._metadata;
         }).catch(() => {

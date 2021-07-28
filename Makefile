@@ -1,5 +1,5 @@
 
-.PHONY: test
+.PHONY: test coverage
 
 build: clean lint build_python build_electron
 
@@ -14,7 +14,8 @@ clean:
 	rm -rf ./package-lock.json
 
 reset: clean
-	rm -rf ./third_party
+	rm -rf ./third_party/env
+	rm -rf ./third_party/source
 
 update: install
 	@./tools/armnn sync schema
@@ -24,22 +25,30 @@ update: install
 	@./tools/coreml sync schema
 	@./tools/dnn schema
 	@./tools/mnn sync schema
+	@./tools/mslite sync schema metadata
 	@./tools/onnx sync install schema metadata
 	@./tools/paddle sync schema
 	@./tools/pytorch sync install schema metadata
 	@./tools/sklearn sync install metadata
 	@./tools/tf sync install schema metadata
 	@./tools/uff schema
+	@./tools/xmodel sync schema
 
 build_python: install
 	python -m pip install --user wheel
 	python ./setup.py build --version bdist_wheel
 
+install_python: build_python
+	pip install --force-reinstall --quiet dist/dist/*.whl
+
 build_electron: install
-	CSC_IDENTITY_AUTO_DISCOVERY=false npx electron-builder --mac --publish never
-	npx electron-builder --win --publish never
-	npx electron-builder --linux appimage --publish never
-	npx electron-builder --linux snap --publish never
+	CSC_IDENTITY_AUTO_DISCOVERY=false npx electron-builder --mac --universal --publish never
+	npx electron-builder --win --x64 --arm64 --publish never
+	npx electron-builder --linux appimage --x64 --publish never
+	npx electron-builder --linux snap --x64 --publish never
+
+start: install
+	npx electron .
 
 lint: install
 	npx eslint source/*.js test/*.js publish/*.js tools/*.js
@@ -47,18 +56,23 @@ lint: install
 test: install
 	node ./test/models.js
 
-start: install
-	npx electron .
+coverage:
+	rm -rf .nyc_output ./coverage ./dist/nyc
+	mkdir -p ./dist/nyc
+	cp ./package.json ./dist/nyc
+	cp -R ./source ./dist/nyc
+	nyc instrument --compact false ./source ./dist/nyc/source
+	nyc --reporter=lcov --instrument npx electron ./dist/nyc
 
 publish_python: build_python
 	python -m pip install --user twine
 	python -m twine upload --non-interactive --skip-existing --verbose dist/dist/*
 
 publish_electron: install
-	npx electron-builder --mac --publish always
-	npx electron-builder --win --publish always
-	npx electron-builder --linux appimage --publish always
-	npx electron-builder --linux snap --publish always
+	npx electron-builder --mac --universal --publish always
+	npx electron-builder --win --x64 --arm64 --publish always
+	npx electron-builder --linux appimage --x64 --publish always
+	npx electron-builder --linux snap --x64 --publish always
 
 build_web:
 	mkdir -p ./dist/web
@@ -69,11 +83,8 @@ build_web:
 	cp -R ./source/*.json ./dist/web
 	cp -R ./source/*.ico ./dist/web
 	cp -R ./source/*.png ./dist/web
-	cp -R ./node_modules/d3/dist/d3.min.js ./dist/web
-	cp -R ./node_modules/dagre/dist/dagre.min.js ./dist/web
-	cp -R ./node_modules/marked/marked.min.js ./dist/web
-	cp -R ./node_modules/pako/dist/pako.min.js ./dist/web
 	rm -rf ./dist/web/electron.* ./dist/web/app.js
+	cp -R ./node_modules/dagre/dist/dagre.js ./dist/web
 	sed -i "s/0\.0\.0/$$(grep '"version":' package.json -m1 | cut -d\" -f4)/g" ./dist/web/index.html
 
 publish_web: build_web
@@ -89,7 +100,7 @@ publish_cask:
 	rm -rf ./dist/homebrew-cask
 	sleep 4
 	git clone --depth=2 https://x-access-token:$(GITHUB_TOKEN)@github.com/$(GITHUB_USER)/homebrew-cask.git ./dist/homebrew-cask
-	node ./publish/cask.js ./package.json ./dist/homebrew-cask/Casks/netron.rb
+	node ./publish/cask.js ./dist/homebrew-cask/Casks/netron.rb
 	git -C ./dist/homebrew-cask add --all
 	git -C ./dist/homebrew-cask commit -m "Update $$(node -pe "require('./package.json').productName") to $$(node -pe "require('./package.json').version")"
 	git -C ./dist/homebrew-cask push
@@ -103,7 +114,7 @@ publish_winget:
 	rm -rf ./dist/winget-pkgs
 	sleep 4
 	git clone --depth=2 https://x-access-token:$(GITHUB_TOKEN)@github.com/$(GITHUB_USER)/winget-pkgs.git ./dist/winget-pkgs
-	node ./publish/winget.js ./package.json ./dist/winget-pkgs/manifests
+	node ./publish/winget.js ./dist/winget-pkgs/manifests
 	git -C ./dist/winget-pkgs add --all
 	git -C ./dist/winget-pkgs commit -m "Update $$(node -pe "require('./package.json').name") to $$(node -pe "require('./package.json').version")"
 	git -C ./dist/winget-pkgs push
@@ -117,6 +128,9 @@ version:
 	git add ./package.json
 	git commit -m "Update to $$(node -pe "require('./package.json').version")"
 	git tag v$$(node -pe "require('./package.json').version")
-	git push --force
+	git push
 	git push --tags
-	git tag -d v$$(node -pe "require('./package.json').version")
+
+pull:
+	git fetch --prune origin "refs/tags/*:refs/tags/*"
+	git pull --prune --rebase

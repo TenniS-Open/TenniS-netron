@@ -19,15 +19,21 @@ caffe2.ModelFactory = class {
                     }
                     const schema = [[1,2],[2,2],[3,2],[4,0],[5,2],[6,2],[7,2],[8,2],[9,2]];
                     if (schema.every((pair) => !tags.has(pair[0]) || tags.get(pair[0]) === pair[1])) {
-                        const buffer = context.buffer;
-                        if (buffer.length > 3 && buffer[0] == 0x0A) {
-                            const size = buffer[1];
-                            if (size < 64 && buffer.length > 2 + size + 1 && buffer.slice(2, 2 + size).every((c) => c >= 32 && c <= 127) && buffer[2 + size] == 0x12) {
+                        const stream = context.stream;
+                        if (stream.length > 3) {
+                            const buffer = stream.peek(Math.min(stream.length, 67));
+                            if (buffer[0] == 0x0A) {
+                                const size = buffer[1];
+                                if (size < 64 &&
+                                    buffer.length > 2 + size + 1 &&
+                                    buffer.slice(2, 2 + size).every((c) => c >= 32 && c <= 127) &&
+                                    buffer[2 + size] == 0x12) {
+                                    return true;
+                                }
+                            }
+                            if (buffer[0] == 0x12) {
                                 return true;
                             }
-                        }
-                        if (buffer.length > 3 && buffer[0] == 0x12) {
-                            return true;
                         }
                     }
                 }
@@ -45,9 +51,9 @@ caffe2.ModelFactory = class {
         return false;
     }
 
-    open(context, host) {
-        return host.require('./caffe2-proto').then(() => {
-            return caffe2.Metadata.open(host).then((metadata) => {
+    open(context) {
+        return context.require('./caffe2-proto').then(() => {
+            return caffe2.Metadata.open(context).then((metadata) => {
                 const identifier = context.identifier;
                 const parts = identifier.split('.');
                 const extension = parts.pop().toLowerCase();
@@ -58,7 +64,7 @@ caffe2.ModelFactory = class {
                         let init_net = null;
                         try {
                             caffe2.proto = protobuf.get('caffe2').caffe2;
-                            const reader = protobuf.TextReader.create(predictBuffer);
+                            const reader = protobuf.TextReader.open(predictBuffer);
                             reader.field = function(tag, message) {
                                 if (message instanceof caffe2.proto.DeviceOption) {
                                     message[tag] = this.read();
@@ -74,9 +80,16 @@ caffe2.ModelFactory = class {
                         }
                         try {
                             caffe2.proto = protobuf.get('caffe2').caffe2;
-                            init_net = initTextFormat ?
-                                caffe2.proto.NetDef.decodeText(protobuf.TextReader.create(initBuffer)) :
-                                caffe2.proto.NetDef.decode(protobuf.Reader.create(initBuffer));
+                            if (initBuffer) {
+                                if (initTextFormat) {
+                                    const reader = protobuf.TextReader.open(initBuffer);
+                                    init_net = caffe2.proto.NetDef.decodeText(reader);
+                                }
+                                else {
+                                    const reader = protobuf.BinaryReader.open(initBuffer);
+                                    init_net = caffe2.proto.NetDef.decode(reader);
+                                }
+                            }
                         }
                         catch (error) {
                             // continue regardless of error
@@ -84,28 +97,32 @@ caffe2.ModelFactory = class {
                         return new caffe2.Model(metadata, predict_net, init_net);
                     };
                     if (base.toLowerCase().endsWith('init_net') || base.toLowerCase().startsWith('init_net')) {
-                        return context.request(identifier.replace('init_net', 'predict_net'), null).then((buffer) => {
-                            return openText(buffer, context.buffer, true);
+                        return context.request(identifier.replace('init_net', 'predict_net'), null).then((stream) => {
+                            const buffer = stream.read();
+                            return openText(buffer, context.stream.peek(), true);
                         }).catch(() => {
-                            return openText(context.buffer, null, true);
+                            return openText(context.stream.peek(), null, true);
                         });
                     }
                     else if (base.toLowerCase().endsWith('predict_net') || base.toLowerCase().startsWith('predict_net')) {
-                        return context.request(identifier.replace('predict_net', 'init_net').replace(/\.pbtxt/, '.pb'), null).then((buffer) => {
-                            return openText(context.buffer, buffer, false);
+                        return context.request(identifier.replace('predict_net', 'init_net').replace(/\.pbtxt/, '.pb'), null).then((stream) => {
+                            const buffer = stream.read();
+                            return openText(context.stream.peek(), buffer, false);
                         }).catch(() => {
-                            return context.request(identifier.replace('predict_net', 'init_net'), null).then((buffer) => {
-                                return openText(context.buffer, buffer, true);
+                            return context.request(identifier.replace('predict_net', 'init_net'), null).then((stream) => {
+                                const buffer = stream.read();
+                                return openText(context.stream.peek(), buffer, true);
                             }).catch(() => {
-                                return openText(context.buffer, null, true);
+                                return openText(context.stream.peek(), null, true);
                             });
                         });
                     }
                     else {
-                        return context.request(base + '_init.pb', null).then((buffer) => {
-                            return openText(context.buffer, buffer, false);
+                        return context.request(base + '_init.pb', null).then((stream) => {
+                            const buffer = stream.read();
+                            return openText(context.stream.peek(), buffer, false);
                         }).catch(() => {
-                            return openText(context.buffer, null, false);
+                            return openText(context.stream.peek(), null, false);
                         });
                     }
                 }
@@ -115,7 +132,7 @@ caffe2.ModelFactory = class {
                         let init_net = null;
                         try {
                             caffe2.proto = protobuf.get('caffe2').caffe2;
-                            const reader = protobuf.Reader.create(predictBuffer);
+                            const reader = protobuf.BinaryReader.open(predictBuffer);
                             predict_net = caffe2.proto.NetDef.decode(reader);
                         }
                         catch (error) {
@@ -125,7 +142,7 @@ caffe2.ModelFactory = class {
                         try {
                             if (initBuffer) {
                                 caffe2.proto = protobuf.get('caffe2').caffe2;
-                                const reader = protobuf.Reader.create(initBuffer);
+                                const reader = protobuf.BinaryReader.open(initBuffer);
                                 init_net = caffe2.proto.NetDef.decode(reader);
                             }
                         }
@@ -135,31 +152,35 @@ caffe2.ModelFactory = class {
                         return new caffe2.Model(metadata, predict_net, init_net);
                     };
                     if (base.toLowerCase().endsWith('init_net')) {
-                        return context.request(base.replace(/init_net$/, '') + 'predict_net.' + extension, null).then((buffer) => {
-                            return openBinary(buffer, context.buffer);
+                        return context.request(base.replace(/init_net$/, '') + 'predict_net.' + extension, null).then((stream) => {
+                            const buffer = stream.read();
+                            return openBinary(buffer, context.stream.peek());
                         }).catch(() => {
-                            return openBinary(context.buffer, null);
+                            return openBinary(context.stream.peek(), null);
                         });
                     }
                     else if (base.toLowerCase().endsWith('_init')) {
-                        return context.request(base.replace(/_init$/, '') + '.' + extension, null).then((buffer) => {
-                            return openBinary(buffer, context.buffer);
+                        return context.request(base.replace(/_init$/, '') + '.' + extension, null).then((stream) => {
+                            const buffer = stream.read();
+                            return openBinary(buffer, context.stream.peek());
                         }).catch(() => {
-                            return openBinary(context.buffer, null);
+                            return openBinary(context.stream.peek(), null);
                         });
                     }
                     else if (base.toLowerCase().endsWith('predict_net') || base.toLowerCase().startsWith('predict_net')) {
-                        return context.request(identifier.replace('predict_net', 'init_net'), null).then((buffer) => {
-                            return openBinary(context.buffer, buffer);
+                        return context.request(identifier.replace('predict_net', 'init_net'), null).then((stream) => {
+                            const buffer = stream.read();
+                            return openBinary(context.stream.peek(), buffer);
                         }).catch(() => {
-                            return openBinary(context.buffer, null);
+                            return openBinary(context.stream.peek(), null);
                         });
                     }
                     else {
-                        return context.request(base + '_init.' + extension, null).then((buffer) => {
-                            return openBinary(context.buffer, buffer);
+                        return context.request(base + '_init.' + extension, null).then((stream) => {
+                            const buffer = stream.read();
+                            return openBinary(context.stream.peek(), buffer);
                         }).catch(() => {
-                            return openBinary(context.buffer, null);
+                            return openBinary(context.stream.peek(), null);
                         });
                     }
                 }
@@ -397,19 +418,14 @@ caffe2.Node = class {
         this._name = op.name || '';
         this._device = op.engine || '';
         this._metadata = metadata;
-        this._type = op.type;
         this._chain = [];
-
         this._attributes = [];
+        this._type = metadata.type(op.type) || { name: op.type };
         for (const arg of op.arg) {
             this._attributes.push(new caffe2.Attribute(metadata, metadata.attribute(this._type, arg.name), arg));
         }
-
-        const schema = metadata.type(this._type);
-
         const inputs = op.input;
         const outputs = op.output;
-
         const tensors = {};
         let index = 0;
         for (const input of inputs) {
@@ -428,8 +444,8 @@ caffe2.Node = class {
         }
         this._inputs = [];
         let inputIndex = 0;
-        if (schema && schema.inputs) {
-            for (const inputDef of schema.inputs) {
+        if (this._type && this._type.inputs) {
+            for (const inputDef of this._type.inputs) {
                 if (inputIndex < inputs.length || inputDef.option != 'optional') {
                     const inputCount = (inputDef.option == 'variadic') ? (inputs.length - inputIndex) : 1;
                     const inputArguments = inputs.slice(inputIndex, inputIndex + inputCount).filter((id) => id != '' || inputDef.option != 'optional').map((id) => {
@@ -448,11 +464,10 @@ caffe2.Node = class {
                 ]);
             }));
         }
-
         this._outputs = [];
         let outputIndex = 0;
-        if (schema && schema.outputs) {
-            for (const outputDef of schema.outputs) {
+        if (this._type && this._type.outputs) {
+            for (const outputDef of this._type.outputs) {
                 if (outputIndex < outputs.length || outputDef.option != 'optional') {
                     const outputCount = (outputDef.option == 'variadic') ? (outputs.length - outputIndex) : 1;
                     const outputArguments = outputs.slice(outputIndex, outputIndex + outputCount).map((id) => new caffe2.Argument(id));
@@ -481,10 +496,6 @@ caffe2.Node = class {
 
     get type() {
         return this._type;
-    }
-
-    get metadata() {
-        return this._metadata.type(this._type);
     }
 
     get inputs() {
@@ -763,11 +774,11 @@ caffe2.TensorShape = class {
 
 caffe2.Metadata = class {
 
-    static open(host) {
+    static open(context) {
         if (caffe2.Metadata._metadata) {
             return Promise.resolve(caffe2.Metadata._metadata);
         }
-        return host.request(null, 'caffe2-metadata.json', 'utf-8').then((data) => {
+        return context.request('caffe2-metadata.json', 'utf-8', null).then((data) => {
             caffe2.Metadata._metadata = new caffe2.Metadata(data);
             return caffe2.Metadata._metadata;
         }).catch(() => {
@@ -777,23 +788,16 @@ caffe2.Metadata = class {
     }
 
     constructor(data) {
-        this._map = {};
+        this._map = new Map();
         this._attributeCache = {};
         if (data) {
-            const items = JSON.parse(data);
-            if (items) {
-                for (const item of items) {
-                    if (item.name && item.schema) {
-                        item.schema.name = item.name;
-                        this._map[item.name] = item.schema;
-                    }
-                }
-            }
+            const metadata = JSON.parse(data);
+            this._map = new Map(metadata.map((item) => [ item.name, item ]));
         }
     }
 
     type(name) {
-        return this._map[name] || null;
+        return this._map.get(name);
     }
 
     attribute(type, name) {

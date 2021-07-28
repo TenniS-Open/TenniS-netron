@@ -12,9 +12,14 @@ protobuf.get = (name) => {
     return protobuf._map.get(name);
 };
 
-protobuf.Reader = class {
+protobuf.BinaryReader = class {
 
-    constructor(buffer) {
+    static open(buffer) {
+        return new protobuf.BinaryReader(buffer);
+    }
+
+    constructor(data) {
+        const buffer = data instanceof Uint8Array ? data : data.peek();
         this._buffer = buffer;
         this._length = buffer.length;
         this._position = 0;
@@ -22,23 +27,142 @@ protobuf.Reader = class {
         this._utf8Decoder = new TextDecoder('utf-8');
     }
 
-    static create(buffer) {
-        return new protobuf.Reader(buffer);
-    }
-
-    next(length) {
-        if (length === undefined) {
-            return this._length;
+    signature() {
+        const tags = new Map();
+        this._position = 0;
+        try {
+            if (this._length > 0) {
+                const type = this._buffer[0] & 7;
+                if (type !== 4 && type !== 6 && type !== 7) {
+                    const length = this.length;
+                    while (this._position < length) {
+                        const tag = this.uint32();
+                        const field = tag >>> 3;
+                        const type = tag & 7;
+                        if (type > 5 || field === 0) {
+                            tags.clear();
+                            break;
+                        }
+                        tags.set(field, type);
+                        this.skipType(type);
+                    }
+                }
+            }
         }
-        return this._position + length;
+        catch (err) {
+            tags.clear();
+        }
+        this._position = 0;
+        return tags;
     }
 
-    end(position) {
-        return this._position < position;
+    decode() {
+        const tags = new Map();
+        this._position = 0;
+        try {
+            const decodeMessage = () => {
+                const length = this.uint32();
+                const end = this.position + length;
+                try {
+                    const tags = new Map();
+                    while (this.position < end) {
+                        const tag = this.uint32();
+                        const field = tag >>> 3;
+                        const type = tag & 7;
+                        if (type > 5 || field === 0) {
+                            this.seek(end);
+                            return 2;
+                        }
+                        if (type === 2) {
+                            const type = tags.get(field);
+                            if (type !== 2) {
+                                const inner = decodeMessage(this);
+                                if (inner === 2) {
+                                    tags.set(field, inner);
+                                }
+                                else if (!type) {
+                                    tags.set(field, inner);
+                                }
+                                else {
+                                    for (const pair of inner) {
+                                        type.set(pair[0], pair[1]);
+                                    }
+                                }
+                                continue;
+                            }
+                        }
+                        tags.set(field, type);
+                        if (!this._skipType(type)) {
+                            this.seek(end);
+                            return 2;
+                        }
+                    }
+                    if (this.position === end) {
+                        return tags;
+                    }
+                }
+                catch (err) {
+                    // continue regardless of error
+                }
+                this.seek(end);
+                return 2;
+            };
+            if (this._length > 0) {
+                const type = this._buffer[0] & 7;
+                if (type !== 4 && type !== 6 && type !== 7) {
+                    const length = this.length;
+                    while (this.position < length) {
+                        const tag = this.uint32();
+                        const field = tag >>> 3;
+                        const type = tag & 7;
+                        if (type > 5 || field === 0) {
+                            tags.clear();
+                            break;
+                        }
+                        if (type === 2) {
+                            const type = tags.get(field);
+                            if (type !== 2) {
+                                const inner = decodeMessage(this);
+                                if (inner === 2) {
+                                    tags.set(field, inner);
+                                }
+                                else if (!type) {
+                                    tags.set(field, inner);
+                                }
+                                else {
+                                    for (const pair of inner) {
+                                        type.set(pair[0], pair[1]);
+                                    }
+                                }
+                                continue;
+                            }
+                        }
+                        tags.set(field, type);
+                        if (!this.skipType(type)) {
+                            tags.clear();
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        catch (err) {
+            tags.clear();
+        }
+        this._position = 0;
+        return tags;
+    }
+
+    get length() {
+        return this._length;
     }
 
     get position() {
         return this._position;
+    }
+
+    seek(position) {
+        this._position = position >= 0 ? position : this._length + position;
     }
 
     string() {
@@ -244,6 +368,38 @@ protobuf.Reader = class {
         while (this._buffer[this._position++] & 128);
     }
 
+    _skipType(wireType) {
+        switch (wireType) {
+            case 0:
+                do {
+                    if (this._position >= this._length) {
+                        return false;
+                    }
+                }
+                while (this._buffer[this._position++] & 128);
+                break;
+            case 1:
+                this.skip(8);
+                break;
+            case 2:
+                this.skip(this.uint32());
+                break;
+            case 3:
+                while ((wireType = this.uint32() & 7) !== 4) {
+                    if (!this._skipType(wireType)) {
+                        return false;
+                    }
+                }
+                break;
+            case 5:
+                this.skip(4);
+                break;
+            default:
+                return false;
+        }
+        return true;
+    }
+
     skipType(wireType) {
         switch (wireType) {
             case 0:
@@ -341,18 +497,79 @@ protobuf.Reader = class {
 
 protobuf.TextReader = class {
 
+    static open(data) {
+        const buffer = data instanceof Uint8Array ? data : data.peek();
+        const decoder = base.TextDecoder.open(buffer);
+        let first = true;
+        for (let i = 0; i < 0x100; i++) {
+            const c = decoder.decode();
+            if (c === undefined || c === '\0') {
+                if (i === 0) {
+                    return null;
+                }
+                break;
+            }
+            const whitespace = c === ' ' || c === '\n' || c === '\r' || c === '\t';
+            if (c < ' ' && !whitespace) {
+                return null;
+            }
+            if (first && !whitespace) {
+                first = false;
+                if (c === '#' || c === '[') {
+                    continue;
+                }
+                if (c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z') {
+                    continue;
+                }
+                return null;
+            }
+        }
+        return new protobuf.TextReader(buffer);
+    }
+
     constructor(buffer) {
-        this._decoder = base.TextDecoder.create(buffer);
+        this._decoder = base.TextDecoder.open(buffer);
+        this.reset();
+    }
+
+    signature() {
+        const tags = new Map();
+        this.reset();
+        try {
+            this.start(false);
+            while (!this.end()) {
+                const tag = this.tag();
+                if (this.token() === '{') {
+                    this.start();
+                    tags.set(tag, true);
+                    while (!this.end()) {
+                        const subtag = this.tag();
+                        tags.set(tag + '.' + subtag, true);
+                        this.skip();
+                        this.match(',');
+                    }
+                }
+                else {
+                    this.skip();
+                    tags.set(tag, true);
+                }
+            }
+        }
+        catch (err) {
+            // continue regardless of error
+        }
+        this.reset();
+        return tags;
+    }
+
+    reset() {
+        this._decoder.position = 0;
         this._position = 0;
         this._token = undefined;
         this._depth = 0;
         this._arrayDepth = 0;
         this._token = '';
         this.next();
-    }
-
-    static create(buffer) {
-        return new protobuf.TextReader(buffer);
     }
 
     start() {
@@ -363,13 +580,23 @@ protobuf.TextReader = class {
     }
 
     end() {
-        if (this._depth > 0 && this._token === '}') {
+        if (this._depth <= 0) {
+            throw new protobuf.Error('Invalid depth ' + this.location());
+        }
+        if (this._token === '}') {
             this.expect('}');
             this.match(';');
             this._depth--;
             return true;
         }
-        return this._token === undefined;
+        if (this._token === undefined) {
+            if (this._depth !== 1) {
+                throw new protobuf.Error('Unexpected end of input' + this.location());
+            }
+            this._depth--;
+            return true;
+        }
+        return false;
     }
 
     tag() {
@@ -388,11 +615,11 @@ protobuf.TextReader = class {
             throw new protobuf.Error("Couldn't parse integer '" + token + "'" + this.location());
         }
         this.next();
-        this._semicolon();
+        this.semicolon();
         return value;
     }
 
-    float() {
+    double() {
         let token = this._token;
         if (token.startsWith('nan')) {
             return NaN;
@@ -411,8 +638,52 @@ protobuf.TextReader = class {
             throw new protobuf.Error("Couldn't parse float '" + token + "'" + this.location());
         }
         this.next();
-        this._semicolon();
+        this.semicolon();
         return value;
+    }
+
+    float() {
+        return this.double();
+    }
+
+    uint32() {
+        return this.integer();
+    }
+
+    int32() {
+        return this.integer();
+    }
+
+    sint32() {
+        return this.integer();
+    }
+
+    int64() {
+        return new base.Int64(this.integer(), 0);
+    }
+
+    uint64() {
+        return new base.Uint64(this.integer(), 0);
+    }
+
+    sint64() {
+        return new base.Int64(this.integer(), 0);
+    }
+
+    fixed64() {
+        return new base.Uint64(this.integer(), 0);
+    }
+
+    sfixed64() {
+        return new base.Int64(this.integer(), 0);
+    }
+
+    fixed32() {
+        return this.integer();
+    }
+
+    sfixed32() {
+        return this.integer();
     }
 
     string() {
@@ -429,24 +700,24 @@ protobuf.TextReader = class {
         }
         const value = token.substring(1, token.length - 1);
         this.next();
-        this._semicolon();
+        this.semicolon();
         return value;
     }
 
-    boolean() {
+    bool() {
         const token = this._token;
         switch (token) {
             case 'true':
             case 'True':
             case '1':
                 this.next();
-                this._semicolon();
+                this.semicolon();
                 return true;
             case 'false':
             case 'False':
             case '0':
                 this.next();
-                this._semicolon();
+                this.semicolon();
                 return false;
         }
         throw new protobuf.Error("Couldn't parse boolean '" + token + "'" + this.location());
@@ -471,25 +742,81 @@ protobuf.TextReader = class {
         else {
             value = Number.parseInt(token, 10);
             if (Number.isNaN(token - value)) {
-                throw new protobuf.Error("Couldn't parse enum '" + token + "'" + this.location());
+                throw new protobuf.Error("Couldn't parse enum '" + (token === undefined ? '' : token) + "'" + this.location());
             }
         }
         this.next();
-        this._semicolon();
+        this.semicolon();
         return value;
     }
 
-    any(message) {
+    any(type) {
+        this.start();
+        const message = type();
         if (this._token.startsWith('[') && this._token.endsWith(']')) {
-            message.type_url = this._token;
+            message.type_url = this._token.substring(1, this._token.length - 1).trim();
             this.next();
-            this.expect('{');
+            this.match(':');
             message.value = this.read();
-            this.expect('}');
             this.match(';');
-            return true;
+            if (!this.end()) {
+                this.expect('}');
+            }
         }
-        return false;
+        else {
+            while (!this.end()) {
+                const tag = this.tag();
+                switch (tag) {
+                    case "type_url":
+                        message.type_url = this.string();
+                        break;
+                    case "value":
+                        message.value = this.bytes();
+                        break;
+                    default:
+                        this.field(tag, message);
+                        break;
+                }
+            }
+        }
+        return message;
+    }
+
+    anyarray(obj, type) {
+        this.start();
+        if (this._token.startsWith('[') && this._token.endsWith(']')) {
+            while (!this.end()) {
+                if (this._token.startsWith('[') && this._token.endsWith(']')) {
+                    const message = type();
+                    message.type_url = this._token.substring(1, this._token.length - 1).trim();
+                    this.next();
+                    this.match(':');
+                    message.value = this.read();
+                    this.match(';');
+                    obj.push(message);
+                    continue;
+                }
+                this.expect('[');
+            }
+        }
+        else {
+            const message = type();
+            while (!this.end()) {
+                const tag = this.tag();
+                switch (tag) {
+                    case "type_url":
+                        message.type_url = this.string();
+                        break;
+                    case "value":
+                        message.value = this.bytes();
+                        break;
+                    default:
+                        this.field(tag, message);
+                        break;
+                }
+            }
+            obj.push(message);
+        }
     }
 
     entry(obj, key, value) {
@@ -592,7 +919,7 @@ protobuf.TextReader = class {
             }
             default: {
                 this.next();
-                this._semicolon();
+                this.semicolon();
                 break;
             }
         }
@@ -845,7 +1172,7 @@ protobuf.TextReader = class {
         return ' at ' + line.toString() + ':' + column.toString() + '.';
     }
 
-    _semicolon() {
+    semicolon() {
         if (this._arrayDepth === 0) {
             this.match(';');
         }
@@ -888,7 +1215,7 @@ protobuf.Error = class extends Error {
 };
 
 if (typeof module !== 'undefined' && typeof module.exports === 'object') {
-    module.exports.Reader = protobuf.Reader;
+    module.exports.BinaryReader = protobuf.BinaryReader;
     module.exports.TextReader = protobuf.TextReader;
     module.exports.Error = protobuf.Error;
     module.exports.Int64 = protobuf.Int64;

@@ -4,15 +4,37 @@ var tar = tar || {};
 
 tar.Archive = class {
 
-    constructor(buffer) {
-        this._entries = [];
-        const reader = new tar.Reader(buffer, 0, buffer.length);
-        while (reader.peek()) {
-            this._entries.push(new tar.Entry(reader));
-            if (reader.match(512, 0)) {
+    static open(data) {
+        const stream = data instanceof Uint8Array ? new tar.BinaryReader(data) : data;
+        if (stream.length > 512) {
+            const buffer = stream.peek(512);
+            const sum = buffer.map((value, index) => (index >= 148 && index < 156) ? 32 : value).reduce((a, b) => a + b, 0);
+            let checksum = '';
+            for (let i = 148; i < 156 && buffer[i] !== 0x00; i++) {
+                checksum += String.fromCharCode(buffer[i]);
+            }
+            checksum = parseInt(checksum, 8);
+            if (!isNaN(checksum) && sum === checksum) {
+                return new tar.Archive(stream);
+            }
+        }
+        return null;
+    }
+
+    constructor(stream) {
+        this._entries = new Map();
+        const position = stream.position;
+        while (stream.position < stream.length) {
+            const entry = new tar.Entry(stream);
+            if (entry.type === '0' || entry.type === '1' || entry.type === '2') {
+                this._entries.set(entry.name, entry.stream);
+            }
+            if (stream.position + 512 > stream.length ||
+                stream.peek(512).every((value) => value === 0x00)) {
                 break;
             }
         }
+        stream.seek(position);
     }
 
     get entries() {
@@ -22,90 +44,123 @@ tar.Archive = class {
 
 tar.Entry = class {
 
-    constructor(reader) {
-        const header = reader.bytes(512);
-        reader.skip(-512);
-        let sum = 0;
-        for (let i = 0; i < header.length; i++) {
-            sum += (i >= 148 && i < 156) ? 32 : header[i];
+    constructor(stream) {
+        const buffer = stream.read(512);
+        const reader = new tar.BinaryReader(buffer);
+        const sum = buffer.map((value, index) => (index >= 148 && index < 156) ? 32 : value).reduce((a, b) => a + b, 0);
+        let checksum = '';
+        for (let i = 148; i < 156 && buffer[i] !== 0x00; i++) {
+            checksum += String.fromCharCode(buffer[i]);
+        }
+        checksum = parseInt(checksum, 8);
+        if (isNaN(checksum) || sum !== checksum) {
+            throw new tar.Error('Invalid tar archive.');
         }
         this._name = reader.string(100);
         reader.string(8); // file mode
         reader.string(8); // owner
         reader.string(8); // group
-        const size = parseInt(reader.string(12).trim(), 8); // size
+        const size = parseInt(reader.string(12).trim(), 8);
         reader.string(12); // timestamp
-        const checksum = parseInt(reader.string(8).trim(), 8); // checksum
-        if (isNaN(checksum) || sum != checksum) {
-            throw new tar.Error('Invalid tar archive.');
-        }
-        reader.string(1); // link indicator
+        reader.string(8); // checksum
+        this._type = reader.string(1);
         reader.string(100); // name of linked file
-        reader.bytes(255);
-        this._data = reader.bytes(size);
-        reader.bytes(((size % 512) != 0) ? (512 - (size % 512)) : 0);
+        if (reader.string(6) === 'ustar') {
+            reader.string(2); // ustar version
+            reader.string(32); // owner user name
+            reader.string(32); // owner group name
+            reader.string(8); // device major number
+            reader.string(8); // device number number
+            this._name = reader.string(155) + this._name;
+        }
+        this._stream = stream.stream(size);
+        stream.read(((size % 512) != 0) ? (512 - (size % 512)) : 0);
+    }
+
+    get type() {
+        return this._type;
     }
 
     get name() {
         return this._name;
     }
 
-    get data() {
-        return this._data;
+    get stream() {
+        return this._stream;
     }
 };
 
-tar.Reader = class {
+tar.BinaryReader = class {
 
     constructor(buffer) {
         this._buffer = buffer;
+        this._length = buffer.length;
         this._position = 0;
-        this._end = buffer.length;
+        this._view = new DataView(buffer.buffer, buffer.byteOffset, buffer.byteLength);
+    }
+
+    get position() {
+        return this._position;
+    }
+
+    get length() {
+        return this._length;
+    }
+
+    create(buffer) {
+        return new tar.BinaryReader(buffer);
+    }
+
+    stream(length) {
+        return this.create(this.read(length));
+    }
+
+    seek(position) {
+        this._position = position >= 0 ? position : this._length + position;
     }
 
     skip(offset) {
         this._position += offset;
-        if (this._position > this._buffer.length) {
-            throw new tar.Error('Expected ' + (this._position - this._buffer.length) + ' more bytes. The file might be corrupted. Unexpected end of file.');
+    }
+
+    peek(length) {
+        if (this._position === 0 && length === undefined) {
+            return this._buffer;
         }
-    }
-
-    peek() {
-        return this._position < this._end;
-    }
-
-    match(size, value) {
-        if (this._position + size <= this._end) {
-            if (this._buffer.subarray(this._position, this._position + size).every((c) => c == value)) {
-                this._position += size;
-                return true;
-            }
-        }
-        return false;
-    }
-
-    bytes(size) {
         const position = this._position;
-        this.skip(size);
+        this.skip(length !== undefined ? length : this._length - this._position);
+        const end = this._position;
+        this.seek(position);
+        return this._buffer.subarray(position, end);
+    }
+
+    read(length) {
+        if (this._position === 0 && length === undefined) {
+            this._position = this._length;
+            return this._buffer;
+        }
+        const position = this._position;
+        this.skip(length !== undefined ? length : this._length - this._position);
         return this._buffer.subarray(position, this._position);
     }
 
-    string(size) {
-        const buffer = this.bytes(size);
+    string(length) {
+        const buffer = this.read(length);
         let position = 0;
-        let str = '';
-        for (let i = 0; i < size; i++) {
+        let text = '';
+        for (let i = 0; i < length; i++) {
             const c = buffer[position++];
-            if (c == 0) {
+            if (c === 0) {
                 break;
             }
-            str += String.fromCharCode(c);
+            text += String.fromCharCode(c);
         }
-        return str;
+        return text;
     }
 };
 
 tar.Error = class extends Error {
+
     constructor(message) {
         super(message);
         this.name = 'tar Error';

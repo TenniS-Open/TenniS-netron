@@ -12,9 +12,14 @@ flatbuffers.get = (name) => {
     return flatbuffers._map.get(name);
 };
 
-flatbuffers.Reader = class {
+flatbuffers.BinaryReader = class {
 
-    constructor(buffer) {
+    static open(data) {
+        return new flatbuffers.BinaryReader(data);
+    }
+
+    constructor(data) {
+        const buffer = data instanceof Uint8Array ? data : data.peek();
         this._buffer = buffer;
         this._position = 0;
         this._dataView = new DataView(buffer.buffer, buffer.byteOffset, buffer.byteLength);
@@ -24,16 +29,14 @@ flatbuffers.Reader = class {
         return this.int32(this._position) + this._position;
     }
 
-    identifier(text) {
-        if (text.length !== 4) {
-            throw new flatbuffers.Error('File identifier must be 4 characters in length.');
+    get identifier() {
+        if (this._buffer.length >= 8) {
+            const buffer = this._buffer.slice(4, 8);
+            if (buffer.every((c) => c >= 32 && c <= 128)) {
+                return String.fromCharCode(...buffer);
+            }
         }
-        const start = this._position + 4;
-        const end = start + 4;
-        if (end > this._buffer.length) {
-            return false;
-        }
-        return this._buffer.slice(start, end).every((value, index) => value === text.charCodeAt(index));
+        return '';
     }
 
     bool(offset) {
@@ -258,12 +261,18 @@ flatbuffers.Reader = class {
         return offset ? new type(this._buffer.buffer, this._buffer.byteOffset + this._vector(position + offset), this._length(position + offset)) : new type(0);
     }
 
-    unionArray(position, offset, decode) {
+    unionArray(/* position, offset, decode */) {
         throw new flatbuffers.Error('Not implemented.');
     }
 
     structArray(position, offset, size, decode) {
-        throw new flatbuffers.Error('Not implemented.');
+        offset = this._offset(position, offset);
+        const length = offset ? this._length(position + offset) : 0;
+        const list = new Array(length);
+        for (let i = 0; i < length; i++) {
+            list[i] = decode(this, this._indirect(this._vector(position + offset) + i * 4));
+        }
+        return list;
     }
 
     tableArray(position, offset, decode) {
@@ -300,9 +309,12 @@ flatbuffers.Reader = class {
 
 flatbuffers.TextReader = class {
 
-    constructor(buffer) {
-        const reader = json.TextReader.create(buffer);
-        this._root = reader.read();
+    static open(obj) {
+        return new flatbuffers.TextReader(obj);
+    }
+
+    constructor(obj) {
+        this._root = obj;
     }
 
     get root() {
@@ -370,8 +382,7 @@ flatbuffers.Error = class extends Error {
 };
 
 if (typeof module !== "undefined" && typeof module.exports === "object") {
-    module.exports.Reader = flatbuffers.Reader;
+    module.exports.BinaryReader = flatbuffers.BinaryReader;
     module.exports.TextReader = flatbuffers.TextReader;
-    module.exports.Error = flatbuffers.Error;
     module.exports.get = flatbuffers.get;
 }

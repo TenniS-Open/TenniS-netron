@@ -5,17 +5,39 @@ var base = base || require('./base');
 
 json.TextReader = class {
 
-    constructor(buffer) {
-        this._buffer = buffer;
+    static open(data) {
+        const decoder = base.TextDecoder.open(data);
+        for (let i = 0; i < 0x100; i++) {
+            const c = decoder.decode();
+            if (c === undefined || c === '\0') {
+                if (i === 0) {
+                    return null;
+                }
+                break;
+            }
+            if (c < ' ' && c !== '\n' && c !== '\r' && c !== '\t') {
+                return null;
+            }
+            if (i === 0) {
+                if (c === '#' || c === '[' || c === '{') {
+                    continue;
+                }
+                if (c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z') {
+                    continue;
+                }
+                return null;
+            }
+        }
+        return new json.TextReader(data);
+    }
+
+    constructor(data) {
+        this._data = data;
         this._escape = { '"': '"', '\\': '\\', '/': '/', b: '\b', f: '\f', n: '\n', r: '\r', t: '\t' };
     }
 
-    static create(buffer) {
-        return new json.TextReader(buffer);
-    }
-
     read() {
-        const decoder = base.TextDecoder.create(this._buffer);
+        const decoder = base.TextDecoder.open(this._data);
         const stack = [];
         this._decoder = decoder;
         this._position = 0;
@@ -148,25 +170,27 @@ json.TextReader = class {
                 switch (c) {
                     case '{': {
                         this._next();
+                        this._whitespace();
                         obj = {};
                         first = true;
                         break;
                     }
                     case '[': {
                         this._next();
+                        this._whitespace();
                         obj = [];
                         first = true;
                         break;
                     }
                     default: {
                         const value = c === '"' ? this._string() : c >= '0' && c <= '9' ? this._number() : this._literal();
+                        this._whitespace();
                         if (this._char !== undefined) {
                             this._unexpected();
                         }
                         return value;
                     }
                 }
-                this._whitespace();
             }
         }
     }
@@ -355,12 +379,13 @@ json.TextReader = class {
 
 json.BinaryReader = class {
 
-    constructor(buffer) {
-        this._buffer = buffer;
+    static open(data) {
+        const buffer = data instanceof Uint8Array ? data : data.peek();
+        return new json.BinaryReader(buffer);
     }
 
-    static create(buffer) {
-        return new json.BinaryReader(buffer);
+    constructor(buffer) {
+        this._buffer = buffer;
     }
 
     read() {

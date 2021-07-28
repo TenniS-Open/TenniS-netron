@@ -30,15 +30,16 @@ uff.ModelFactory = class {
         return false;
     }
 
-    open(context, host) {
-        return host.require('./uff-proto').then(() => {
+    open(context) {
+        return context.require('./uff-proto').then(() => {
             let meta_graph = null;
             const identifier = context.identifier;
             const extension = identifier.split('.').pop().toLowerCase();
             if (extension === 'pbtxt' || identifier.toLowerCase().endsWith('.uff.txt')) {
                 try {
                     uff.proto = protobuf.get('uff').uff;
-                    const reader = protobuf.TextReader.create(context.buffer);
+                    const stream = context.stream;
+                    const reader = protobuf.TextReader.open(stream);
                     meta_graph = uff.proto.MetaGraph.decodeText(reader);
                 }
                 catch (error) {
@@ -48,7 +49,8 @@ uff.ModelFactory = class {
             else {
                 try {
                     uff.proto = protobuf.get('uff').uff;
-                    const reader = protobuf.Reader.create(context.buffer);
+                    const stream = context.stream;
+                    const reader = protobuf.BinaryReader.open(stream);
                     meta_graph = uff.proto.MetaGraph.decode(reader);
                 }
                 catch (error) {
@@ -56,7 +58,7 @@ uff.ModelFactory = class {
                     throw  new uff.Error('File format is not uff.MetaGraph (' + message.replace(/\.$/, '') + ').');
                 }
             }
-            return uff.Metadata.open(host).then((metadata) => {
+            return uff.Metadata.open(context).then((metadata) => {
                 return new uff.Model(metadata, meta_graph);
             });
         });
@@ -67,7 +69,7 @@ uff.Model = class {
 
     constructor(metadata, meta_graph) {
         this._version = meta_graph.version;
-        this._imports = meta_graph.descriptors.map((descriptor) => descriptor.id + ' v' + descriptor.version.toString()).join(', ');
+        this._imports = meta_graph.descriptors.map((descriptor) => descriptor.id + ' v' + descriptor.version.toString());
         const references = new Map(meta_graph.referenced_data.map((item) => [ item.key, item.value ]));
         for (const graph of meta_graph.graphs) {
             for (const node of graph.nodes) {
@@ -214,17 +216,15 @@ uff.Node = class {
 
     constructor(metadata, node, args) {
         this._name = node.id;
-        this._operation = node.operation;
-        this._metadata = metadata.type(node.operation);
+        this._type = metadata.type(node.operation) || { name: node.operation };
         this._attributes = [];
         this._inputs = [];
         this._outputs = [];
 
-        const schema = metadata.type(node.operation);
         if (node.inputs && node.inputs.length > 0) {
             let inputIndex = 0;
-            if (schema && schema.inputs) {
-                for (const inputSchema of schema.inputs) {
+            if (this._type && this._type.inputs) {
+                for (const inputSchema of this._type.inputs) {
                     if (inputIndex < node.inputs.length || inputSchema.optional !== true) {
                         const inputCount = inputSchema.list ? (node.inputs.length - inputIndex) : 1;
                         const inputArguments = node.inputs.slice(inputIndex, inputIndex + inputCount).map((id) => {
@@ -246,7 +246,7 @@ uff.Node = class {
         ]));
 
         for (const field of node.fields) {
-            this._attributes.push(new uff.Attribute(metadata.attribute(this._operation, field.key), field.key, field.value));
+            this._attributes.push(new uff.Attribute(metadata.attribute(node.operation, field.key), field.key, field.value));
         }
     }
 
@@ -255,11 +255,7 @@ uff.Node = class {
     }
 
     get type() {
-        return this._operation;
-    }
-
-    get metadata() {
-        return this._metadata;
+        return this._type;
     }
 
     get inputs() {
@@ -294,7 +290,7 @@ uff.Attribute = class {
             case 'dtype_list': this._value = value.dtype_list.map((type) => new uff.TensorType(type, null).dataType); this._type = 'uff.DataType[]'; break;
             case 'dim_orders': this._value = value.dim_orders; break;
             case 'dim_orders_list': this._value = value.dim_orders_list.val; break;
-            default: throw new uff.Error("Unknown attribute value '" + JSON.stringify(value) + "'.");
+            default: throw new uff.Error("Unknown attribute '" + name + "' value '" + JSON.stringify(value) + "'.");
         }
     }
 
@@ -498,11 +494,11 @@ uff.TensorShape = class {
 
 uff.Metadata = class {
 
-    static open(host) {
+    static open(context) {
         if (uff.Metadata._metadata) {
             return Promise.resolve(uff.Metadata._metadata);
         }
-        return host.request(null, 'uff-metadata.json', 'utf-8').then((data) => {
+        return context.request('uff-metadata.json', 'utf-8', null).then((data) => {
             uff.Metadata._metadata = new uff.Metadata(data);
             return uff.Metadata._metadata;
         }).catch(() => {
@@ -515,15 +511,8 @@ uff.Metadata = class {
         this._map = new Map();
         this._attributeCache = new Map();
         if (data) {
-            const items = JSON.parse(data);
-            if (items) {
-                for (const item of items) {
-                    if (item.name && item.schema) {
-                        item.schema.name = item.name;
-                        this._map.set(item.name, item.schema);
-                    }
-                }
-            }
+            const metadata = JSON.parse(data);
+            this._map = new Map(metadata.map((item) => [ item.name, item ]));
         }
     }
 

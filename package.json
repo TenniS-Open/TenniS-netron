@@ -6,7 +6,7 @@
         "email": "lutzroeder@users.noreply.github.com",
         "url": "https://www.lutzroeder.com"
     },
-    "version": "4.5.6",
+    "version": "5.0.5",
     "description": "Visualizer for neural network, deep learning, and machine learning models",
     "license": "MIT",
     "repository": "lutzroeder/netron",
@@ -14,22 +14,19 @@
     "scripts": {
         "postinstall": "electron-builder install-app-deps",
         "start": "[ -d node_modules ] || npm install && npx electron .",
-        "server": "[ -d node_modules ] || npm install && python setup.py --quiet build && PYTHONPATH=./dist/lib python -c 'import netron; netron.main()' $@"
+        "server": "[ -d node_modules ] || npm install && python setup.py --quiet build && python -c 'import sys, os; sys.path.insert(0, os.path.join(\"dist\", \"lib\")); import netron; netron.main()' $@"
     },
     "dependencies": {
-        "d3": "6.2.0",
         "dagre": "0.8.5",
-        "electron-updater": "4.3.5",
+        "electron-updater": "4.3.9",
         "long": "^4.0.0",
-        "marked": "1.2.2",
-        "pako": "1.0.11",
         "uuid": "^8.0.0"
     },
     "devDependencies": {
-        "electron": "10.1.4",
-        "electron-builder": "22.9.1",
+        "electron": "13.1.7",
+        "electron-builder": "22.11.7",
         "electron-notarize": "1.0.0",
-        "eslint": "7.11.0",
-        "xmldom": "0.3.0"
+        "eslint": "7.31.0",
+        "xmldom": "0.6.0"
     }
 }

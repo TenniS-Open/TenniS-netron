@@ -15,20 +15,21 @@ bigdl.ModelFactory = class {
         return false;
     }
 
-    open(context, host) {
-        return host.require('./bigdl-proto').then(() => {
+    open(context) {
+        return context.require('./bigdl-proto').then(() => {
             let module = null;
             try {
                 // https://github.com/intel-analytics/BigDL/blob/master/spark/dl/src/main/resources/serialization/bigdl.proto
                 bigdl.proto = protobuf.get('bigdl').com.intel.analytics.bigdl.serialization;
-                const reader = protobuf.Reader.create(context.buffer);
+                const stream = context.stream;
+                const reader = protobuf.BinaryReader.open(stream);
                 module = bigdl.proto.BigDLModule.decode(reader);
             }
             catch (error) {
                 const message = error && error.message ? error.message : error.toString();
                 throw new bigdl.Error('File format is not bigdl.BigDLModule (' + message.replace(/\.$/, '') + ').');
             }
-            return bigdl.Metadata.open(host).then((metadata) => {
+            return bigdl.Metadata.open(context).then((metadata) => {
                 return new bigdl.Model(metadata, module);
             });
         });
@@ -169,16 +170,15 @@ bigdl.Argument = class {
 bigdl.Node = class {
 
     constructor(metadata, group, module) {
-        this._metadata = metadata;
         this._group = group;
-        this._type = module.moduleType.split('.').pop();
+        const type = module.moduleType.split('.').pop();
         this._name = module.name;
         this._attributes = [];
         this._inputs = [];
         this._outputs = [];
         this._inputs.push(new bigdl.Parameter('input', module.preModules.map((id) => new bigdl.Argument(id, null, null))));
-        const schema =  metadata.type(this.type);
-        const inputs = (schema && schema.inputs) ? schema.inputs.slice() : [];
+        this._type =  metadata.type(type);
+        const inputs = (this._type && this._type.inputs) ? this._type.inputs.slice() : [];
         inputs.shift();
         if (module.weight) {
             inputs.shift();
@@ -219,7 +219,7 @@ bigdl.Node = class {
                 this._inputs.push(new bigdl.Parameter(key, value.arrayValue.tensor.map((tensor) => new bigdl.Argument('', null, new bigdl.Tensor(tensor)))));
                 continue;
             }
-            this._attributes.push(new bigdl.Attribute(metadata.attribute(this._type, key), key, value));
+            this._attributes.push(new bigdl.Attribute(key, value));
         }
         const output = this._name || this._type + module.namePostfix;
         this._outputs.push(new bigdl.Parameter('output', [
@@ -233,10 +233,6 @@ bigdl.Node = class {
 
     get type() {
         return this._type;
-    }
-
-    get metadata() {
-        return this._metadata.type(this._type);
     }
 
     get name() {
@@ -258,7 +254,7 @@ bigdl.Node = class {
 
 bigdl.Attribute = class {
 
-    constructor(schema, name, value) {
+    constructor(name, value) {
         this._name = name;
         switch (value.dataType) {
             case bigdl.proto.DataType.INT32: {
@@ -336,7 +332,7 @@ bigdl.Attribute = class {
     }
 
     get type() {
-        return '';
+        return this._type;
     }
 
     get name() {
@@ -423,11 +419,11 @@ bigdl.TensorShape = class {
 
 bigdl.Metadata = class {
 
-    static open(host) {
+    static open(context) {
         if (bigdl.Metadata._metadata) {
             return Promise.resolve(bigdl.Metadata._metadata);
         }
-        return host.request(null, 'bigdl-metadata.json', 'utf-8').then((data) => {
+        return context.request('bigdl-metadata.json', 'utf-8', null).then((data) => {
             bigdl.Metadata._metadata = new bigdl.Metadata(data);
             return bigdl.Metadata._metadata;
         }).catch(() => {
@@ -437,38 +433,16 @@ bigdl.Metadata = class {
     }
 
     constructor(data) {
-        this._map = {};
+        this._map = new Map();
         this._attributeCache = {};
         if (data) {
-            const items = JSON.parse(data);
-            if (items) {
-                for (const item of items) {
-                    if (item.name && item.schema) {
-                        item.schema.name = item.name;
-                        this._map[item.name] = item.schema;
-                    }
-                }
-            }
+            const metadata = JSON.parse(data);
+            this._map = new Map(metadata.map((item) => [ item.name, item ]));
         }
     }
 
     type(name) {
-        return this._map[name] || null;
-    }
-
-    attribute(type, name) {
-        let map = this._attributeCache[type];
-        if (!map) {
-            map = {};
-            const schema = this.type(type);
-            if (schema && schema.attributes && schema.attributes.length > 0) {
-                for (const attribute of schema.attributes) {
-                    map[attribute.name] = attribute;
-                }
-            }
-            this._attributeCache[type] = map;
-        }
-        return map[name] || null;
+        return this._map.get(name);
     }
 };
 

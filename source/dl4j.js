@@ -15,9 +15,9 @@ dl4j.ModelFactory = class {
         return false;
     }
 
-    open(context, host) {
+    open(context) {
         return Promise.resolve().then(() => {
-            return dl4j.Metadata.open(host).then((metadata) => {
+            return dl4j.Metadata.open(context).then((metadata) => {
                 const entries = context.entries('zip');
                 const container = dl4j.ModelFactory._openContainer(entries);
                 return new dl4j.Model(metadata, container.configuration, container.coefficients);
@@ -26,15 +26,17 @@ dl4j.ModelFactory = class {
     }
 
     static _openContainer(entries) {
-        const configurationEntries = entries.filter((entry) => entry.name === 'configuration.json');
-        const coefficientsEntries = entries.filter((entry) => entry.name === 'coefficients.bin');
-        if (configurationEntries.length === 1 && coefficientsEntries.length <= 1) {
+        const stream = entries.get('configuration.json');
+        const coefficients = entries.get('coefficients.bin');
+        if (stream) {
             try {
-                const reader = json.TextReader.create(configurationEntries[0].data);
+                const reader = json.TextReader.open(stream);
                 const configuration = reader.read();
                 if (configuration && (configuration.confs || configuration.vertices)) {
-                    const coefficients = coefficientsEntries.length == 1 ? coefficientsEntries[0].data : [];
-                    return { configuration: configuration, coefficients: coefficients };
+                    return {
+                        configuration: configuration,
+                        coefficients: coefficients ? coefficients.peek() : []
+                    };
                 }
             }
             catch (error) {
@@ -201,13 +203,12 @@ dl4j.Argument = class {
 dl4j.Node = class {
 
     constructor(metadata, layer, inputs, dataType, variables) {
-
-        this._metadata = metadata;
-        this._type = layer.__type__;
         this._name = layer.layerName || '';
         this._inputs = [];
         this._outputs = [];
         this._attributes = [];
+        const type = layer.__type__;
+        this._type = metadata.type(type) || { name: type };
 
         if (inputs && inputs.length > 0) {
             const args = inputs.map((input) => new dl4j.Argument(input, null, null));
@@ -217,7 +218,7 @@ dl4j.Node = class {
         if (variables) {
             for (const variable of variables) {
                 let tensor = null;
-                switch (this._type) {
+                switch (type) {
                     case 'Convolution':
                         switch (variable) {
                             case 'W':
@@ -302,7 +303,7 @@ dl4j.Node = class {
                 case 'hasBias':
                     continue;
             }
-            this._attributes.push(new dl4j.Attribute(metadata.attribute(this._type, key), key, attributes[key]));
+            this._attributes.push(new dl4j.Attribute(metadata.attribute(type, key), key, attributes[key]));
         }
 
         if (layer.idropout) {
@@ -319,10 +320,6 @@ dl4j.Node = class {
 
     get name() {
         return this._name;
-    }
-
-    get metadata() {
-        return this._metadata.type(this._type);
     }
 
     get inputs() {
@@ -451,12 +448,12 @@ dl4j.TensorShape = class {
 
 dl4j.Metadata = class {
 
-    static open(host) {
+    static open(context) {
         dl4j.Metadata.textDecoder = dl4j.Metadata.textDecoder || new TextDecoder('utf-8');
         if (dl4j.Metadata._metadata) {
             return Promise.resolve(dl4j.Metadata._metadata);
         }
-        return host.request(null, 'dl4j-metadata.json', 'utf-8').then((data) => {
+        return context.request('dl4j-metadata.json', 'utf-8', null).then((data) => {
             dl4j.Metadata._metadata = new dl4j.Metadata(data);
             return dl4j.Metadata._metadata;
         }).catch(() => {
@@ -466,23 +463,16 @@ dl4j.Metadata = class {
     }
 
     constructor(data) {
-        this._map = {};
+        this._map = new Map();
         this._attributeCache = {};
         if (data) {
-            if (data) {
-                const items = JSON.parse(data);
-                if (items) {
-                    for (const item of items) {
-                        item.schema.name = item.name;
-                        this._map[item.name] = item.schema;
-                    }
-                }
-            }
+            const metadata = JSON.parse(data);
+            this._map = new Map(metadata.map((item) => [ item.name, item ]));
         }
     }
 
     type(name) {
-        return this._map[name];
+        return this._map.get(name);
     }
 
     attribute(type, name) {

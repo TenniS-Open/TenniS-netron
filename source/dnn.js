@@ -14,20 +14,20 @@ dnn.ModelFactory = class {
         return false;
     }
 
-    open(context, host) {
-        return host.require('./dnn-proto').then(() => {
+    open(context) {
+        return context.require('./dnn-proto').then(() => {
             let model = null;
-            const identifier = context.identifier;
             try {
                 dnn.proto = protobuf.get('dnn').dnn;
-                const reader = protobuf.Reader.create(context.buffer);
+                const stream = context.stream;
+                const reader = protobuf.BinaryReader.open(stream);
                 model = dnn.proto.Model.decode(reader);
             }
             catch (error) {
                 const message = error && error.message ? error.message : error.toString();
                 throw new dnn.Error('File format is not dnn.Graph (' + message.replace(/\.$/, '') + ').');
             }
-            return dnn.Metadata.open(host).then((metadata) => {
+            return dnn.Metadata.open(context).then((metadata) => {
                 return new dnn.Model(metadata, model);
             });
         });
@@ -182,8 +182,8 @@ dnn.Node = class {
     constructor(metadata, node, arg) {
         const layer = node.layer;
         this._name = layer.name;
-        this._type = layer.type;
-        this._metadata = metadata.type(this._type);
+        const type = layer.type;
+        this._type = metadata.type(type) || { name: type };
         this._attributes = [];
         this._inputs = [];
         this._outputs = [];
@@ -204,11 +204,10 @@ dnn.Node = class {
         }
         const outputs = node.output.map((output) => { return arg(output); });
 
-        const schema = this._metadata;
         if (inputs && inputs.length > 0) {
             let inputIndex = 0;
-            if (schema && schema.inputs) {
-                for (const inputSchema of schema.inputs) {
+            if (this._type && this._type.inputs) {
+                for (const inputSchema of this._type.inputs) {
                     if (inputIndex < inputs.length || inputSchema.option != 'optional') {
                         const inputCount = (inputSchema.option == 'variadic') ? (node.input.length - inputIndex) : 1;
                         const inputArguments = inputs.slice(inputIndex, inputIndex + inputCount);
@@ -238,7 +237,7 @@ dnn.Node = class {
                 case 'quantization':
                     break;
                 default:
-                    this._attributes.push(new dnn.Attribute(metadata.attribute(this._type, key), key, layer[key]));
+                    this._attributes.push(new dnn.Attribute(metadata.attribute(type, key), key, layer[key]));
                     break;
             }
         }
@@ -250,10 +249,6 @@ dnn.Node = class {
 
     get type() {
         return this._type;
-    }
-
-    get metadata() {
-        return this._metadata;
     }
 
     get inputs() {
@@ -457,11 +452,11 @@ dnn.TensorShape = class {
 
 dnn.Metadata = class {
 
-    static open(host) {
+    static open(context) {
         if (dnn.Metadata._metadata) {
             return Promise.resolve(dnn.Metadata._metadata);
         }
-        return host.request(null, 'dnn-metadata.json', 'utf-8').then((data) => {
+        return context.request('dnn-metadata.json', 'utf-8', null).then((data) => {
             dnn.Metadata._metadata = new dnn.Metadata(data);
             return dnn.Metadata._metadata;
         }).catch(() => {
@@ -474,15 +469,8 @@ dnn.Metadata = class {
         this._map = new Map();
         this._attributeCache = new Map();
         if (data) {
-            const items = JSON.parse(data);
-            if (items) {
-                for (const item of items) {
-                    if (item.name && item.schema) {
-                        item.schema.name = item.name;
-                        this._map.set(item.name, item.schema);
-                    }
-                }
-            }
+            const metadata = JSON.parse(data);
+            this._map = new Map(metadata.map((item) => [ item.name, item ]));
         }
     }
 

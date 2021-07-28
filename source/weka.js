@@ -10,10 +10,16 @@ weka.ModelFactory = class {
 
     match(context) {
         try {
-            const reader = new java.io.InputObjectStream(context.buffer);
-            const obj = reader.read();
-            if (obj && obj.$class && obj.$class.name) {
-                return true;
+            const stream = context.stream;
+            if (stream.length >= 5) {
+                const signature = [ 0xac, 0xed ];
+                if (stream.peek(2).every((value, index) => value === signature[index])) {
+                    const reader = new java.io.InputObjectStream(stream);
+                    const obj = reader.read();
+                    if (obj && obj.$class && obj.$class.name) {
+                        return true;
+                    }
+                }
             }
         }
         catch (err) {
@@ -22,9 +28,9 @@ weka.ModelFactory = class {
         return false;
     }
 
-    open(context, host) {
+    open(context) {
         return Promise.resolve().then(() => {
-            const reader = new java.io.InputObjectStream(context.buffer);
+            const reader = new java.io.InputObjectStream(context.stream);
             const obj = reader.read();
             throw new weka.Error("Unsupported type '" + obj.$class.name + "'.");
         });
@@ -43,18 +49,19 @@ java.io = {};
 
 java.io.InputObjectStream = class {
 
-    constructor(buffer) {
+    constructor(stream) {
         // Object Serialization Stream Protocol
         // https://www.cis.upenn.edu/~bcpierce/courses/629/jdkdocs/guide/serialization/spec/protocol.doc.html
-        this._reader = new java.io.InputObjectStream.BinaryReader(buffer);
-        this._references = [];
-        if (buffer.length < 5) {
+        if (stream.length < 5) {
             throw new java.io.Error('Invalid stream size');
         }
-        const signature = this._reader.uint16();
-        if (signature !== 0xACED) {
-            throw new java.io.Error('Invalid signature.');
+        const signature = [ 0xac, 0xed ];
+        if (!stream.peek(2).every((value, index) => value === signature[index])) {
+            throw new java.io.Error('Invalid stream signature');
         }
+        this._reader = new java.io.InputObjectStream.BinaryReader(stream.peek());
+        this._references = [];
+        this._reader.skip(2);
         const version = this._reader.uint16();
         if (version !== 0x0005) {
             throw new java.io.Error("Unsupported version '" + version + "'.");
@@ -129,7 +136,7 @@ java.io.InputObjectStream = class {
         throw new java.io.Error("Unsupported code '" + code + "'.");
     }
 
-    _classData(obj) {
+    _classData(/* obj */) {
         /*
         const classname = obj.$class.name;
         let flags = obj.$class.flags;

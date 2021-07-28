@@ -27,6 +27,9 @@ fileAssociations:
     ext: meta
   - name: "Core ML Model"
     ext: mlmodel
+  - name: "Core ML Model Package"
+    ext: mlpackage
+    isPackage: true
   - name: "MNN Model"
     ext: mnn
   - name: "Model"
@@ -65,30 +68,29 @@ fileAssociations:
     ext: paddle
   - name: "PaddlePaddle"
     ext: pdmodel
+  - name: "PaddlePaddle"
+    ext: pdparams
+  - name: "RKNN"
+    ext: rknn
+  - name: "Vitis-AI xmodel"
+    ext: xmodel
 afterSign: "./publish/notarize.js"
 publish:
   - provider: github
     releaseType: release
-mac:
-  category: public.app-category.developer-tools
-  darkModeSupport: true
-  hardenedRuntime: true
-  gatekeeperAssess: false
-  target: 
-  - dmg
-  - zip
 linux:
   target:
   - AppImage
   - snap
-snap:
-  plugs:
-  - default
-  - removable-media
-  publish:
-  - provider: snapStore
-    channels:
-    - stable
+mac:
+  artifactName: ${productName}-${version}-mac.${ext}
+  category: public.app-category.developer-tools
+  darkModeSupport: true
+  gatekeeperAssess: false
+  hardenedRuntime: true
+  target:
+  - dmg
+  - zip
 win:
   target:
   - nsis
@@ -96,6 +98,9 @@ win:
   - sha256
   verifyUpdateCodeSignature: false
 dmg:
+  artifactName: ${productName}-${version}.${ext}
+  title: "${productName} ${version}"
+  writeUpdateInfo: false
   iconSize: 160
   contents:
   - x: 180
@@ -105,4 +110,12 @@ dmg:
     type: link
     path: /Applications
 nsis:
-  perMachine: true
+  differentialPackage: false
+snap:
+  plugs:
+  - default
+  - removable-media
+  publish:
+  - provider: snapStore
+    channels:
+    - stable

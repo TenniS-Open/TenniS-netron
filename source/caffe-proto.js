@@ -10,8 +10,8 @@ $root.caffe.BlobShape = class BlobShape {
 
     static decode(reader, length) {
         const message = new $root.caffe.BlobShape();
-        const end = reader.next(length);
-        while (reader.end(end)) {
+        const end = length !== undefined ? reader.position + length : reader.length;
+        while (reader.position < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
                 case 1:
@@ -32,7 +32,7 @@ $root.caffe.BlobShape = class BlobShape {
             const tag = reader.tag();
             switch (tag) {
                 case "dim":
-                    reader.array(message.dim, () => reader.integer());
+                    reader.array(message.dim, () => reader.int64());
                     break;
                 default:
                     reader.field(tag, message);
@@ -54,8 +54,8 @@ $root.caffe.BlobProto = class BlobProto {
 
     static decode(reader, length) {
         const message = new $root.caffe.BlobProto();
-        const end = reader.next(length);
-        while (reader.end(end)) {
+        const end = length !== undefined ? reader.position + length : reader.length;
+        while (reader.position < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
                 case 7:
@@ -100,7 +100,7 @@ $root.caffe.BlobProto = class BlobProto {
             const tag = reader.tag();
             switch (tag) {
                 case "shape":
-                    message.shape = $root.caffe.BlobShape.decodeText(reader, true);
+                    message.shape = $root.caffe.BlobShape.decodeText(reader);
                     break;
                 case "data":
                     reader.array(message.data, () => reader.float());
@@ -109,22 +109,22 @@ $root.caffe.BlobProto = class BlobProto {
                     reader.array(message.diff, () => reader.float());
                     break;
                 case "double_data":
-                    reader.array(message.double_data, () => reader.float());
+                    reader.array(message.double_data, () => reader.double());
                     break;
                 case "double_diff":
-                    reader.array(message.double_diff, () => reader.float());
+                    reader.array(message.double_diff, () => reader.double());
                     break;
                 case "num":
-                    message.num = reader.integer();
+                    message.num = reader.int32();
                     break;
                 case "channels":
-                    message.channels = reader.integer();
+                    message.channels = reader.int32();
                     break;
                 case "height":
-                    message.height = reader.integer();
+                    message.height = reader.int32();
                     break;
                 case "width":
-                    message.width = reader.integer();
+                    message.width = reader.int32();
                     break;
                 default:
                     reader.field(tag, message);
@@ -149,8 +149,8 @@ $root.caffe.BlobProtoVector = class BlobProtoVector {
 
     static decode(reader, length) {
         const message = new $root.caffe.BlobProtoVector();
-        const end = reader.next(length);
-        while (reader.end(end)) {
+        const end = length !== undefined ? reader.position + length : reader.length;
+        while (reader.position < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
                 case 1:
@@ -171,7 +171,7 @@ $root.caffe.BlobProtoVector = class BlobProtoVector {
             const tag = reader.tag();
             switch (tag) {
                 case "blobs":
-                    message.blobs.push($root.caffe.BlobProto.decodeText(reader, true));
+                    message.blobs.push($root.caffe.BlobProto.decodeText(reader));
                     break;
                 default:
                     reader.field(tag, message);
@@ -190,8 +190,8 @@ $root.caffe.Datum = class Datum {
 
     static decode(reader, length) {
         const message = new $root.caffe.Datum();
-        const end = reader.next(length);
-        while (reader.end(end)) {
+        const end = length !== undefined ? reader.position + length : reader.length;
+        while (reader.position < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
                 case 1:
@@ -230,25 +230,25 @@ $root.caffe.Datum = class Datum {
             const tag = reader.tag();
             switch (tag) {
                 case "channels":
-                    message.channels = reader.integer();
+                    message.channels = reader.int32();
                     break;
                 case "height":
-                    message.height = reader.integer();
+                    message.height = reader.int32();
                     break;
                 case "width":
-                    message.width = reader.integer();
+                    message.width = reader.int32();
                     break;
                 case "data":
                     message.data = reader.bytes();
                     break;
                 case "label":
-                    message.label = reader.integer();
+                    message.label = reader.int32();
                     break;
                 case "float_data":
                     reader.array(message.float_data, () => reader.float());
                     break;
                 case "encoded":
-                    message.encoded = reader.boolean();
+                    message.encoded = reader.bool();
                     break;
                 default:
                     reader.field(tag, message);
@@ -273,8 +273,8 @@ $root.caffe.FillerParameter = class FillerParameter {
 
     static decode(reader, length) {
         const message = new $root.caffe.FillerParameter();
-        const end = reader.next(length);
-        while (reader.end(end)) {
+        const end = length !== undefined ? reader.position + length : reader.length;
+        while (reader.position < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
                 case 1:
@@ -334,7 +334,7 @@ $root.caffe.FillerParameter = class FillerParameter {
                     message.std = reader.float();
                     break;
                 case "sparse":
-                    message.sparse = reader.integer();
+                    message.sparse = reader.int32();
                     break;
                 case "variance_norm":
                     message.variance_norm = reader.enum($root.caffe.FillerParameter.VarianceNorm);
@@ -375,8 +375,8 @@ $root.caffe.NetParameter = class NetParameter {
 
     static decode(reader, length) {
         const message = new $root.caffe.NetParameter();
-        const end = reader.next(length);
-        while (reader.end(end)) {
+        const end = length !== undefined ? reader.position + length : reader.length;
+        while (reader.position < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
                 case 1:
@@ -427,25 +427,25 @@ $root.caffe.NetParameter = class NetParameter {
                     reader.array(message.input, () => reader.string());
                     break;
                 case "input_shape":
-                    message.input_shape.push($root.caffe.BlobShape.decodeText(reader, true));
+                    message.input_shape.push($root.caffe.BlobShape.decodeText(reader));
                     break;
                 case "input_dim":
-                    reader.array(message.input_dim, () => reader.integer());
+                    reader.array(message.input_dim, () => reader.int32());
                     break;
                 case "force_backward":
-                    message.force_backward = reader.boolean();
+                    message.force_backward = reader.bool();
                     break;
                 case "state":
-                    message.state = $root.caffe.NetState.decodeText(reader, true);
+                    message.state = $root.caffe.NetState.decodeText(reader);
                     break;
                 case "debug_info":
-                    message.debug_info = reader.boolean();
+                    message.debug_info = reader.bool();
                     break;
                 case "layer":
-                    message.layer.push($root.caffe.LayerParameter.decodeText(reader, true));
+                    message.layer.push($root.caffe.LayerParameter.decodeText(reader));
                     break;
                 case "layers":
-                    message.layers.push($root.caffe.V1LayerParameter.decodeText(reader, true));
+                    message.layers.push($root.caffe.V1LayerParameter.decodeText(reader));
                     break;
                 default:
                     reader.field(tag, message);
@@ -474,8 +474,8 @@ $root.caffe.SolverParameter = class SolverParameter {
 
     static decode(reader, length) {
         const message = new $root.caffe.SolverParameter();
-        const end = reader.next(length);
-        while (reader.end(end)) {
+        const end = length !== undefined ? reader.position + length : reader.length;
+        while (reader.position < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
                 case 24:
@@ -622,7 +622,7 @@ $root.caffe.SolverParameter = class SolverParameter {
                     message.net = reader.string();
                     break;
                 case "net_param":
-                    message.net_param = $root.caffe.NetParameter.decodeText(reader, true);
+                    message.net_param = $root.caffe.NetParameter.decodeText(reader);
                     break;
                 case "train_net":
                     message.train_net = reader.string();
@@ -631,43 +631,43 @@ $root.caffe.SolverParameter = class SolverParameter {
                     reader.array(message.test_net, () => reader.string());
                     break;
                 case "train_net_param":
-                    message.train_net_param = $root.caffe.NetParameter.decodeText(reader, true);
+                    message.train_net_param = $root.caffe.NetParameter.decodeText(reader);
                     break;
                 case "test_net_param":
-                    message.test_net_param.push($root.caffe.NetParameter.decodeText(reader, true));
+                    message.test_net_param.push($root.caffe.NetParameter.decodeText(reader));
                     break;
                 case "train_state":
-                    message.train_state = $root.caffe.NetState.decodeText(reader, true);
+                    message.train_state = $root.caffe.NetState.decodeText(reader);
                     break;
                 case "test_state":
-                    message.test_state.push($root.caffe.NetState.decodeText(reader, true));
+                    message.test_state.push($root.caffe.NetState.decodeText(reader));
                     break;
                 case "test_iter":
-                    reader.array(message.test_iter, () => reader.integer());
+                    reader.array(message.test_iter, () => reader.int32());
                     break;
                 case "test_interval":
-                    message.test_interval = reader.integer();
+                    message.test_interval = reader.int32();
                     break;
                 case "test_compute_loss":
-                    message.test_compute_loss = reader.boolean();
+                    message.test_compute_loss = reader.bool();
                     break;
                 case "test_initialization":
-                    message.test_initialization = reader.boolean();
+                    message.test_initialization = reader.bool();
                     break;
                 case "base_lr":
                     message.base_lr = reader.float();
                     break;
                 case "display":
-                    message.display = reader.integer();
+                    message.display = reader.int32();
                     break;
                 case "average_loss":
-                    message.average_loss = reader.integer();
+                    message.average_loss = reader.int32();
                     break;
                 case "max_iter":
-                    message.max_iter = reader.integer();
+                    message.max_iter = reader.int32();
                     break;
                 case "iter_size":
-                    message.iter_size = reader.integer();
+                    message.iter_size = reader.int32();
                     break;
                 case "lr_policy":
                     message.lr_policy = reader.string();
@@ -688,22 +688,22 @@ $root.caffe.SolverParameter = class SolverParameter {
                     message.regularization_type = reader.string();
                     break;
                 case "stepsize":
-                    message.stepsize = reader.integer();
+                    message.stepsize = reader.int32();
                     break;
                 case "stepvalue":
-                    reader.array(message.stepvalue, () => reader.integer());
+                    reader.array(message.stepvalue, () => reader.int32());
                     break;
                 case "clip_gradients":
                     message.clip_gradients = reader.float();
                     break;
                 case "snapshot":
-                    message.snapshot = reader.integer();
+                    message.snapshot = reader.int32();
                     break;
                 case "snapshot_prefix":
                     message.snapshot_prefix = reader.string();
                     break;
                 case "snapshot_diff":
-                    message.snapshot_diff = reader.boolean();
+                    message.snapshot_diff = reader.bool();
                     break;
                 case "snapshot_format":
                     message.snapshot_format = reader.enum($root.caffe.SolverParameter.SnapshotFormat);
@@ -712,10 +712,10 @@ $root.caffe.SolverParameter = class SolverParameter {
                     message.solver_mode = reader.enum($root.caffe.SolverParameter.SolverMode);
                     break;
                 case "device_id":
-                    message.device_id = reader.integer();
+                    message.device_id = reader.int32();
                     break;
                 case "random_seed":
-                    message.random_seed = reader.integer();
+                    message.random_seed = reader.int64();
                     break;
                 case "type":
                     message.type = reader.string();
@@ -730,16 +730,16 @@ $root.caffe.SolverParameter = class SolverParameter {
                     message.rms_decay = reader.float();
                     break;
                 case "debug_info":
-                    message.debug_info = reader.boolean();
+                    message.debug_info = reader.bool();
                     break;
                 case "snapshot_after_train":
-                    message.snapshot_after_train = reader.boolean();
+                    message.snapshot_after_train = reader.bool();
                     break;
                 case "solver_type":
                     message.solver_type = reader.enum($root.caffe.SolverParameter.SolverType);
                     break;
                 case "layer_wise_reduce":
-                    message.layer_wise_reduce = reader.boolean();
+                    message.layer_wise_reduce = reader.bool();
                     break;
                 case "weights":
                     reader.array(message.weights, () => reader.string());
@@ -817,8 +817,8 @@ $root.caffe.SolverState = class SolverState {
 
     static decode(reader, length) {
         const message = new $root.caffe.SolverState();
-        const end = reader.next(length);
-        while (reader.end(end)) {
+        const end = length !== undefined ? reader.position + length : reader.length;
+        while (reader.position < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
                 case 1:
@@ -848,16 +848,16 @@ $root.caffe.SolverState = class SolverState {
             const tag = reader.tag();
             switch (tag) {
                 case "iter":
-                    message.iter = reader.integer();
+                    message.iter = reader.int32();
                     break;
                 case "learned_net":
                     message.learned_net = reader.string();
                     break;
                 case "history":
-                    message.history.push($root.caffe.BlobProto.decodeText(reader, true));
+                    message.history.push($root.caffe.BlobProto.decodeText(reader));
                     break;
                 case "current_step":
-                    message.current_step = reader.integer();
+                    message.current_step = reader.int32();
                     break;
                 default:
                     reader.field(tag, message);
@@ -885,8 +885,8 @@ $root.caffe.NetState = class NetState {
 
     static decode(reader, length) {
         const message = new $root.caffe.NetState();
-        const end = reader.next(length);
-        while (reader.end(end)) {
+        const end = length !== undefined ? reader.position + length : reader.length;
+        while (reader.position < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
                 case 1:
@@ -916,7 +916,7 @@ $root.caffe.NetState = class NetState {
                     message.phase = reader.enum($root.caffe.Phase);
                     break;
                 case "level":
-                    message.level = reader.integer();
+                    message.level = reader.int32();
                     break;
                 case "stage":
                     reader.array(message.stage, () => reader.string());
@@ -942,8 +942,8 @@ $root.caffe.NetStateRule = class NetStateRule {
 
     static decode(reader, length) {
         const message = new $root.caffe.NetStateRule();
-        const end = reader.next(length);
-        while (reader.end(end)) {
+        const end = length !== undefined ? reader.position + length : reader.length;
+        while (reader.position < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
                 case 1:
@@ -979,10 +979,10 @@ $root.caffe.NetStateRule = class NetStateRule {
                     message.phase = reader.enum($root.caffe.Phase);
                     break;
                 case "min_level":
-                    message.min_level = reader.integer();
+                    message.min_level = reader.int32();
                     break;
                 case "max_level":
-                    message.max_level = reader.integer();
+                    message.max_level = reader.int32();
                     break;
                 case "stage":
                     reader.array(message.stage, () => reader.string());
@@ -1010,8 +1010,8 @@ $root.caffe.ParamSpec = class ParamSpec {
 
     static decode(reader, length) {
         const message = new $root.caffe.ParamSpec();
-        const end = reader.next(length);
-        while (reader.end(end)) {
+        const end = length !== undefined ? reader.position + length : reader.length;
+        while (reader.position < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
                 case 1:
@@ -1086,8 +1086,8 @@ $root.caffe.LayerParameter = class LayerParameter {
 
     static decode(reader, length) {
         const message = new $root.caffe.LayerParameter();
-        const end = reader.next(length);
-        while (reader.end(end)) {
+        const end = length !== undefined ? reader.position + length : reader.length;
+        while (reader.position < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
                 case 1:
@@ -1303,166 +1303,166 @@ $root.caffe.LayerParameter = class LayerParameter {
                     reader.array(message.loss_weight, () => reader.float());
                     break;
                 case "param":
-                    message.param.push($root.caffe.ParamSpec.decodeText(reader, true));
+                    message.param.push($root.caffe.ParamSpec.decodeText(reader));
                     break;
                 case "blobs":
-                    message.blobs.push($root.caffe.BlobProto.decodeText(reader, true));
+                    message.blobs.push($root.caffe.BlobProto.decodeText(reader));
                     break;
                 case "propagate_down":
-                    reader.array(message.propagate_down, () => reader.boolean());
+                    reader.array(message.propagate_down, () => reader.bool());
                     break;
                 case "include":
-                    message.include.push($root.caffe.NetStateRule.decodeText(reader, true));
+                    message.include.push($root.caffe.NetStateRule.decodeText(reader));
                     break;
                 case "exclude":
-                    message.exclude.push($root.caffe.NetStateRule.decodeText(reader, true));
+                    message.exclude.push($root.caffe.NetStateRule.decodeText(reader));
                     break;
                 case "transform_param":
-                    message.transform_param = $root.caffe.TransformationParameter.decodeText(reader, true);
+                    message.transform_param = $root.caffe.TransformationParameter.decodeText(reader);
                     break;
                 case "loss_param":
-                    message.loss_param = $root.caffe.LossParameter.decodeText(reader, true);
+                    message.loss_param = $root.caffe.LossParameter.decodeText(reader);
                     break;
                 case "accuracy_param":
-                    message.accuracy_param = $root.caffe.AccuracyParameter.decodeText(reader, true);
+                    message.accuracy_param = $root.caffe.AccuracyParameter.decodeText(reader);
                     break;
                 case "argmax_param":
-                    message.argmax_param = $root.caffe.ArgMaxParameter.decodeText(reader, true);
+                    message.argmax_param = $root.caffe.ArgMaxParameter.decodeText(reader);
                     break;
                 case "batch_norm_param":
-                    message.batch_norm_param = $root.caffe.BatchNormParameter.decodeText(reader, true);
+                    message.batch_norm_param = $root.caffe.BatchNormParameter.decodeText(reader);
                     break;
                 case "bias_param":
-                    message.bias_param = $root.caffe.BiasParameter.decodeText(reader, true);
+                    message.bias_param = $root.caffe.BiasParameter.decodeText(reader);
                     break;
                 case "clip_param":
-                    message.clip_param = $root.caffe.ClipParameter.decodeText(reader, true);
+                    message.clip_param = $root.caffe.ClipParameter.decodeText(reader);
                     break;
                 case "concat_param":
-                    message.concat_param = $root.caffe.ConcatParameter.decodeText(reader, true);
+                    message.concat_param = $root.caffe.ConcatParameter.decodeText(reader);
                     break;
                 case "contrastive_loss_param":
-                    message.contrastive_loss_param = $root.caffe.ContrastiveLossParameter.decodeText(reader, true);
+                    message.contrastive_loss_param = $root.caffe.ContrastiveLossParameter.decodeText(reader);
                     break;
                 case "convolution_param":
-                    message.convolution_param = $root.caffe.ConvolutionParameter.decodeText(reader, true);
+                    message.convolution_param = $root.caffe.ConvolutionParameter.decodeText(reader);
                     break;
                 case "crop_param":
-                    message.crop_param = $root.caffe.CropParameter.decodeText(reader, true);
+                    message.crop_param = $root.caffe.CropParameter.decodeText(reader);
                     break;
                 case "data_param":
-                    message.data_param = $root.caffe.DataParameter.decodeText(reader, true);
+                    message.data_param = $root.caffe.DataParameter.decodeText(reader);
                     break;
                 case "dropout_param":
-                    message.dropout_param = $root.caffe.DropoutParameter.decodeText(reader, true);
+                    message.dropout_param = $root.caffe.DropoutParameter.decodeText(reader);
                     break;
                 case "dummy_data_param":
-                    message.dummy_data_param = $root.caffe.DummyDataParameter.decodeText(reader, true);
+                    message.dummy_data_param = $root.caffe.DummyDataParameter.decodeText(reader);
                     break;
                 case "eltwise_param":
-                    message.eltwise_param = $root.caffe.EltwiseParameter.decodeText(reader, true);
+                    message.eltwise_param = $root.caffe.EltwiseParameter.decodeText(reader);
                     break;
                 case "elu_param":
-                    message.elu_param = $root.caffe.ELUParameter.decodeText(reader, true);
+                    message.elu_param = $root.caffe.ELUParameter.decodeText(reader);
                     break;
                 case "embed_param":
-                    message.embed_param = $root.caffe.EmbedParameter.decodeText(reader, true);
+                    message.embed_param = $root.caffe.EmbedParameter.decodeText(reader);
                     break;
                 case "exp_param":
-                    message.exp_param = $root.caffe.ExpParameter.decodeText(reader, true);
+                    message.exp_param = $root.caffe.ExpParameter.decodeText(reader);
                     break;
                 case "flatten_param":
-                    message.flatten_param = $root.caffe.FlattenParameter.decodeText(reader, true);
+                    message.flatten_param = $root.caffe.FlattenParameter.decodeText(reader);
                     break;
                 case "hdf5_data_param":
-                    message.hdf5_data_param = $root.caffe.HDF5DataParameter.decodeText(reader, true);
+                    message.hdf5_data_param = $root.caffe.HDF5DataParameter.decodeText(reader);
                     break;
                 case "hdf5_output_param":
-                    message.hdf5_output_param = $root.caffe.HDF5OutputParameter.decodeText(reader, true);
+                    message.hdf5_output_param = $root.caffe.HDF5OutputParameter.decodeText(reader);
                     break;
                 case "hinge_loss_param":
-                    message.hinge_loss_param = $root.caffe.HingeLossParameter.decodeText(reader, true);
+                    message.hinge_loss_param = $root.caffe.HingeLossParameter.decodeText(reader);
                     break;
                 case "image_data_param":
-                    message.image_data_param = $root.caffe.ImageDataParameter.decodeText(reader, true);
+                    message.image_data_param = $root.caffe.ImageDataParameter.decodeText(reader);
                     break;
                 case "infogain_loss_param":
-                    message.infogain_loss_param = $root.caffe.InfogainLossParameter.decodeText(reader, true);
+                    message.infogain_loss_param = $root.caffe.InfogainLossParameter.decodeText(reader);
                     break;
                 case "inner_product_param":
-                    message.inner_product_param = $root.caffe.InnerProductParameter.decodeText(reader, true);
+                    message.inner_product_param = $root.caffe.InnerProductParameter.decodeText(reader);
                     break;
                 case "input_param":
-                    message.input_param = $root.caffe.InputParameter.decodeText(reader, true);
+                    message.input_param = $root.caffe.InputParameter.decodeText(reader);
                     break;
                 case "log_param":
-                    message.log_param = $root.caffe.LogParameter.decodeText(reader, true);
+                    message.log_param = $root.caffe.LogParameter.decodeText(reader);
                     break;
                 case "lrn_param":
-                    message.lrn_param = $root.caffe.LRNParameter.decodeText(reader, true);
+                    message.lrn_param = $root.caffe.LRNParameter.decodeText(reader);
                     break;
                 case "memory_data_param":
-                    message.memory_data_param = $root.caffe.MemoryDataParameter.decodeText(reader, true);
+                    message.memory_data_param = $root.caffe.MemoryDataParameter.decodeText(reader);
                     break;
                 case "mvn_param":
-                    message.mvn_param = $root.caffe.MVNParameter.decodeText(reader, true);
+                    message.mvn_param = $root.caffe.MVNParameter.decodeText(reader);
                     break;
                 case "parameter_param":
-                    message.parameter_param = $root.caffe.ParameterParameter.decodeText(reader, true);
+                    message.parameter_param = $root.caffe.ParameterParameter.decodeText(reader);
                     break;
                 case "pooling_param":
-                    message.pooling_param = $root.caffe.PoolingParameter.decodeText(reader, true);
+                    message.pooling_param = $root.caffe.PoolingParameter.decodeText(reader);
                     break;
                 case "power_param":
-                    message.power_param = $root.caffe.PowerParameter.decodeText(reader, true);
+                    message.power_param = $root.caffe.PowerParameter.decodeText(reader);
                     break;
                 case "prelu_param":
-                    message.prelu_param = $root.caffe.PReLUParameter.decodeText(reader, true);
+                    message.prelu_param = $root.caffe.PReLUParameter.decodeText(reader);
                     break;
                 case "python_param":
-                    message.python_param = $root.caffe.PythonParameter.decodeText(reader, true);
+                    message.python_param = $root.caffe.PythonParameter.decodeText(reader);
                     break;
                 case "recurrent_param":
-                    message.recurrent_param = $root.caffe.RecurrentParameter.decodeText(reader, true);
+                    message.recurrent_param = $root.caffe.RecurrentParameter.decodeText(reader);
                     break;
                 case "reduction_param":
-                    message.reduction_param = $root.caffe.ReductionParameter.decodeText(reader, true);
+                    message.reduction_param = $root.caffe.ReductionParameter.decodeText(reader);
                     break;
                 case "relu_param":
-                    message.relu_param = $root.caffe.ReLUParameter.decodeText(reader, true);
+                    message.relu_param = $root.caffe.ReLUParameter.decodeText(reader);
                     break;
                 case "reshape_param":
-                    message.reshape_param = $root.caffe.ReshapeParameter.decodeText(reader, true);
+                    message.reshape_param = $root.caffe.ReshapeParameter.decodeText(reader);
                     break;
                 case "scale_param":
-                    message.scale_param = $root.caffe.ScaleParameter.decodeText(reader, true);
+                    message.scale_param = $root.caffe.ScaleParameter.decodeText(reader);
                     break;
                 case "sigmoid_param":
-                    message.sigmoid_param = $root.caffe.SigmoidParameter.decodeText(reader, true);
+                    message.sigmoid_param = $root.caffe.SigmoidParameter.decodeText(reader);
                     break;
                 case "softmax_param":
-                    message.softmax_param = $root.caffe.SoftmaxParameter.decodeText(reader, true);
+                    message.softmax_param = $root.caffe.SoftmaxParameter.decodeText(reader);
                     break;
                 case "spp_param":
-                    message.spp_param = $root.caffe.SPPParameter.decodeText(reader, true);
+                    message.spp_param = $root.caffe.SPPParameter.decodeText(reader);
                     break;
                 case "slice_param":
-                    message.slice_param = $root.caffe.SliceParameter.decodeText(reader, true);
+                    message.slice_param = $root.caffe.SliceParameter.decodeText(reader);
                     break;
                 case "swish_param":
-                    message.swish_param = $root.caffe.SwishParameter.decodeText(reader, true);
+                    message.swish_param = $root.caffe.SwishParameter.decodeText(reader);
                     break;
                 case "tanh_param":
-                    message.tanh_param = $root.caffe.TanHParameter.decodeText(reader, true);
+                    message.tanh_param = $root.caffe.TanHParameter.decodeText(reader);
                     break;
                 case "threshold_param":
-                    message.threshold_param = $root.caffe.ThresholdParameter.decodeText(reader, true);
+                    message.threshold_param = $root.caffe.ThresholdParameter.decodeText(reader);
                     break;
                 case "tile_param":
-                    message.tile_param = $root.caffe.TileParameter.decodeText(reader, true);
+                    message.tile_param = $root.caffe.TileParameter.decodeText(reader);
                     break;
                 case "window_data_param":
-                    message.window_data_param = $root.caffe.WindowDataParameter.decodeText(reader, true);
+                    message.window_data_param = $root.caffe.WindowDataParameter.decodeText(reader);
                     break;
                 default:
                     reader.field(tag, message);
@@ -1534,8 +1534,8 @@ $root.caffe.TransformationParameter = class TransformationParameter {
 
     static decode(reader, length) {
         const message = new $root.caffe.TransformationParameter();
-        const end = reader.next(length);
-        while (reader.end(end)) {
+        const end = length !== undefined ? reader.position + length : reader.length;
+        while (reader.position < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
                 case 1:
@@ -1577,10 +1577,10 @@ $root.caffe.TransformationParameter = class TransformationParameter {
                     message.scale = reader.float();
                     break;
                 case "mirror":
-                    message.mirror = reader.boolean();
+                    message.mirror = reader.bool();
                     break;
                 case "crop_size":
-                    message.crop_size = reader.integer();
+                    message.crop_size = reader.uint32();
                     break;
                 case "mean_file":
                     message.mean_file = reader.string();
@@ -1589,10 +1589,10 @@ $root.caffe.TransformationParameter = class TransformationParameter {
                     reader.array(message.mean_value, () => reader.float());
                     break;
                 case "force_color":
-                    message.force_color = reader.boolean();
+                    message.force_color = reader.bool();
                     break;
                 case "force_gray":
-                    message.force_gray = reader.boolean();
+                    message.force_gray = reader.bool();
                     break;
                 default:
                     reader.field(tag, message);
@@ -1617,8 +1617,8 @@ $root.caffe.LossParameter = class LossParameter {
 
     static decode(reader, length) {
         const message = new $root.caffe.LossParameter();
-        const end = reader.next(length);
-        while (reader.end(end)) {
+        const end = length !== undefined ? reader.position + length : reader.length;
+        while (reader.position < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
                 case 1:
@@ -1645,13 +1645,13 @@ $root.caffe.LossParameter = class LossParameter {
             const tag = reader.tag();
             switch (tag) {
                 case "ignore_label":
-                    message.ignore_label = reader.integer();
+                    message.ignore_label = reader.int32();
                     break;
                 case "normalization":
                     message.normalization = reader.enum($root.caffe.LossParameter.NormalizationMode);
                     break;
                 case "normalize":
-                    message.normalize = reader.boolean();
+                    message.normalize = reader.bool();
                     break;
                 default:
                     reader.field(tag, message);
@@ -1680,8 +1680,8 @@ $root.caffe.AccuracyParameter = class AccuracyParameter {
 
     static decode(reader, length) {
         const message = new $root.caffe.AccuracyParameter();
-        const end = reader.next(length);
-        while (reader.end(end)) {
+        const end = length !== undefined ? reader.position + length : reader.length;
+        while (reader.position < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
                 case 1:
@@ -1708,13 +1708,13 @@ $root.caffe.AccuracyParameter = class AccuracyParameter {
             const tag = reader.tag();
             switch (tag) {
                 case "top_k":
-                    message.top_k = reader.integer();
+                    message.top_k = reader.uint32();
                     break;
                 case "axis":
-                    message.axis = reader.integer();
+                    message.axis = reader.int32();
                     break;
                 case "ignore_label":
-                    message.ignore_label = reader.integer();
+                    message.ignore_label = reader.int32();
                     break;
                 default:
                     reader.field(tag, message);
@@ -1736,8 +1736,8 @@ $root.caffe.ArgMaxParameter = class ArgMaxParameter {
 
     static decode(reader, length) {
         const message = new $root.caffe.ArgMaxParameter();
-        const end = reader.next(length);
-        while (reader.end(end)) {
+        const end = length !== undefined ? reader.position + length : reader.length;
+        while (reader.position < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
                 case 1:
@@ -1764,13 +1764,13 @@ $root.caffe.ArgMaxParameter = class ArgMaxParameter {
             const tag = reader.tag();
             switch (tag) {
                 case "out_max_val":
-                    message.out_max_val = reader.boolean();
+                    message.out_max_val = reader.bool();
                     break;
                 case "top_k":
-                    message.top_k = reader.integer();
+                    message.top_k = reader.uint32();
                     break;
                 case "axis":
-                    message.axis = reader.integer();
+                    message.axis = reader.int32();
                     break;
                 default:
                     reader.field(tag, message);
@@ -1792,8 +1792,8 @@ $root.caffe.ClipParameter = class ClipParameter {
 
     static decode(reader, length) {
         const message = new $root.caffe.ClipParameter();
-        const end = reader.next(length);
-        while (reader.end(end)) {
+        const end = length !== undefined ? reader.position + length : reader.length;
+        while (reader.position < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
                 case 1:
@@ -1841,8 +1841,8 @@ $root.caffe.ConcatParameter = class ConcatParameter {
 
     static decode(reader, length) {
         const message = new $root.caffe.ConcatParameter();
-        const end = reader.next(length);
-        while (reader.end(end)) {
+        const end = length !== undefined ? reader.position + length : reader.length;
+        while (reader.position < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
                 case 2:
@@ -1866,10 +1866,10 @@ $root.caffe.ConcatParameter = class ConcatParameter {
             const tag = reader.tag();
             switch (tag) {
                 case "axis":
-                    message.axis = reader.integer();
+                    message.axis = reader.int32();
                     break;
                 case "concat_dim":
-                    message.concat_dim = reader.integer();
+                    message.concat_dim = reader.uint32();
                     break;
                 default:
                     reader.field(tag, message);
@@ -1890,8 +1890,8 @@ $root.caffe.BatchNormParameter = class BatchNormParameter {
 
     static decode(reader, length) {
         const message = new $root.caffe.BatchNormParameter();
-        const end = reader.next(length);
-        while (reader.end(end)) {
+        const end = length !== undefined ? reader.position + length : reader.length;
+        while (reader.position < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
                 case 1:
@@ -1918,7 +1918,7 @@ $root.caffe.BatchNormParameter = class BatchNormParameter {
             const tag = reader.tag();
             switch (tag) {
                 case "use_global_stats":
-                    message.use_global_stats = reader.boolean();
+                    message.use_global_stats = reader.bool();
                     break;
                 case "moving_average_fraction":
                     message.moving_average_fraction = reader.float();
@@ -1946,8 +1946,8 @@ $root.caffe.BiasParameter = class BiasParameter {
 
     static decode(reader, length) {
         const message = new $root.caffe.BiasParameter();
-        const end = reader.next(length);
-        while (reader.end(end)) {
+        const end = length !== undefined ? reader.position + length : reader.length;
+        while (reader.position < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
                 case 1:
@@ -1974,13 +1974,13 @@ $root.caffe.BiasParameter = class BiasParameter {
             const tag = reader.tag();
             switch (tag) {
                 case "axis":
-                    message.axis = reader.integer();
+                    message.axis = reader.int32();
                     break;
                 case "num_axes":
-                    message.num_axes = reader.integer();
+                    message.num_axes = reader.int32();
                     break;
                 case "filler":
-                    message.filler = $root.caffe.FillerParameter.decodeText(reader, true);
+                    message.filler = $root.caffe.FillerParameter.decodeText(reader);
                     break;
                 default:
                     reader.field(tag, message);
@@ -2002,8 +2002,8 @@ $root.caffe.ContrastiveLossParameter = class ContrastiveLossParameter {
 
     static decode(reader, length) {
         const message = new $root.caffe.ContrastiveLossParameter();
-        const end = reader.next(length);
-        while (reader.end(end)) {
+        const end = length !== undefined ? reader.position + length : reader.length;
+        while (reader.position < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
                 case 1:
@@ -2030,7 +2030,7 @@ $root.caffe.ContrastiveLossParameter = class ContrastiveLossParameter {
                     message.margin = reader.float();
                     break;
                 case "legacy_version":
-                    message.legacy_version = reader.boolean();
+                    message.legacy_version = reader.bool();
                     break;
                 default:
                     reader.field(tag, message);
@@ -2055,8 +2055,8 @@ $root.caffe.ConvolutionParameter = class ConvolutionParameter {
 
     static decode(reader, length) {
         const message = new $root.caffe.ConvolutionParameter();
-        const end = reader.next(length);
-        while (reader.end(end)) {
+        const end = length !== undefined ? reader.position + length : reader.length;
+        while (reader.position < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
                 case 1:
@@ -2128,58 +2128,58 @@ $root.caffe.ConvolutionParameter = class ConvolutionParameter {
             const tag = reader.tag();
             switch (tag) {
                 case "num_output":
-                    message.num_output = reader.integer();
+                    message.num_output = reader.uint32();
                     break;
                 case "bias_term":
-                    message.bias_term = reader.boolean();
+                    message.bias_term = reader.bool();
                     break;
                 case "pad":
-                    reader.array(message.pad, () => reader.integer());
+                    reader.array(message.pad, () => reader.uint32());
                     break;
                 case "kernel_size":
-                    reader.array(message.kernel_size, () => reader.integer());
+                    reader.array(message.kernel_size, () => reader.uint32());
                     break;
                 case "stride":
-                    reader.array(message.stride, () => reader.integer());
+                    reader.array(message.stride, () => reader.uint32());
                     break;
                 case "dilation":
-                    reader.array(message.dilation, () => reader.integer());
+                    reader.array(message.dilation, () => reader.uint32());
                     break;
                 case "pad_h":
-                    message.pad_h = reader.integer();
+                    message.pad_h = reader.uint32();
                     break;
                 case "pad_w":
-                    message.pad_w = reader.integer();
+                    message.pad_w = reader.uint32();
                     break;
                 case "kernel_h":
-                    message.kernel_h = reader.integer();
+                    message.kernel_h = reader.uint32();
                     break;
                 case "kernel_w":
-                    message.kernel_w = reader.integer();
+                    message.kernel_w = reader.uint32();
                     break;
                 case "stride_h":
-                    message.stride_h = reader.integer();
+                    message.stride_h = reader.uint32();
                     break;
                 case "stride_w":
-                    message.stride_w = reader.integer();
+                    message.stride_w = reader.uint32();
                     break;
                 case "group":
-                    message.group = reader.integer();
+                    message.group = reader.uint32();
                     break;
                 case "weight_filler":
-                    message.weight_filler = $root.caffe.FillerParameter.decodeText(reader, true);
+                    message.weight_filler = $root.caffe.FillerParameter.decodeText(reader);
                     break;
                 case "bias_filler":
-                    message.bias_filler = $root.caffe.FillerParameter.decodeText(reader, true);
+                    message.bias_filler = $root.caffe.FillerParameter.decodeText(reader);
                     break;
                 case "engine":
                     message.engine = reader.enum($root.caffe.ConvolutionParameter.Engine);
                     break;
                 case "axis":
-                    message.axis = reader.integer();
+                    message.axis = reader.int32();
                     break;
                 case "force_nd_im2col":
-                    message.force_nd_im2col = reader.boolean();
+                    message.force_nd_im2col = reader.bool();
                     break;
                 default:
                     reader.field(tag, message);
@@ -2219,8 +2219,8 @@ $root.caffe.CropParameter = class CropParameter {
 
     static decode(reader, length) {
         const message = new $root.caffe.CropParameter();
-        const end = reader.next(length);
-        while (reader.end(end)) {
+        const end = length !== undefined ? reader.position + length : reader.length;
+        while (reader.position < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
                 case 1:
@@ -2244,10 +2244,10 @@ $root.caffe.CropParameter = class CropParameter {
             const tag = reader.tag();
             switch (tag) {
                 case "axis":
-                    message.axis = reader.integer();
+                    message.axis = reader.int32();
                     break;
                 case "offset":
-                    reader.array(message.offset, () => reader.integer());
+                    reader.array(message.offset, () => reader.uint32());
                     break;
                 default:
                     reader.field(tag, message);
@@ -2267,8 +2267,8 @@ $root.caffe.DataParameter = class DataParameter {
 
     static decode(reader, length) {
         const message = new $root.caffe.DataParameter();
-        const end = reader.next(length);
-        while (reader.end(end)) {
+        const end = length !== undefined ? reader.position + length : reader.length;
+        while (reader.position < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
                 case 1:
@@ -2319,10 +2319,10 @@ $root.caffe.DataParameter = class DataParameter {
                     message.source = reader.string();
                     break;
                 case "batch_size":
-                    message.batch_size = reader.integer();
+                    message.batch_size = reader.uint32();
                     break;
                 case "rand_skip":
-                    message.rand_skip = reader.integer();
+                    message.rand_skip = reader.uint32();
                     break;
                 case "backend":
                     message.backend = reader.enum($root.caffe.DataParameter.DB);
@@ -2334,16 +2334,16 @@ $root.caffe.DataParameter = class DataParameter {
                     message.mean_file = reader.string();
                     break;
                 case "crop_size":
-                    message.crop_size = reader.integer();
+                    message.crop_size = reader.uint32();
                     break;
                 case "mirror":
-                    message.mirror = reader.boolean();
+                    message.mirror = reader.bool();
                     break;
                 case "force_encoded_color":
-                    message.force_encoded_color = reader.boolean();
+                    message.force_encoded_color = reader.bool();
                     break;
                 case "prefetch":
-                    message.prefetch = reader.integer();
+                    message.prefetch = reader.uint32();
                     break;
                 default:
                     reader.field(tag, message);
@@ -2377,8 +2377,8 @@ $root.caffe.DropoutParameter = class DropoutParameter {
 
     static decode(reader, length) {
         const message = new $root.caffe.DropoutParameter();
-        const end = reader.next(length);
-        while (reader.end(end)) {
+        const end = length !== undefined ? reader.position + length : reader.length;
+        while (reader.position < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
                 case 1:
@@ -2425,8 +2425,8 @@ $root.caffe.DummyDataParameter = class DummyDataParameter {
 
     static decode(reader, length) {
         const message = new $root.caffe.DummyDataParameter();
-        const end = reader.next(length);
-        while (reader.end(end)) {
+        const end = length !== undefined ? reader.position + length : reader.length;
+        while (reader.position < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
                 case 1:
@@ -2462,22 +2462,22 @@ $root.caffe.DummyDataParameter = class DummyDataParameter {
             const tag = reader.tag();
             switch (tag) {
                 case "data_filler":
-                    message.data_filler.push($root.caffe.FillerParameter.decodeText(reader, true));
+                    message.data_filler.push($root.caffe.FillerParameter.decodeText(reader));
                     break;
                 case "shape":
-                    message.shape.push($root.caffe.BlobShape.decodeText(reader, true));
+                    message.shape.push($root.caffe.BlobShape.decodeText(reader));
                     break;
                 case "num":
-                    reader.array(message.num, () => reader.integer());
+                    reader.array(message.num, () => reader.uint32());
                     break;
                 case "channels":
-                    reader.array(message.channels, () => reader.integer());
+                    reader.array(message.channels, () => reader.uint32());
                     break;
                 case "height":
-                    reader.array(message.height, () => reader.integer());
+                    reader.array(message.height, () => reader.uint32());
                     break;
                 case "width":
-                    reader.array(message.width, () => reader.integer());
+                    reader.array(message.width, () => reader.uint32());
                     break;
                 default:
                     reader.field(tag, message);
@@ -2496,8 +2496,8 @@ $root.caffe.EltwiseParameter = class EltwiseParameter {
 
     static decode(reader, length) {
         const message = new $root.caffe.EltwiseParameter();
-        const end = reader.next(length);
-        while (reader.end(end)) {
+        const end = length !== undefined ? reader.position + length : reader.length;
+        while (reader.position < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
                 case 1:
@@ -2530,7 +2530,7 @@ $root.caffe.EltwiseParameter = class EltwiseParameter {
                     reader.array(message.coeff, () => reader.float());
                     break;
                 case "stable_prod_grad":
-                    message.stable_prod_grad = reader.boolean();
+                    message.stable_prod_grad = reader.bool();
                     break;
                 default:
                     reader.field(tag, message);
@@ -2557,8 +2557,8 @@ $root.caffe.ELUParameter = class ELUParameter {
 
     static decode(reader, length) {
         const message = new $root.caffe.ELUParameter();
-        const end = reader.next(length);
-        while (reader.end(end)) {
+        const end = length !== undefined ? reader.position + length : reader.length;
+        while (reader.position < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
                 case 1:
@@ -2599,8 +2599,8 @@ $root.caffe.EmbedParameter = class EmbedParameter {
 
     static decode(reader, length) {
         const message = new $root.caffe.EmbedParameter();
-        const end = reader.next(length);
-        while (reader.end(end)) {
+        const end = length !== undefined ? reader.position + length : reader.length;
+        while (reader.position < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
                 case 1:
@@ -2633,19 +2633,19 @@ $root.caffe.EmbedParameter = class EmbedParameter {
             const tag = reader.tag();
             switch (tag) {
                 case "num_output":
-                    message.num_output = reader.integer();
+                    message.num_output = reader.uint32();
                     break;
                 case "input_dim":
-                    message.input_dim = reader.integer();
+                    message.input_dim = reader.uint32();
                     break;
                 case "bias_term":
-                    message.bias_term = reader.boolean();
+                    message.bias_term = reader.bool();
                     break;
                 case "weight_filler":
-                    message.weight_filler = $root.caffe.FillerParameter.decodeText(reader, true);
+                    message.weight_filler = $root.caffe.FillerParameter.decodeText(reader);
                     break;
                 case "bias_filler":
-                    message.bias_filler = $root.caffe.FillerParameter.decodeText(reader, true);
+                    message.bias_filler = $root.caffe.FillerParameter.decodeText(reader);
                     break;
                 default:
                     reader.field(tag, message);
@@ -2669,8 +2669,8 @@ $root.caffe.ExpParameter = class ExpParameter {
 
     static decode(reader, length) {
         const message = new $root.caffe.ExpParameter();
-        const end = reader.next(length);
-        while (reader.end(end)) {
+        const end = length !== undefined ? reader.position + length : reader.length;
+        while (reader.position < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
                 case 1:
@@ -2725,8 +2725,8 @@ $root.caffe.FlattenParameter = class FlattenParameter {
 
     static decode(reader, length) {
         const message = new $root.caffe.FlattenParameter();
-        const end = reader.next(length);
-        while (reader.end(end)) {
+        const end = length !== undefined ? reader.position + length : reader.length;
+        while (reader.position < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
                 case 1:
@@ -2750,10 +2750,10 @@ $root.caffe.FlattenParameter = class FlattenParameter {
             const tag = reader.tag();
             switch (tag) {
                 case "axis":
-                    message.axis = reader.integer();
+                    message.axis = reader.int32();
                     break;
                 case "end_axis":
-                    message.end_axis = reader.integer();
+                    message.end_axis = reader.int32();
                     break;
                 default:
                     reader.field(tag, message);
@@ -2774,8 +2774,8 @@ $root.caffe.HDF5DataParameter = class HDF5DataParameter {
 
     static decode(reader, length) {
         const message = new $root.caffe.HDF5DataParameter();
-        const end = reader.next(length);
-        while (reader.end(end)) {
+        const end = length !== undefined ? reader.position + length : reader.length;
+        while (reader.position < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
                 case 1:
@@ -2805,10 +2805,10 @@ $root.caffe.HDF5DataParameter = class HDF5DataParameter {
                     message.source = reader.string();
                     break;
                 case "batch_size":
-                    message.batch_size = reader.integer();
+                    message.batch_size = reader.uint32();
                     break;
                 case "shuffle":
-                    message.shuffle = reader.boolean();
+                    message.shuffle = reader.bool();
                     break;
                 default:
                     reader.field(tag, message);
@@ -2830,8 +2830,8 @@ $root.caffe.HDF5OutputParameter = class HDF5OutputParameter {
 
     static decode(reader, length) {
         const message = new $root.caffe.HDF5OutputParameter();
-        const end = reader.next(length);
-        while (reader.end(end)) {
+        const end = length !== undefined ? reader.position + length : reader.length;
+        while (reader.position < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
                 case 1:
@@ -2872,8 +2872,8 @@ $root.caffe.HingeLossParameter = class HingeLossParameter {
 
     static decode(reader, length) {
         const message = new $root.caffe.HingeLossParameter();
-        const end = reader.next(length);
-        while (reader.end(end)) {
+        const end = length !== undefined ? reader.position + length : reader.length;
+        while (reader.position < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
                 case 1:
@@ -2919,8 +2919,8 @@ $root.caffe.ImageDataParameter = class ImageDataParameter {
 
     static decode(reader, length) {
         const message = new $root.caffe.ImageDataParameter();
-        const end = reader.next(length);
-        while (reader.end(end)) {
+        const end = length !== undefined ? reader.position + length : reader.length;
+        while (reader.position < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
                 case 1:
@@ -2977,22 +2977,22 @@ $root.caffe.ImageDataParameter = class ImageDataParameter {
                     message.source = reader.string();
                     break;
                 case "batch_size":
-                    message.batch_size = reader.integer();
+                    message.batch_size = reader.uint32();
                     break;
                 case "rand_skip":
-                    message.rand_skip = reader.integer();
+                    message.rand_skip = reader.uint32();
                     break;
                 case "shuffle":
-                    message.shuffle = reader.boolean();
+                    message.shuffle = reader.bool();
                     break;
                 case "new_height":
-                    message.new_height = reader.integer();
+                    message.new_height = reader.uint32();
                     break;
                 case "new_width":
-                    message.new_width = reader.integer();
+                    message.new_width = reader.uint32();
                     break;
                 case "is_color":
-                    message.is_color = reader.boolean();
+                    message.is_color = reader.bool();
                     break;
                 case "scale":
                     message.scale = reader.float();
@@ -3001,10 +3001,10 @@ $root.caffe.ImageDataParameter = class ImageDataParameter {
                     message.mean_file = reader.string();
                     break;
                 case "crop_size":
-                    message.crop_size = reader.integer();
+                    message.crop_size = reader.uint32();
                     break;
                 case "mirror":
-                    message.mirror = reader.boolean();
+                    message.mirror = reader.bool();
                     break;
                 case "root_folder":
                     message.root_folder = reader.string();
@@ -3038,8 +3038,8 @@ $root.caffe.InfogainLossParameter = class InfogainLossParameter {
 
     static decode(reader, length) {
         const message = new $root.caffe.InfogainLossParameter();
-        const end = reader.next(length);
-        while (reader.end(end)) {
+        const end = length !== undefined ? reader.position + length : reader.length;
+        while (reader.position < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
                 case 1:
@@ -3066,7 +3066,7 @@ $root.caffe.InfogainLossParameter = class InfogainLossParameter {
                     message.source = reader.string();
                     break;
                 case "axis":
-                    message.axis = reader.integer();
+                    message.axis = reader.int32();
                     break;
                 default:
                     reader.field(tag, message);
@@ -3087,8 +3087,8 @@ $root.caffe.InnerProductParameter = class InnerProductParameter {
 
     static decode(reader, length) {
         const message = new $root.caffe.InnerProductParameter();
-        const end = reader.next(length);
-        while (reader.end(end)) {
+        const end = length !== undefined ? reader.position + length : reader.length;
+        while (reader.position < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
                 case 1:
@@ -3124,22 +3124,22 @@ $root.caffe.InnerProductParameter = class InnerProductParameter {
             const tag = reader.tag();
             switch (tag) {
                 case "num_output":
-                    message.num_output = reader.integer();
+                    message.num_output = reader.uint32();
                     break;
                 case "bias_term":
-                    message.bias_term = reader.boolean();
+                    message.bias_term = reader.bool();
                     break;
                 case "weight_filler":
-                    message.weight_filler = $root.caffe.FillerParameter.decodeText(reader, true);
+                    message.weight_filler = $root.caffe.FillerParameter.decodeText(reader);
                     break;
                 case "bias_filler":
-                    message.bias_filler = $root.caffe.FillerParameter.decodeText(reader, true);
+                    message.bias_filler = $root.caffe.FillerParameter.decodeText(reader);
                     break;
                 case "axis":
-                    message.axis = reader.integer();
+                    message.axis = reader.int32();
                     break;
                 case "transpose":
-                    message.transpose = reader.boolean();
+                    message.transpose = reader.bool();
                     break;
                 default:
                     reader.field(tag, message);
@@ -3165,8 +3165,8 @@ $root.caffe.InputParameter = class InputParameter {
 
     static decode(reader, length) {
         const message = new $root.caffe.InputParameter();
-        const end = reader.next(length);
-        while (reader.end(end)) {
+        const end = length !== undefined ? reader.position + length : reader.length;
+        while (reader.position < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
                 case 1:
@@ -3187,7 +3187,7 @@ $root.caffe.InputParameter = class InputParameter {
             const tag = reader.tag();
             switch (tag) {
                 case "shape":
-                    message.shape.push($root.caffe.BlobShape.decodeText(reader, true));
+                    message.shape.push($root.caffe.BlobShape.decodeText(reader));
                     break;
                 default:
                     reader.field(tag, message);
@@ -3205,8 +3205,8 @@ $root.caffe.LogParameter = class LogParameter {
 
     static decode(reader, length) {
         const message = new $root.caffe.LogParameter();
-        const end = reader.next(length);
-        while (reader.end(end)) {
+        const end = length !== undefined ? reader.position + length : reader.length;
+        while (reader.position < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
                 case 1:
@@ -3261,8 +3261,8 @@ $root.caffe.LRNParameter = class LRNParameter {
 
     static decode(reader, length) {
         const message = new $root.caffe.LRNParameter();
-        const end = reader.next(length);
-        while (reader.end(end)) {
+        const end = length !== undefined ? reader.position + length : reader.length;
+        while (reader.position < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
                 case 1:
@@ -3298,7 +3298,7 @@ $root.caffe.LRNParameter = class LRNParameter {
             const tag = reader.tag();
             switch (tag) {
                 case "local_size":
-                    message.local_size = reader.integer();
+                    message.local_size = reader.uint32();
                     break;
                 case "alpha":
                     message.alpha = reader.float();
@@ -3349,8 +3349,8 @@ $root.caffe.MemoryDataParameter = class MemoryDataParameter {
 
     static decode(reader, length) {
         const message = new $root.caffe.MemoryDataParameter();
-        const end = reader.next(length);
-        while (reader.end(end)) {
+        const end = length !== undefined ? reader.position + length : reader.length;
+        while (reader.position < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
                 case 1:
@@ -3380,16 +3380,16 @@ $root.caffe.MemoryDataParameter = class MemoryDataParameter {
             const tag = reader.tag();
             switch (tag) {
                 case "batch_size":
-                    message.batch_size = reader.integer();
+                    message.batch_size = reader.uint32();
                     break;
                 case "channels":
-                    message.channels = reader.integer();
+                    message.channels = reader.uint32();
                     break;
                 case "height":
-                    message.height = reader.integer();
+                    message.height = reader.uint32();
                     break;
                 case "width":
-                    message.width = reader.integer();
+                    message.width = reader.uint32();
                     break;
                 default:
                     reader.field(tag, message);
@@ -3412,8 +3412,8 @@ $root.caffe.MVNParameter = class MVNParameter {
 
     static decode(reader, length) {
         const message = new $root.caffe.MVNParameter();
-        const end = reader.next(length);
-        while (reader.end(end)) {
+        const end = length !== undefined ? reader.position + length : reader.length;
+        while (reader.position < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
                 case 1:
@@ -3440,10 +3440,10 @@ $root.caffe.MVNParameter = class MVNParameter {
             const tag = reader.tag();
             switch (tag) {
                 case "normalize_variance":
-                    message.normalize_variance = reader.boolean();
+                    message.normalize_variance = reader.bool();
                     break;
                 case "across_channels":
-                    message.across_channels = reader.boolean();
+                    message.across_channels = reader.bool();
                     break;
                 case "eps":
                     message.eps = reader.float();
@@ -3468,8 +3468,8 @@ $root.caffe.ParameterParameter = class ParameterParameter {
 
     static decode(reader, length) {
         const message = new $root.caffe.ParameterParameter();
-        const end = reader.next(length);
-        while (reader.end(end)) {
+        const end = length !== undefined ? reader.position + length : reader.length;
+        while (reader.position < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
                 case 1:
@@ -3490,7 +3490,7 @@ $root.caffe.ParameterParameter = class ParameterParameter {
             const tag = reader.tag();
             switch (tag) {
                 case "shape":
-                    message.shape = $root.caffe.BlobShape.decodeText(reader, true);
+                    message.shape = $root.caffe.BlobShape.decodeText(reader);
                     break;
                 default:
                     reader.field(tag, message);
@@ -3510,8 +3510,8 @@ $root.caffe.PoolingParameter = class PoolingParameter {
 
     static decode(reader, length) {
         const message = new $root.caffe.PoolingParameter();
-        const end = reader.next(length);
-        while (reader.end(end)) {
+        const end = length !== undefined ? reader.position + length : reader.length;
+        while (reader.position < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
                 case 1:
@@ -3571,37 +3571,37 @@ $root.caffe.PoolingParameter = class PoolingParameter {
                     message.pool = reader.enum($root.caffe.PoolingParameter.PoolMethod);
                     break;
                 case "pad":
-                    message.pad = reader.integer();
+                    message.pad = reader.uint32();
                     break;
                 case "pad_h":
-                    message.pad_h = reader.integer();
+                    message.pad_h = reader.uint32();
                     break;
                 case "pad_w":
-                    message.pad_w = reader.integer();
+                    message.pad_w = reader.uint32();
                     break;
                 case "kernel_size":
-                    message.kernel_size = reader.integer();
+                    message.kernel_size = reader.uint32();
                     break;
                 case "kernel_h":
-                    message.kernel_h = reader.integer();
+                    message.kernel_h = reader.uint32();
                     break;
                 case "kernel_w":
-                    message.kernel_w = reader.integer();
+                    message.kernel_w = reader.uint32();
                     break;
                 case "stride":
-                    message.stride = reader.integer();
+                    message.stride = reader.uint32();
                     break;
                 case "stride_h":
-                    message.stride_h = reader.integer();
+                    message.stride_h = reader.uint32();
                     break;
                 case "stride_w":
-                    message.stride_w = reader.integer();
+                    message.stride_w = reader.uint32();
                     break;
                 case "engine":
                     message.engine = reader.enum($root.caffe.PoolingParameter.Engine);
                     break;
                 case "global_pooling":
-                    message.global_pooling = reader.boolean();
+                    message.global_pooling = reader.bool();
                     break;
                 case "round_mode":
                     message.round_mode = reader.enum($root.caffe.PoolingParameter.RoundMode);
@@ -3653,8 +3653,8 @@ $root.caffe.PowerParameter = class PowerParameter {
 
     static decode(reader, length) {
         const message = new $root.caffe.PowerParameter();
-        const end = reader.next(length);
-        while (reader.end(end)) {
+        const end = length !== undefined ? reader.position + length : reader.length;
+        while (reader.position < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
                 case 1:
@@ -3709,8 +3709,8 @@ $root.caffe.PythonParameter = class PythonParameter {
 
     static decode(reader, length) {
         const message = new $root.caffe.PythonParameter();
-        const end = reader.next(length);
-        while (reader.end(end)) {
+        const end = length !== undefined ? reader.position + length : reader.length;
+        while (reader.position < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
                 case 1:
@@ -3749,7 +3749,7 @@ $root.caffe.PythonParameter = class PythonParameter {
                     message.param_str = reader.string();
                     break;
                 case "share_in_parallel":
-                    message.share_in_parallel = reader.boolean();
+                    message.share_in_parallel = reader.bool();
                     break;
                 default:
                     reader.field(tag, message);
@@ -3772,8 +3772,8 @@ $root.caffe.RecurrentParameter = class RecurrentParameter {
 
     static decode(reader, length) {
         const message = new $root.caffe.RecurrentParameter();
-        const end = reader.next(length);
-        while (reader.end(end)) {
+        const end = length !== undefined ? reader.position + length : reader.length;
+        while (reader.position < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
                 case 1:
@@ -3806,19 +3806,19 @@ $root.caffe.RecurrentParameter = class RecurrentParameter {
             const tag = reader.tag();
             switch (tag) {
                 case "num_output":
-                    message.num_output = reader.integer();
+                    message.num_output = reader.uint32();
                     break;
                 case "weight_filler":
-                    message.weight_filler = $root.caffe.FillerParameter.decodeText(reader, true);
+                    message.weight_filler = $root.caffe.FillerParameter.decodeText(reader);
                     break;
                 case "bias_filler":
-                    message.bias_filler = $root.caffe.FillerParameter.decodeText(reader, true);
+                    message.bias_filler = $root.caffe.FillerParameter.decodeText(reader);
                     break;
                 case "debug_info":
-                    message.debug_info = reader.boolean();
+                    message.debug_info = reader.bool();
                     break;
                 case "expose_hidden":
-                    message.expose_hidden = reader.boolean();
+                    message.expose_hidden = reader.bool();
                     break;
                 default:
                     reader.field(tag, message);
@@ -3842,8 +3842,8 @@ $root.caffe.ReductionParameter = class ReductionParameter {
 
     static decode(reader, length) {
         const message = new $root.caffe.ReductionParameter();
-        const end = reader.next(length);
-        while (reader.end(end)) {
+        const end = length !== undefined ? reader.position + length : reader.length;
+        while (reader.position < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
                 case 1:
@@ -3873,7 +3873,7 @@ $root.caffe.ReductionParameter = class ReductionParameter {
                     message.operation = reader.enum($root.caffe.ReductionParameter.ReductionOp);
                     break;
                 case "axis":
-                    message.axis = reader.integer();
+                    message.axis = reader.int32();
                     break;
                 case "coeff":
                     message.coeff = reader.float();
@@ -3905,8 +3905,8 @@ $root.caffe.ReLUParameter = class ReLUParameter {
 
     static decode(reader, length) {
         const message = new $root.caffe.ReLUParameter();
-        const end = reader.next(length);
-        while (reader.end(end)) {
+        const end = length !== undefined ? reader.position + length : reader.length;
+        while (reader.position < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
                 case 1:
@@ -3960,8 +3960,8 @@ $root.caffe.ReshapeParameter = class ReshapeParameter {
 
     static decode(reader, length) {
         const message = new $root.caffe.ReshapeParameter();
-        const end = reader.next(length);
-        while (reader.end(end)) {
+        const end = length !== undefined ? reader.position + length : reader.length;
+        while (reader.position < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
                 case 1:
@@ -3988,13 +3988,13 @@ $root.caffe.ReshapeParameter = class ReshapeParameter {
             const tag = reader.tag();
             switch (tag) {
                 case "shape":
-                    message.shape = $root.caffe.BlobShape.decodeText(reader, true);
+                    message.shape = $root.caffe.BlobShape.decodeText(reader);
                     break;
                 case "axis":
-                    message.axis = reader.integer();
+                    message.axis = reader.int32();
                     break;
                 case "num_axes":
-                    message.num_axes = reader.integer();
+                    message.num_axes = reader.int32();
                     break;
                 default:
                     reader.field(tag, message);
@@ -4016,8 +4016,8 @@ $root.caffe.ScaleParameter = class ScaleParameter {
 
     static decode(reader, length) {
         const message = new $root.caffe.ScaleParameter();
-        const end = reader.next(length);
-        while (reader.end(end)) {
+        const end = length !== undefined ? reader.position + length : reader.length;
+        while (reader.position < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
                 case 1:
@@ -4050,19 +4050,19 @@ $root.caffe.ScaleParameter = class ScaleParameter {
             const tag = reader.tag();
             switch (tag) {
                 case "axis":
-                    message.axis = reader.integer();
+                    message.axis = reader.int32();
                     break;
                 case "num_axes":
-                    message.num_axes = reader.integer();
+                    message.num_axes = reader.int32();
                     break;
                 case "filler":
-                    message.filler = $root.caffe.FillerParameter.decodeText(reader, true);
+                    message.filler = $root.caffe.FillerParameter.decodeText(reader);
                     break;
                 case "bias_term":
-                    message.bias_term = reader.boolean();
+                    message.bias_term = reader.bool();
                     break;
                 case "bias_filler":
-                    message.bias_filler = $root.caffe.FillerParameter.decodeText(reader, true);
+                    message.bias_filler = $root.caffe.FillerParameter.decodeText(reader);
                     break;
                 default:
                     reader.field(tag, message);
@@ -4086,8 +4086,8 @@ $root.caffe.SigmoidParameter = class SigmoidParameter {
 
     static decode(reader, length) {
         const message = new $root.caffe.SigmoidParameter();
-        const end = reader.next(length);
-        while (reader.end(end)) {
+        const end = length !== undefined ? reader.position + length : reader.length;
+        while (reader.position < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
                 case 1:
@@ -4135,8 +4135,8 @@ $root.caffe.SliceParameter = class SliceParameter {
 
     static decode(reader, length) {
         const message = new $root.caffe.SliceParameter();
-        const end = reader.next(length);
-        while (reader.end(end)) {
+        const end = length !== undefined ? reader.position + length : reader.length;
+        while (reader.position < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
                 case 3:
@@ -4163,13 +4163,13 @@ $root.caffe.SliceParameter = class SliceParameter {
             const tag = reader.tag();
             switch (tag) {
                 case "axis":
-                    message.axis = reader.integer();
+                    message.axis = reader.int32();
                     break;
                 case "slice_point":
-                    reader.array(message.slice_point, () => reader.integer());
+                    reader.array(message.slice_point, () => reader.uint32());
                     break;
                 case "slice_dim":
-                    message.slice_dim = reader.integer();
+                    message.slice_dim = reader.uint32();
                     break;
                 default:
                     reader.field(tag, message);
@@ -4190,8 +4190,8 @@ $root.caffe.SoftmaxParameter = class SoftmaxParameter {
 
     static decode(reader, length) {
         const message = new $root.caffe.SoftmaxParameter();
-        const end = reader.next(length);
-        while (reader.end(end)) {
+        const end = length !== undefined ? reader.position + length : reader.length;
+        while (reader.position < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
                 case 1:
@@ -4218,7 +4218,7 @@ $root.caffe.SoftmaxParameter = class SoftmaxParameter {
                     message.engine = reader.enum($root.caffe.SoftmaxParameter.Engine);
                     break;
                 case "axis":
-                    message.axis = reader.integer();
+                    message.axis = reader.int32();
                     break;
                 default:
                     reader.field(tag, message);
@@ -4245,8 +4245,8 @@ $root.caffe.SwishParameter = class SwishParameter {
 
     static decode(reader, length) {
         const message = new $root.caffe.SwishParameter();
-        const end = reader.next(length);
-        while (reader.end(end)) {
+        const end = length !== undefined ? reader.position + length : reader.length;
+        while (reader.position < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
                 case 1:
@@ -4287,8 +4287,8 @@ $root.caffe.TanHParameter = class TanHParameter {
 
     static decode(reader, length) {
         const message = new $root.caffe.TanHParameter();
-        const end = reader.next(length);
-        while (reader.end(end)) {
+        const end = length !== undefined ? reader.position + length : reader.length;
+        while (reader.position < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
                 case 1:
@@ -4335,8 +4335,8 @@ $root.caffe.TileParameter = class TileParameter {
 
     static decode(reader, length) {
         const message = new $root.caffe.TileParameter();
-        const end = reader.next(length);
-        while (reader.end(end)) {
+        const end = length !== undefined ? reader.position + length : reader.length;
+        while (reader.position < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
                 case 1:
@@ -4360,10 +4360,10 @@ $root.caffe.TileParameter = class TileParameter {
             const tag = reader.tag();
             switch (tag) {
                 case "axis":
-                    message.axis = reader.integer();
+                    message.axis = reader.int32();
                     break;
                 case "tiles":
-                    message.tiles = reader.integer();
+                    message.tiles = reader.int32();
                     break;
                 default:
                     reader.field(tag, message);
@@ -4384,8 +4384,8 @@ $root.caffe.ThresholdParameter = class ThresholdParameter {
 
     static decode(reader, length) {
         const message = new $root.caffe.ThresholdParameter();
-        const end = reader.next(length);
-        while (reader.end(end)) {
+        const end = length !== undefined ? reader.position + length : reader.length;
+        while (reader.position < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
                 case 1:
@@ -4426,8 +4426,8 @@ $root.caffe.WindowDataParameter = class WindowDataParameter {
 
     static decode(reader, length) {
         const message = new $root.caffe.WindowDataParameter();
-        const end = reader.next(length);
-        while (reader.end(end)) {
+        const end = length !== undefined ? reader.position + length : reader.length;
+        while (reader.position < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
                 case 1:
@@ -4493,13 +4493,13 @@ $root.caffe.WindowDataParameter = class WindowDataParameter {
                     message.mean_file = reader.string();
                     break;
                 case "batch_size":
-                    message.batch_size = reader.integer();
+                    message.batch_size = reader.uint32();
                     break;
                 case "crop_size":
-                    message.crop_size = reader.integer();
+                    message.crop_size = reader.uint32();
                     break;
                 case "mirror":
-                    message.mirror = reader.boolean();
+                    message.mirror = reader.bool();
                     break;
                 case "fg_threshold":
                     message.fg_threshold = reader.float();
@@ -4511,13 +4511,13 @@ $root.caffe.WindowDataParameter = class WindowDataParameter {
                     message.fg_fraction = reader.float();
                     break;
                 case "context_pad":
-                    message.context_pad = reader.integer();
+                    message.context_pad = reader.uint32();
                     break;
                 case "crop_mode":
                     message.crop_mode = reader.string();
                     break;
                 case "cache_images":
-                    message.cache_images = reader.boolean();
+                    message.cache_images = reader.bool();
                     break;
                 case "root_folder":
                     message.root_folder = reader.string();
@@ -4552,8 +4552,8 @@ $root.caffe.SPPParameter = class SPPParameter {
 
     static decode(reader, length) {
         const message = new $root.caffe.SPPParameter();
-        const end = reader.next(length);
-        while (reader.end(end)) {
+        const end = length !== undefined ? reader.position + length : reader.length;
+        while (reader.position < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
                 case 1:
@@ -4580,7 +4580,7 @@ $root.caffe.SPPParameter = class SPPParameter {
             const tag = reader.tag();
             switch (tag) {
                 case "pyramid_height":
-                    message.pyramid_height = reader.integer();
+                    message.pyramid_height = reader.uint32();
                     break;
                 case "pool":
                     message.pool = reader.enum($root.caffe.SPPParameter.PoolMethod);
@@ -4630,8 +4630,8 @@ $root.caffe.V1LayerParameter = class V1LayerParameter {
 
     static decode(reader, length) {
         const message = new $root.caffe.V1LayerParameter();
-        const end = reader.next(length);
-        while (reader.end(end)) {
+        const end = length !== undefined ? reader.position + length : reader.length;
+        while (reader.position < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
                 case 2:
@@ -4787,16 +4787,16 @@ $root.caffe.V1LayerParameter = class V1LayerParameter {
                     message.name = reader.string();
                     break;
                 case "include":
-                    message.include.push($root.caffe.NetStateRule.decodeText(reader, true));
+                    message.include.push($root.caffe.NetStateRule.decodeText(reader));
                     break;
                 case "exclude":
-                    message.exclude.push($root.caffe.NetStateRule.decodeText(reader, true));
+                    message.exclude.push($root.caffe.NetStateRule.decodeText(reader));
                     break;
                 case "type":
                     message.type = reader.enum($root.caffe.V1LayerParameter.LayerType);
                     break;
                 case "blobs":
-                    message.blobs.push($root.caffe.BlobProto.decodeText(reader, true));
+                    message.blobs.push($root.caffe.BlobProto.decodeText(reader));
                     break;
                 case "param":
                     reader.array(message.param, () => reader.string());
@@ -4814,97 +4814,97 @@ $root.caffe.V1LayerParameter = class V1LayerParameter {
                     reader.array(message.loss_weight, () => reader.float());
                     break;
                 case "accuracy_param":
-                    message.accuracy_param = $root.caffe.AccuracyParameter.decodeText(reader, true);
+                    message.accuracy_param = $root.caffe.AccuracyParameter.decodeText(reader);
                     break;
                 case "argmax_param":
-                    message.argmax_param = $root.caffe.ArgMaxParameter.decodeText(reader, true);
+                    message.argmax_param = $root.caffe.ArgMaxParameter.decodeText(reader);
                     break;
                 case "concat_param":
-                    message.concat_param = $root.caffe.ConcatParameter.decodeText(reader, true);
+                    message.concat_param = $root.caffe.ConcatParameter.decodeText(reader);
                     break;
                 case "contrastive_loss_param":
-                    message.contrastive_loss_param = $root.caffe.ContrastiveLossParameter.decodeText(reader, true);
+                    message.contrastive_loss_param = $root.caffe.ContrastiveLossParameter.decodeText(reader);
                     break;
                 case "convolution_param":
-                    message.convolution_param = $root.caffe.ConvolutionParameter.decodeText(reader, true);
+                    message.convolution_param = $root.caffe.ConvolutionParameter.decodeText(reader);
                     break;
                 case "data_param":
-                    message.data_param = $root.caffe.DataParameter.decodeText(reader, true);
+                    message.data_param = $root.caffe.DataParameter.decodeText(reader);
                     break;
                 case "dropout_param":
-                    message.dropout_param = $root.caffe.DropoutParameter.decodeText(reader, true);
+                    message.dropout_param = $root.caffe.DropoutParameter.decodeText(reader);
                     break;
                 case "dummy_data_param":
-                    message.dummy_data_param = $root.caffe.DummyDataParameter.decodeText(reader, true);
+                    message.dummy_data_param = $root.caffe.DummyDataParameter.decodeText(reader);
                     break;
                 case "eltwise_param":
-                    message.eltwise_param = $root.caffe.EltwiseParameter.decodeText(reader, true);
+                    message.eltwise_param = $root.caffe.EltwiseParameter.decodeText(reader);
                     break;
                 case "exp_param":
-                    message.exp_param = $root.caffe.ExpParameter.decodeText(reader, true);
+                    message.exp_param = $root.caffe.ExpParameter.decodeText(reader);
                     break;
                 case "hdf5_data_param":
-                    message.hdf5_data_param = $root.caffe.HDF5DataParameter.decodeText(reader, true);
+                    message.hdf5_data_param = $root.caffe.HDF5DataParameter.decodeText(reader);
                     break;
                 case "hdf5_output_param":
-                    message.hdf5_output_param = $root.caffe.HDF5OutputParameter.decodeText(reader, true);
+                    message.hdf5_output_param = $root.caffe.HDF5OutputParameter.decodeText(reader);
                     break;
                 case "hinge_loss_param":
-                    message.hinge_loss_param = $root.caffe.HingeLossParameter.decodeText(reader, true);
+                    message.hinge_loss_param = $root.caffe.HingeLossParameter.decodeText(reader);
                     break;
                 case "image_data_param":
-                    message.image_data_param = $root.caffe.ImageDataParameter.decodeText(reader, true);
+                    message.image_data_param = $root.caffe.ImageDataParameter.decodeText(reader);
                     break;
                 case "infogain_loss_param":
-                    message.infogain_loss_param = $root.caffe.InfogainLossParameter.decodeText(reader, true);
+                    message.infogain_loss_param = $root.caffe.InfogainLossParameter.decodeText(reader);
                     break;
                 case "inner_product_param":
-                    message.inner_product_param = $root.caffe.InnerProductParameter.decodeText(reader, true);
+                    message.inner_product_param = $root.caffe.InnerProductParameter.decodeText(reader);
                     break;
                 case "lrn_param":
-                    message.lrn_param = $root.caffe.LRNParameter.decodeText(reader, true);
+                    message.lrn_param = $root.caffe.LRNParameter.decodeText(reader);
                     break;
                 case "memory_data_param":
-                    message.memory_data_param = $root.caffe.MemoryDataParameter.decodeText(reader, true);
+                    message.memory_data_param = $root.caffe.MemoryDataParameter.decodeText(reader);
                     break;
                 case "mvn_param":
-                    message.mvn_param = $root.caffe.MVNParameter.decodeText(reader, true);
+                    message.mvn_param = $root.caffe.MVNParameter.decodeText(reader);
                     break;
                 case "pooling_param":
-                    message.pooling_param = $root.caffe.PoolingParameter.decodeText(reader, true);
+                    message.pooling_param = $root.caffe.PoolingParameter.decodeText(reader);
                     break;
                 case "power_param":
-                    message.power_param = $root.caffe.PowerParameter.decodeText(reader, true);
+                    message.power_param = $root.caffe.PowerParameter.decodeText(reader);
                     break;
                 case "relu_param":
-                    message.relu_param = $root.caffe.ReLUParameter.decodeText(reader, true);
+                    message.relu_param = $root.caffe.ReLUParameter.decodeText(reader);
                     break;
                 case "sigmoid_param":
-                    message.sigmoid_param = $root.caffe.SigmoidParameter.decodeText(reader, true);
+                    message.sigmoid_param = $root.caffe.SigmoidParameter.decodeText(reader);
                     break;
                 case "softmax_param":
-                    message.softmax_param = $root.caffe.SoftmaxParameter.decodeText(reader, true);
+                    message.softmax_param = $root.caffe.SoftmaxParameter.decodeText(reader);
                     break;
                 case "slice_param":
-                    message.slice_param = $root.caffe.SliceParameter.decodeText(reader, true);
+                    message.slice_param = $root.caffe.SliceParameter.decodeText(reader);
                     break;
                 case "tanh_param":
-                    message.tanh_param = $root.caffe.TanHParameter.decodeText(reader, true);
+                    message.tanh_param = $root.caffe.TanHParameter.decodeText(reader);
                     break;
                 case "threshold_param":
-                    message.threshold_param = $root.caffe.ThresholdParameter.decodeText(reader, true);
+                    message.threshold_param = $root.caffe.ThresholdParameter.decodeText(reader);
                     break;
                 case "window_data_param":
-                    message.window_data_param = $root.caffe.WindowDataParameter.decodeText(reader, true);
+                    message.window_data_param = $root.caffe.WindowDataParameter.decodeText(reader);
                     break;
                 case "transform_param":
-                    message.transform_param = $root.caffe.TransformationParameter.decodeText(reader, true);
+                    message.transform_param = $root.caffe.TransformationParameter.decodeText(reader);
                     break;
                 case "loss_param":
-                    message.loss_param = $root.caffe.LossParameter.decodeText(reader, true);
+                    message.loss_param = $root.caffe.LossParameter.decodeText(reader);
                     break;
                 case "layer":
-                    message.layer = $root.caffe.V0LayerParameter.decodeText(reader, true);
+                    message.layer = $root.caffe.V0LayerParameter.decodeText(reader);
                     break;
                 default:
                     reader.field(tag, message);
@@ -5007,8 +5007,8 @@ $root.caffe.V0LayerParameter = class V0LayerParameter {
 
     static decode(reader, length) {
         const message = new $root.caffe.V0LayerParameter();
-        const end = reader.next(length);
-        while (reader.end(end)) {
+        const end = length !== undefined ? reader.position + length : reader.length;
+        while (reader.position < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
                 case 1:
@@ -5146,28 +5146,28 @@ $root.caffe.V0LayerParameter = class V0LayerParameter {
                     message.type = reader.string();
                     break;
                 case "num_output":
-                    message.num_output = reader.integer();
+                    message.num_output = reader.uint32();
                     break;
                 case "biasterm":
-                    message.biasterm = reader.boolean();
+                    message.biasterm = reader.bool();
                     break;
                 case "weight_filler":
-                    message.weight_filler = $root.caffe.FillerParameter.decodeText(reader, true);
+                    message.weight_filler = $root.caffe.FillerParameter.decodeText(reader);
                     break;
                 case "bias_filler":
-                    message.bias_filler = $root.caffe.FillerParameter.decodeText(reader, true);
+                    message.bias_filler = $root.caffe.FillerParameter.decodeText(reader);
                     break;
                 case "pad":
-                    message.pad = reader.integer();
+                    message.pad = reader.uint32();
                     break;
                 case "kernelsize":
-                    message.kernelsize = reader.integer();
+                    message.kernelsize = reader.uint32();
                     break;
                 case "group":
-                    message.group = reader.integer();
+                    message.group = reader.uint32();
                     break;
                 case "stride":
-                    message.stride = reader.integer();
+                    message.stride = reader.uint32();
                     break;
                 case "pool":
                     message.pool = reader.enum($root.caffe.V0LayerParameter.PoolMethod);
@@ -5176,7 +5176,7 @@ $root.caffe.V0LayerParameter = class V0LayerParameter {
                     message.dropout_ratio = reader.float();
                     break;
                 case "local_size":
-                    message.local_size = reader.integer();
+                    message.local_size = reader.uint32();
                     break;
                 case "alpha":
                     message.alpha = reader.float();
@@ -5197,16 +5197,16 @@ $root.caffe.V0LayerParameter = class V0LayerParameter {
                     message.meanfile = reader.string();
                     break;
                 case "batchsize":
-                    message.batchsize = reader.integer();
+                    message.batchsize = reader.uint32();
                     break;
                 case "cropsize":
-                    message.cropsize = reader.integer();
+                    message.cropsize = reader.uint32();
                     break;
                 case "mirror":
-                    message.mirror = reader.boolean();
+                    message.mirror = reader.bool();
                     break;
                 case "blobs":
-                    message.blobs.push($root.caffe.BlobProto.decodeText(reader, true));
+                    message.blobs.push($root.caffe.BlobProto.decodeText(reader));
                     break;
                 case "blobs_lr":
                     reader.array(message.blobs_lr, () => reader.float());
@@ -5215,7 +5215,7 @@ $root.caffe.V0LayerParameter = class V0LayerParameter {
                     reader.array(message.weight_decay, () => reader.float());
                     break;
                 case "rand_skip":
-                    message.rand_skip = reader.integer();
+                    message.rand_skip = reader.uint32();
                     break;
                 case "det_fg_threshold":
                     message.det_fg_threshold = reader.float();
@@ -5227,31 +5227,31 @@ $root.caffe.V0LayerParameter = class V0LayerParameter {
                     message.det_fg_fraction = reader.float();
                     break;
                 case "det_context_pad":
-                    message.det_context_pad = reader.integer();
+                    message.det_context_pad = reader.uint32();
                     break;
                 case "det_crop_mode":
                     message.det_crop_mode = reader.string();
                     break;
                 case "new_num":
-                    message.new_num = reader.integer();
+                    message.new_num = reader.int32();
                     break;
                 case "new_channels":
-                    message.new_channels = reader.integer();
+                    message.new_channels = reader.int32();
                     break;
                 case "new_height":
-                    message.new_height = reader.integer();
+                    message.new_height = reader.int32();
                     break;
                 case "new_width":
-                    message.new_width = reader.integer();
+                    message.new_width = reader.int32();
                     break;
                 case "shuffle_images":
-                    message.shuffle_images = reader.boolean();
+                    message.shuffle_images = reader.bool();
                     break;
                 case "concat_dim":
-                    message.concat_dim = reader.integer();
+                    message.concat_dim = reader.uint32();
                     break;
                 case "hdf5_output_param":
-                    message.hdf5_output_param = $root.caffe.HDF5OutputParameter.decodeText(reader, true);
+                    message.hdf5_output_param = $root.caffe.HDF5OutputParameter.decodeText(reader);
                     break;
                 default:
                     reader.field(tag, message);
@@ -5311,8 +5311,8 @@ $root.caffe.PReLUParameter = class PReLUParameter {
 
     static decode(reader, length) {
         const message = new $root.caffe.PReLUParameter();
-        const end = reader.next(length);
-        while (reader.end(end)) {
+        const end = length !== undefined ? reader.position + length : reader.length;
+        while (reader.position < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
                 case 1:
@@ -5336,10 +5336,10 @@ $root.caffe.PReLUParameter = class PReLUParameter {
             const tag = reader.tag();
             switch (tag) {
                 case "filler":
-                    message.filler = $root.caffe.FillerParameter.decodeText(reader, true);
+                    message.filler = $root.caffe.FillerParameter.decodeText(reader);
                     break;
                 case "channel_shared":
-                    message.channel_shared = reader.boolean();
+                    message.channel_shared = reader.bool();
                     break;
                 default:
                     reader.field(tag, message);

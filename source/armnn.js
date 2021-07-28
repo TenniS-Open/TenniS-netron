@@ -11,8 +11,8 @@ armnn.ModelFactory = class {
                 return true;
             }
             case 'json': {
-                const tags = context.tags('json');
-                if (tags.has('layers') && tags.has('inputIds') && tags.has('outputIds')) {
+                const obj = context.open('json');
+                if (obj && obj.layers && obj.inputIds && obj.outputIds) {
                     return true;
                 }
             }
@@ -20,8 +20,8 @@ armnn.ModelFactory = class {
         return false;
     }
 
-    open(context, host) {
-        return host.require('./armnn-schema').then((schema) => {
+    open(context) {
+        return context.require('./armnn-schema').then((/* schema */) => {
             armnn.schema = flatbuffers.get('armnn').armnnSerializer;
             let model = null;
             try {
@@ -29,12 +29,14 @@ armnn.ModelFactory = class {
                 const extension = identifier.split('.').pop().toLowerCase();
                 switch (extension) {
                     case 'armnn': {
-                        const reader = new flatbuffers.Reader(context.buffer);
+                        const stream = context.stream;
+                        const reader = flatbuffers.BinaryReader.open(stream);
                         model = armnn.schema.SerializedGraph.create(reader);
                         break;
                     }
                     case 'json': {
-                        const reader = new flatbuffers.TextReader(context.buffer);
+                        const obj = context.open('json');
+                        const reader = flatbuffers.TextReader.open(obj);
                         model = armnn.schema.SerializedGraph.createText(reader);
                         break;
                     }
@@ -45,7 +47,7 @@ armnn.ModelFactory = class {
                 throw new armnn.Error('File format is not armnn.SerializedGraph (' + message.replace(/\.$/, '') + ').');
             }
 
-            return armnn.Metadata.open(host).then((metadata) => {
+            return armnn.Metadata.open(context).then((metadata) => {
                 return new armnn.Model(metadata, model);
             });
         });
@@ -146,51 +148,54 @@ armnn.Graph = class {
 armnn.Node = class {
 
     constructor(metadata, layer, args) {
-        this._metadata = metadata;
-        this._type = layer.layer.constructor.name;
+        const type = layer.layer.constructor.name;
         this._name = '';
         this._outputs = [];
         this._inputs = [];
         this._attributes = [];
-
+        this._type = Object.assign({}, metadata.type(type) || { name: type });
+        this._type.name = this._type.name.replace(/Layer$/, '');
+        const inputSchemas = (this._type && this._type.inputs) ? [...this._type.inputs] : [ { name: 'input' } ];
+        const outputSchemas = (this._type && this._type.outputs) ? [...this._type.outputs] : [ { name: 'output' } ];
         const base = armnn.Node.getBase(layer);
         if (base) {
             this._name = base.layerName;
-
-            for (let i = 0; i < base.inputSlots.length; i++) {
-                const connection = base.inputSlots[i].connection;
-                const sourceLayerIndex = connection.sourceLayerIndex;
-                const sourceOutputIndex = connection.outputSlotIndex;
-                const argument = args[sourceLayerIndex.toString() + ':' + sourceOutputIndex.toString()];
-                this._inputs.push(new armnn.Parameter('input', [ argument ]));
+            const inputSlots = [...base.inputSlots];
+            while (inputSlots.length > 0) {
+                const inputSchema = inputSchemas.length > 0 ? inputSchemas.shift() : { name: '?' };
+                const inputCount = inputSchema.list ? inputSlots.length : 1;
+                this._inputs.push(new armnn.Parameter(inputSchema.name, inputSlots.splice(0, inputCount).map((inputSlot) => {
+                    return args[inputSlot.connection.sourceLayerIndex.toString() + ':' + inputSlot.connection.outputSlotIndex.toString()];
+                })));
             }
-
-            for (let i = 0; i < base.outputSlots.length; i++) {
-                const argument = args[base.index.toString() + ':' + i.toString()];
-                this._outputs.push(new armnn.Parameter('output', [ argument ]));
+            const outputSlots = [...base.outputSlots];
+            while (outputSlots.length > 0) {
+                const outputSchema = outputSchemas.length > 0 ? outputSchemas.shift() : { name: '?' };
+                const outputCount = outputSchema.list ? outputSlots.length : 1;
+                this._outputs.push(new armnn.Parameter(outputSchema.name, outputSlots.splice(0, outputCount).map((outputSlot) => {
+                    return args[base.index + ':' + outputSlot.index];
+                })));
             }
         }
-
-        const schema = this._metadata.type(this._type);
-        if (schema) {
+        if (this._type) {
             const _layer = armnn.Node.castLayer(layer);
 
-            if (schema.bindings) {
-                for (let i = 0 ; i < schema.bindings.length ; i++) {
-                    const binding = schema.bindings[i];
+            if (this._type.bindings) {
+                for (let i = 0 ; i < this._type.bindings.length ; i++) {
+                    const binding = this._type.bindings[i];
                     const value = _layer.base()[binding.src]();
                     this._attributes.push(new armnn.Attribute(binding.name, binding.type, value));
                 }
             }
-            if (schema.attributes) {
-                for (const attribute of schema.attributes) {
+            if (this._type.attributes) {
+                for (const attribute of this._type.attributes) {
                     const value = this.packAttr(_layer, attribute);
                     this._attributes.push(new armnn.Attribute(attribute.name, attribute.type, value));
                 }
             }
-            if (schema.inputs) {
-                for (let i = 0 ; i < schema.inputs.length ; i++) {
-                    const input = schema.inputs[i];
+            if (this._type.inputs) {
+                for (let i = 0 ; i < this._type.inputs.length ; i++) {
+                    const input = this._type.inputs[i];
                     const initializer = _layer[input.src];
                     if (initializer) {
                         const args = [ new armnn.Argument('', null, initializer) ];
@@ -202,19 +207,11 @@ armnn.Node = class {
     }
 
     get type() {
-        return this._type.replace(/Layer$/, '');
+        return this._type;
     }
 
     get name() {
         return this._name;
-    }
-
-    get domain() {
-        return null;
-    }
-
-    get metadata() {
-        return this._metadata.type(this._type);
     }
 
     get group() {
@@ -290,14 +287,9 @@ armnn.Attribute = class {
 
     constructor(name, type, value) {
         this._name = name;
-        this._value = value;
+        this._value = ArrayBuffer.isView(value) ? Array.from(value) : value;
         this._visible = true;
-        switch (type) {
-            case 'int': this._type = 'int32'; break;
-            case 'uint': this._type = 'uint32'; break;
-            case 'float': this._type = 'float32'; break;
-            case 'string': this._type = 'string'; break;
-        }
+        this._type = type;
     }
 
     get name() {
@@ -555,11 +547,11 @@ armnn.TensorShape = class {
 
 armnn.Metadata = class {
 
-    static open(host) {
+    static open(context) {
         if (armnn.Metadata._metadata) {
             return Promise.resolve(armnn.Metadata._metadata);
         }
-        return host.request(null, 'armnn-metadata.json', 'utf-8').then((data) => {
+        return context.request('armnn-metadata.json', 'utf-8', null).then((data) => {
             armnn.Metadata._metadata = new armnn.Metadata(data);
             return armnn.Metadata._metadata;
         }).catch(() => {
@@ -569,22 +561,15 @@ armnn.Metadata = class {
     }
 
     constructor(data) {
-        this._map = {};
+        this._map = new Map();
         if (data) {
-            const items = JSON.parse(data);
-            if (items) {
-                for (const item of items) {
-                    if (item.name && item.schema) {
-                        item.schema.name = item.name;
-                        this._map[item.name] = item.schema;
-                    }
-                }
-            }
+            const metadata = JSON.parse(data);
+            this._map = new Map(metadata.map((item) => [ item.name, item ]));
         }
     }
 
     type(name) {
-        return this._map[name];
+        return this._map.get(name);
     }
 
     attribute(type, name) {
