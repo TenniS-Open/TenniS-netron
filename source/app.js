@@ -238,6 +238,8 @@ class Application {
     }
 
     _checkForUpdates() {
+        // Do not check update in TenniS version.
+        return;
         if (!electron.app.isPackaged) {
             return;
         }
