@@ -31,7 +31,7 @@ utils.Stream = class {
             this._dataview = new DataView(data.buffer, data.byteOffset, data.length);
             this._offset = offset;
         } else {
-            throw utils.Error("Stream param 1 must be DataView or ArrayBuffer");
+            throw new tennis.Error("Stream param 1 must be DataView or ArrayBuffer");
         }
     }
 
@@ -241,7 +241,7 @@ utils.dtype = {
             default:
                 break;
         }
-        throw utils.Error("Not support dtype = " + dtype);
+        throw new tennis.Error("Not support dtype = " + dtype);
     },
 
     /**
@@ -684,7 +684,7 @@ utils.Module = class {
         stream.skip(4);
         let mask = stream.int32();
         if (mask != 0x19910929) {
-            throw utils.Error("TenniS Module not valid.");
+            throw new tennis.Error("TenniS Module not valid.");
         }
         this._mask = mask;
         stream.skip(120);
@@ -795,19 +795,25 @@ utils.Module = class {
 
 tennis.ModelFactory = class {
 
+    _stream_buffer(stream) {
+        stream.seek(0);
+        return stream.read(stream.length);
+    }
+
     match(context) {
         // const extension = context.identifier.split('.').pop().toLowerCase();
-        const b = context.buffer;
+        let b = context.buffer ? context.buffer : this._stream_buffer(context.stream);
         let stream = new utils.Stream(b);
         stream.skip(4);
         const mask = stream.int32();
         return mask == 0x19910929;
     }
 
-    open(context, host) {
-        return tennis.Metadata.open(host).then((metadata) => {
+    open(context) {
+        return tennis.Metadata.open(context).then((metadata) => {
             const identifier = context.identifier;
-            let stream = new utils.Stream(context.buffer);
+            let b = context.buffer ? context.buffer : this._stream_buffer(context.stream);
+            let stream = new utils.Stream(b);
             return this._openModel(metadata, stream, identifier);
         });
     }
@@ -1068,6 +1074,8 @@ tennis.Node = class {
         this._outputs = [];
         this._chain = [];
 
+        this._type = {"name": this._operator, "category": this.category}
+
         /**
          * add input output info
          */
@@ -1169,7 +1177,7 @@ tennis.Node = class {
     }
 
     get type() {
-        return this._operator;
+        return this._type;
     }
 
     /// [Deprecated]
@@ -1444,11 +1452,11 @@ tennis.TensorShape = class {
 
 tennis.Metadata = class {
 
-    static open(host) {
+    static open(context) {
         if (tennis.Metadata._metadata) {
             return Promise.resolve(tennis.Metadata._metadata);
         }
-        return host.request(null, 'tennis-metadata.json', 'utf-8').then((data) => {
+        return context.request('tennis-metadata.json', 'utf-8', null).then((data) => {
             tennis.Metadata._metadata = new tennis.Metadata(data);
             return tennis.Metadata._metadata;
         }).catch(() => {
@@ -1512,5 +1520,4 @@ tennis.Error = class extends Error {
 
 if (typeof module !== 'undefined' && typeof module.exports === 'object') {
     module.exports.ModelFactory = tennis.ModelFactory;
-    module.exports.utils = utils;
 }
