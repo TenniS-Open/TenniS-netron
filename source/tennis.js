@@ -1326,7 +1326,9 @@ tennis.Attribute = class {
             }
         }
         // make sure value set
-        this._cache_value();
+        if (this._show_value == null) {
+            this._cache_value();
+        }
     }
 
     _cache_value() {
