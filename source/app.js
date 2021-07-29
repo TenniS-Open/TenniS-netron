@@ -1,7 +1,7 @@
 /* jshint esversion: 6 */
 
 const electron = require('electron');
-const updater = require('electron-updater');
+// const updater = require('electron-updater');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');

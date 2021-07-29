@@ -1074,7 +1074,12 @@ tennis.Node = class {
         this._outputs = [];
         this._chain = [];
 
-        this._type = {"name": this._operator, "category": this.category}
+        this._type = this._metadata.type(this._operator);
+        if (!this._type) {
+            this._type = {
+                "name": this._operator,
+            }
+        }
 
         /**
          * add input output info
@@ -1226,6 +1231,10 @@ tennis.Node = class {
             return schema;
         }
         return '';
+    }
+
+    get description() {
+        return "";
     }
 
     /// [Deprecated]
@@ -1508,6 +1517,14 @@ tennis.Metadata = class {
             }
         }
         return this._attributeMap.get(key);
+    }
+    
+    getNodeDescription(operator) {
+        const schema = this.getSchema(operator);
+        if (schema) {
+            if (schema.description) return schema.description;
+        }
+        return "";
     }
 };
 
