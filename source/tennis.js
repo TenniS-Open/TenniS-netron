@@ -170,9 +170,9 @@ utils.Stream = class {
      */
     int32_array() {
         const size = this.int32();
-        let array = [];
+        let array = Array(size);
         for (let i = 0; i < size; ++i) {
-            array.push(this.int32());
+            array[i] = this.int32();
         }
         return array;
     }
@@ -327,9 +327,9 @@ utils.Tensor = class {
             return decoder();
         }
         const count = this.count;
-        let list = [];
+        let list = Array(count);
         for (let i = 0; i < count; ++i) {
-            list.push(decoder());
+            list[i] = decoder();
         }
         return list;
     }
@@ -1277,13 +1277,12 @@ tennis.Attribute = class {
      */
     constructor(metadata, operator, name, value) {
         this._name = name;
-        this._value = value.value;
-        if (this._value === null) {
-            this._value = "Not readable.";
-        }
+        this._tensor = value;
+        this._value = null;
         this._show_value = null;
         this._type = value.proto;
         this._description = null;
+        const small_value_attibute_limit = 64;
         const schema = metadata.getAttributeSchema(operator, name);
         if (schema) {
             this._description = schema.description;
@@ -1291,32 +1290,53 @@ tennis.Attribute = class {
             switch (schema.type) {
                 case "bool":
                 case "boolean":
-                    this._show_value = this._value ? true : false;
+                    this._show_value = this._cache_value() ? true : false;
                     this._type = "bool";
                     break;
                 case "enum":
                     this._type = "enum";
                     try {
-                        this._show_value = schema.enum[this._value];
+                        this._show_value = schema.enum[this._cache_value()];
                     }
                     catch (error) {
                     }
                     break;
             }
+        }
+        if (this._show_value === null) {
+            // incase of node using buffer.
+            if (value.dtype == utils.dtype.INT8 || value.dtype == utils.dtype.UINT8) {
+                this._show_value = value.view(small_value_attibute_limit).toString();
+            }
+        }
+        if (schema) {
             if (Object.prototype.hasOwnProperty.call(schema, 'visible') && !schema.visible) {
                 this._visible = false;
             }
             else if (Object.prototype.hasOwnProperty.call(schema, 'default')) {
-                if (this.value == schema.default ||
-                    this.value.toString() == schema.default.toString()) {
+                const this_value = this._cache_value();
+                if (this_value == schema.default ||
+                    this_value.toString() == schema.default.toString()) {
                     this._visible = false;
                 }
             }
             if (this._type == "enum") {
                 // show enum as value : string
-                this._show_value = this._value + " : " + this._show_value;
+                this._show_value = this._cache_value().toString() + " : " + this._show_value;
             }
         }
+        // make sure value set
+        this._cache_value();
+    }
+
+    _cache_value() {
+        if (this._value === null) {
+            this._value = this._tensor.value;
+            if (this._value === null) {
+                this._value = "Not readable.";
+            }
+        }
+        return this._value;
     }
 
     get description() {
@@ -1388,7 +1408,7 @@ tennis.Tensor = class {
     }
 
     toString() {
-        const limit = 1000;
+        const limit = 64;
         const value = this._tensor.view(limit);
         if (value === null) {
             return "";
