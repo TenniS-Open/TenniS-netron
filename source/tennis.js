@@ -4,8 +4,6 @@
 
 var tennis = tennis || {};
 var base = base || require('./base');
-var long = long || { Long: require('long') };
-var marked = marked || require('marked');
 var utils = utils || {};
 
 utils.Stream = class {
@@ -46,18 +44,18 @@ utils.Stream = class {
      * @return {number} 
      */
     int64() {
-        let high = this.uint32();
-        let low = this.uint32();
-        return new long.Long(high, low, false).toNumber();
+        const value = this._dataview.getInt64(this._offset, true);
+        this._offset += 8;
+        return value;
     }
 
     /**
      * @return {number} 
      */
     uint64() {
-        let high = this.uint32();
-        let low = this.uint32();
-        return new long.Long(high, low, true).toNumber();
+        const value = this._dataview.getUint64(this._offset, true);
+        this._offset += 8;
+        return value;
     }
 
     float32() {
@@ -1078,7 +1076,7 @@ tennis.Node = class {
         if (!this._type) {
             this._type = {
                 "name": this._operator,
-            }
+            };
         }
 
         /**
