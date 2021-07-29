@@ -44,7 +44,7 @@ utils.Stream = class {
      * @return {number} 
      */
     int64() {
-        const value = this._dataview.getInt64(this._offset, true);
+        const value = this._dataview.getInt64(this._offset, true).toNumber();
         this._offset += 8;
         return value;
     }
@@ -53,7 +53,7 @@ utils.Stream = class {
      * @return {number} 
      */
     uint64() {
-        const value = this._dataview.getUint64(this._offset, true);
+        const value = this._dataview.getUint64(this._offset, true).toNumber();
         this._offset += 8;
         return value;
     }
